@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+
+  <div id="login-view">
+    <div class="login-container">
+      <div class="logo-container">
+        <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/DAM.png" alt="DAM Logo">
+      </div>
+      <h4>PT. DAYA ANUGRAH MULYA</h4>
+      <p class="login-subtitle">TSP MODUL</p>
+      <form id="login-form">
+        <div class="login-field">
+          <label for="nik-input">NIK</label>
+          <input type="text" id="nik-input" inputmode="numeric" placeholder="Masukkan NIK" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label for="password-input">Password</label>
+          <div class="password-wrap">
+            <input type="password" id="password-input" placeholder="Masukkan Password" autocomplete="current-password" required>
+            <button type="button" class="password-toggle" id="password-toggle" aria-label="Tampilkan password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="action-btn btn-login">Masuk</button>
+      </form>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <div id="app-view" class="app-wrapper">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/DAM.png" alt="DAM Logo">
+        <div class="sidebar-title">TSP MODUL</div>
+        <span class="role-badge" id="sidebar-role-badge"></span>
+      </div>
+      <div class="sidebar-user-profile">
+        <div id="sidebar-user-name"></div>
+        <div id="sidebar-user-role"></div>
+      </div>
+      <nav class="main-nav">
+        <a class="nav-link" id="tab-btn-stock"><i class="bi bi-boxes"></i><span>Stock</span></a>
+        <a class="nav-link" id="tab-btn-scan"><i class="bi bi-upc-scan"></i><span>Scan</span></a>
+        <a class="nav-link" id="tab-btn-validasi" style="display:none;"><i class="bi bi-clipboard-check"></i><span>Validasi</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="secondary-btn logout-btn" id="logout-btn">Logout</button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <button id="menu-toggle" aria-label="Menu">&#9776;</button>
+        <h2 id="app-title">TSP Modul</h2>
+      </header>
+
+      <div class="app-content">
+        <div id="tab-stock" class="tab-panel">
+          <div id="mesin-picker-wrap" style="display:none;">
+            <p>Pilih Mesin:</p>
+            <select id="mesin-picker"></select>
+          </div>
+          <p class="stock-shift-label" id="stock-shift-label"></p>
+          <div class="stock-layout">
+            <div class="stock-main"><div id="stock-table-wrap"></div></div>
+            <div class="stock-side panel" id="recent-receipts-panel" style="display:none;">
+              <h3>Penerimaan Terakhir</h3>
+              <div id="recent-receipts-wrap"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-scan" class="tab-panel" style="display:none;">
+          <?!= include('Scanner'); ?>
+        </div>
+
+        <div id="tab-validasi" class="tab-panel" style="display:none;">
+          <p class="stock-shift-label" id="validator-shift-label"></p>
+          <div id="validator-table-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var PAGE_ROLE = null;
+    var PAGE_EVENTS = [];
+    var CURRENT_NIK = null;
+
+    var TSP_EVENTS = [
+      { code: 'terima_wrm', label: 'Terima dari WRM', requiresMesin: false, requiresJumlah: false },
+      { code: 'kirim_mesin', label: 'Kirim ke Mesin', requiresMesin: true, requiresJumlah: true },
+      { code: 'retur_dari_mesin', label: 'Retur dari Mesin', requiresMesin: false, requiresJumlah: false },
+      { code: 'retur_ke_wrm', label: 'Retur ke WRM (MatClaim)', requiresMesin: false, requiresJumlah: false }
+    ];
+    var OPERATOR_EVENTS = [
+      { code: 'terima_operator', label: 'Terima dari TSP', requiresMesin: false, requiresJumlah: false },
+      { code: 'consume_operator', label: 'Consume', requiresMesin: false, requiresJumlah: false }
+    ];
+
+    var STOCK_COLUMNS = [
+      { key: 'deskripsi', label: 'Material' },
+      { key: 'stockAwal', label: 'Awal', numeric: true },
+      { key: 'masuk', label: 'Masuk', numeric: true },
+      { key: 'keluar', label: 'Keluar', numeric: true },
+      { key: 'returIn', label: 'Retur+', numeric: true },
+      { key: 'returOut', label: 'Retur-', numeric: true },
+      { key: 'stockAkhir', label: 'Akhir', numeric: true }
+    ];
+    var MESIN_STOCK_COLUMNS = [
+      { key: 'deskripsi', label: 'Material' },
+      { key: 'stockAwal', label: 'Awal', numeric: true },
+      { key: 'masuk', label: 'Masuk', numeric: true },
+      { key: 'keluar', label: 'Keluar', numeric: true },
+      { key: 'stockAkhir', label: 'Akhir', numeric: true }
+    ];
+    var VALIDATOR_COLUMNS = [
+      { key: 'deskripsi', label: 'Material' },
+      { key: 'masukScan', label: 'Masuk (Scan)', numeric: true },
+      { key: 'masukMb51', label: 'Masuk (MB51)', numeric: true },
+      { key: 'selisih', label: 'Selisih', numeric: true },
+      { key: 'status', label: 'Status' }
+    ];
+    var RECEIPT_COLUMNS = [
+      { key: 'waktu', label: 'Waktu' },
+      { key: 'barcode', label: 'Barcode' },
+      { key: 'deskripsi', label: 'Material' },
+      { key: 'jumlah', label: 'Jumlah', numeric: true }
+    ];
+
+    function showLogin() {
+      document.getElementById('login-view').style.display = 'flex';
+      document.getElementById('app-view').style.display = 'none';
+    }
+
+    function openSidebar() { document.getElementById('app-view').classList.add('sidebar-open'); }
+    function closeSidebar() { document.getElementById('app-view').classList.remove('sidebar-open'); }
+
+    function showApp(user) {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('app-view').style.display = 'flex';
+      document.getElementById('sidebar-user-name').textContent = user.nama;
+      document.getElementById('sidebar-user-role').textContent = user.jabatan;
+
+      var badge = document.getElementById('sidebar-role-badge');
+      badge.textContent = user.role === 'tsp' ? 'TSP PORTAL' : 'OPERATOR PORTAL';
+      badge.className = 'role-badge ' + (user.role === 'tsp' ? 'role-badge-tsp' : 'role-badge-operator');
+
+      PAGE_ROLE = user.role;
+      PAGE_EVENTS = user.role === 'tsp' ? TSP_EVENTS : OPERATOR_EVENTS;
+      CURRENT_NIK = user.nik;
+
+      document.getElementById('tab-btn-validasi').style.display = user.role === 'tsp' ? 'inline-block' : 'none';
+      document.getElementById('mesin-picker-wrap').style.display = user.role === 'operator' ? 'block' : 'none';
+      document.getElementById('recent-receipts-panel').style.display = user.role === 'tsp' ? 'block' : 'none';
+
+      renderActions();
+
+      if (user.role === 'operator') {
+        setupMesinPicker();
+      } else {
+        switchTab('stock');
+      }
+    }
+
+    function setupMesinPicker() {
+      var select = document.getElementById('mesin-picker');
+      google.script.run.withSuccessHandler(function (list) {
+        select.innerHTML = '';
+        list.forEach(function (m) {
+          var opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          select.appendChild(opt);
+        });
+        var remembered = sessionStorage.getItem('tspModulMesin');
+        if (remembered && list.indexOf(remembered) !== -1) select.value = remembered;
+        switchTab('stock');
+      }).getMesinList();
+    }
+
+    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi' };
+
+    function switchTab(tab) {
+      ['stock', 'scan', 'validasi'].forEach(function (t) {
+        document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
+        document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
+      });
+      document.getElementById('app-title').textContent =
+        TAB_LABELS[tab].toUpperCase() + ' ' + (PAGE_ROLE === 'tsp' ? 'TSP' : 'OPERATOR');
+      if (tab === 'stock') loadStockTab();
+      if (tab === 'validasi') loadValidatorTab();
+      closeSidebar();
+    }
+
+    function renderTable(containerId, rows, columns) {
+      var container = document.getElementById(containerId);
+      if (!rows || rows.length === 0) {
+        container.innerHTML = '<p>Tidak ada data.</p>';
+        return;
+      }
+      var html = '<div class="table-scroll"><table class="data-table"><thead><tr>';
+      columns.forEach(function (c) { html += '<th class="' + (c.numeric ? 'num-cell' : '') + '">' + c.label + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr>';
+        columns.forEach(function (c) {
+          html += '<td class="' + (c.numeric ? 'num-cell' : '') + '">' + r[c.key] + '</td>';
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+
+    function loadStockTab() {
+      var wrap = document.getElementById('stock-table-wrap');
+      wrap.innerHTML = '<p>Memuat stock...</p>';
+
+      if (PAGE_ROLE === 'tsp') {
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          document.getElementById('stock-shift-label').textContent =
+            res.data.date + ' — Shift aktif: ' + res.data.shift;
+          renderTable('stock-table-wrap', res.data.rows, STOCK_COLUMNS);
+        }).getTspStock();
+        loadRecentReceipts();
+      } else {
+        var select = document.getElementById('mesin-picker');
+        var selectedMesin = select.value;
+        if (!selectedMesin) { wrap.innerHTML = '<p>Pilih mesin dulu.</p>'; return; }
+        sessionStorage.setItem('tspModulMesin', selectedMesin);
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          document.getElementById('stock-shift-label').textContent =
+            res.data.date + ' — Shift aktif: ' + res.data.shift + ' — Mesin ' + selectedMesin;
+          renderTable('stock-table-wrap', res.data.rows, MESIN_STOCK_COLUMNS);
+        }).getMesinStock(selectedMesin);
+      }
+    }
+
+    function loadRecentReceipts() {
+      var wrap = document.getElementById('recent-receipts-wrap');
+      wrap.innerHTML = '<p>Memuat...</p>';
+      google.script.run.withSuccessHandler(function (res) {
+        if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+        renderTable('recent-receipts-wrap', res.data, RECEIPT_COLUMNS);
+      }).getRecentReceipts();
+    }
+
+    function loadValidatorTab() {
+      var wrap = document.getElementById('validator-table-wrap');
+      wrap.innerHTML = '<p>Memuat validasi...</p>';
+      google.script.run.withSuccessHandler(function (res) {
+        if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+        document.getElementById('validator-shift-label').textContent = 'Shift aktif: ' + res.data.shift;
+        renderTable('validator-table-wrap', res.data.rows, VALIDATOR_COLUMNS);
+      }).getValidatorData();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (evt) {
+      evt.preventDefault();
+      var nik = document.getElementById('nik-input').value.trim();
+      var password = document.getElementById('password-input').value;
+      var errorBox = document.getElementById('login-error');
+      errorBox.style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res.success) {
+            sessionStorage.setItem('tspModulUser', JSON.stringify(res.user));
+            showApp(res.user);
+          } else {
+            errorBox.textContent = res.message;
+            errorBox.style.display = 'block';
+          }
+        })
+        .withFailureHandler(function (err) {
+          errorBox.textContent = err.message || String(err);
+          errorBox.style.display = 'block';
+        })
+        .login(nik, password);
+    });
+
+    document.getElementById('password-toggle').addEventListener('click', function () {
+      var input = document.getElementById('password-input');
+      var showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      this.textContent = showing ? 'Show' : 'Hide';
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', function () {
+      sessionStorage.removeItem('tspModulUser');
+      showLogin();
+    });
+
+    document.getElementById('tab-btn-stock').onclick = function () { switchTab('stock'); };
+    document.getElementById('tab-btn-scan').onclick = function () { switchTab('scan'); };
+    document.getElementById('tab-btn-validasi').onclick = function () { switchTab('validasi'); };
+    document.getElementById('mesin-picker').addEventListener('change', function () {
+      if (document.getElementById('tab-stock').style.display !== 'none') loadStockTab();
+    });
+    document.getElementById('menu-toggle').addEventListener('click', openSidebar);
+    document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+    (function tryRestoreSession() {
+      var stored = sessionStorage.getItem('tspModulUser');
+      if (stored) {
+        try {
+          showApp(JSON.parse(stored));
+          return;
+        } catch (e) { /* sessionStorage rusak, jatuh ke login */ }
+      }
+      showLogin();
+    })();
+  </script>
+</body>
+</html>

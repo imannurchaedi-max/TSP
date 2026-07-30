@@ -1,0 +1,180 @@
+<div id="action-view">
+  <div class="btn-grid" id="action-list"></div>
+</div>
+
+<div id="extra-view">
+  <div id="mesin-field">
+    <p>Pilih mesin tujuan:</p>
+    <select id="mesin-select"></select>
+  </div>
+  <div id="jumlah-field">
+    <p>Jumlah yang dikirim:</p>
+    <input type="number" id="jumlah-input" min="0" step="any" placeholder="Contoh: 200">
+  </div>
+  <button class="action-btn" id="extra-continue" style="margin-top:10px;">Lanjut Scan</button>
+  <button class="secondary-btn" id="extra-cancel">Batal</button>
+</div>
+
+<div id="scanner-view">
+  <p>Ambil foto barcode/QR yang jelas &amp; fokus.</p>
+  <button class="action-btn" id="capture-btn">📷 Ambil Foto Barcode</button>
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
+  <div class="result-box" id="scan-status" style="display:none; background:#e0e7ff; color:#3730a3;"></div>
+  <div id="reader" style="display:none;"></div>
+  <button class="secondary-btn" id="scan-cancel">Batal</button>
+</div>
+
+<div id="result-view">
+  <div class="result-box" id="result-box"></div>
+  <div class="result-box" id="child-barcode-box" style="display:none; background:#e0e7ff; color:#3730a3; font-size:20px; font-weight:bold; text-align:center;"></div>
+  <button class="action-btn" id="scan-again" style="margin-top:10px;">Scan Lagi</button>
+  <button class="secondary-btn" id="back-to-menu">Kembali ke Menu</button>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  var html5QrCode = null;
+  var currentEvent = null;
+  var currentMesin = null;
+  var currentJumlah = null;
+
+  function showView(id) {
+    ['action-view', 'extra-view', 'scanner-view', 'result-view'].forEach(function (v) {
+      document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
+    });
+  }
+
+  function renderActions() {
+    var list = document.getElementById('action-list');
+    list.innerHTML = '';
+    PAGE_EVENTS.forEach(function (ev) {
+      var btn = document.createElement('button');
+      btn.className = 'action-btn';
+      btn.textContent = ev.label;
+      btn.onclick = function () { selectEvent(ev); };
+      list.appendChild(btn);
+    });
+  }
+
+  function selectEvent(ev) {
+    currentEvent = ev;
+    currentMesin = null;
+    currentJumlah = null;
+
+    if (ev.requiresMesin || ev.requiresJumlah) {
+      document.getElementById('mesin-field').style.display = ev.requiresMesin ? 'block' : 'none';
+      document.getElementById('jumlah-field').style.display = ev.requiresJumlah ? 'block' : 'none';
+
+      if (ev.requiresMesin) {
+        var select = document.getElementById('mesin-select');
+        select.innerHTML = '';
+        google.script.run.withSuccessHandler(function (list) {
+          list.forEach(function (m) {
+            var opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            select.appendChild(opt);
+          });
+        }).getMesinList();
+      }
+      if (ev.requiresJumlah) {
+        document.getElementById('jumlah-input').value = '';
+      }
+      showView('extra-view');
+    } else {
+      startScanner();
+    }
+  }
+
+  /**
+   * Dulu pakai kamera live (getUserMedia), tapi web app Apps Script selalu dirender di
+   * iframe bawaan Google yang tidak mendelegasikan izin kamera -> selalu NotAllowedError
+   * apapun setting browser/OS-nya. Solusinya: ambil FOTO (via <input capture>, buka app
+   * kamera native, bukan getUserMedia), lalu decode barcode dari foto itu pakai scanFile().
+   */
+  function startScanner() {
+    showView('scanner-view');
+    document.getElementById('scan-status').style.display = 'none';
+  }
+
+  function handleCapturedFile(file) {
+    if (!file) return;
+    var statusEl = document.getElementById('scan-status');
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Membaca barcode dari foto...';
+
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode('reader');
+    }
+    html5QrCode.scanFile(file, true)
+      .then(function (decodedText) {
+        statusEl.style.display = 'none';
+        onScanSuccess(decodedText);
+      })
+      .catch(function () {
+        statusEl.style.display = 'none';
+        showResult(false, 'Barcode tidak terbaca dari foto. Coba ambil foto ulang, pastikan barcode fokus & tidak terpotong.', null);
+      });
+  }
+
+  function onScanSuccess(decodedText) {
+    google.script.run
+      .withSuccessHandler(function (res) { showResult(res.success, res.message, res.childBarcode); })
+      .withFailureHandler(function (err) { showResult(false, err.message || String(err), null); })
+      .submitScan(decodedText, currentEvent.code, currentMesin, currentJumlah, CURRENT_NIK);
+  }
+
+  function showResult(success, message, childBarcode) {
+    var box = document.getElementById('result-box');
+    box.className = 'result-box ' + (success ? 'result-success' : 'result-error');
+    box.textContent = message;
+
+    var childBox = document.getElementById('child-barcode-box');
+    if (childBarcode) {
+      childBox.textContent = 'Kode Reprint: ' + childBarcode;
+      childBox.style.display = 'block';
+    } else {
+      childBox.style.display = 'none';
+    }
+    showView('result-view');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    renderActions();
+    showView('action-view');
+
+    document.getElementById('capture-btn').onclick = function () {
+      document.getElementById('camera-input').value = '';
+      document.getElementById('camera-input').click();
+    };
+    document.getElementById('camera-input').addEventListener('change', function (evt) {
+      handleCapturedFile(evt.target.files[0]);
+    });
+
+    document.getElementById('extra-continue').onclick = function () {
+      if (currentEvent.requiresMesin) {
+        currentMesin = document.getElementById('mesin-select').value;
+      }
+      if (currentEvent.requiresJumlah) {
+        currentJumlah = document.getElementById('jumlah-input').value;
+        if (!currentJumlah || Number(currentJumlah) <= 0) {
+          alert('Isi jumlah yang valid dulu.');
+          return;
+        }
+      }
+      startScanner();
+    };
+    document.getElementById('extra-cancel').onclick = function () {
+      showView('action-view');
+    };
+    document.getElementById('scan-cancel').onclick = function () {
+      showView('action-view');
+    };
+    document.getElementById('scan-again').onclick = function () {
+      startScanner();
+    };
+    document.getElementById('back-to-menu').onclick = function () {
+      showView('action-view');
+    };
+  });
+</script>

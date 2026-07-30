@@ -1,0 +1,13 @@
+{
+  "name": "tsp-modul-js-tools",
+  "version": "1.0.0",
+  "description": "JS & Diagram tooling for TSP Modul",
+  "main": "index.js",
+  "scripts": {
+    "gitnexus:analyze": "gitnexus analyze .",
+    "mermaid:generate": "python tools/mermaid_generator.py"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.0.0"
+  }
+}
