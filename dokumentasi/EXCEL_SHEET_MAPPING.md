@@ -64,7 +64,7 @@
 
 ---
 ## Sheet: `BARCODE INCOMING WRM`
-- **Jumlah Baris**: 2845
+- **Jumlah Baris**: 2830
 - **Jumlah Kolom**: 23
 
 ### Daftar Kolom & Data Type
@@ -133,6 +133,54 @@
 | 7 | `JUMLAH` | `object` | - |
 
 ---
+## Sheet: `STOCK MESIN`
+- **Jumlah Baris**: 139
+- **Jumlah Kolom**: 39
+
+### Daftar Kolom & Data Type
+| No | Nama Kolom | Type Data | Sample Nilai |
+|---|---|---|---|
+| 1 | `No.` | `int64` | 1 |
+| 2 | `Tanggal` | `float64` | - |
+| 3 | `Shift` | `float64` | - |
+| 4 | `Mesin` | `float64` | - |
+| 5 | `NIK OP` | `float64` | - |
+| 6 | `NAMA OP` | `float64` | - |
+| 7 | `MID` | `int64` | 20000000 |
+| 8 | `Deskripsi` | `str` | KRAFT BLEACHED WOODPULP FR 411-48X120 |
+| 9 | `UOM` | `str` | KG |
+| 10 | `Stock Awal BHP 1` | `float64` | - |
+| 11 | `Stock Awal BHP 2` | `float64` | - |
+| 12 | `Stock Awal BHP 3` | `float64` | - |
+| 13 | `Stock Awal AHP 1` | `float64` | - |
+| 14 | `Stock Awal BHP 4` | `float64` | - |
+| 15 | `Stock Awal BHP 5` | `float64` | - |
+| 16 | `Terima BHP 1` | `float64` | - |
+| 17 | `Terima BHP 2` | `float64` | - |
+| 18 | `Terima BHP 3` | `float64` | 2788.0 |
+| 19 | `Terima AHP 1` | `float64` | - |
+| 20 | `Terima BHP 4` | `float64` | 3691.0 |
+| 21 | `Terima BHP 5` | `float64` | - |
+| 22 | `Consume BHP 1` | `float64` | - |
+| 23 | `Consume BHP 2` | `float64` | - |
+| 24 | `Consume BHP 3` | `float64` | - |
+| 25 | `Consume AHP 1` | `float64` | - |
+| 26 | `Consume BHP 4` | `float64` | - |
+| 27 | `Consume BHP 5` | `float64` | - |
+| 28 | `Return BHP 1` | `float64` | - |
+| 29 | `Return BHP 2` | `float64` | - |
+| 30 | `Return BHP 3` | `str` | - |
+| 31 | `Return AHP 1` | `float64` | - |
+| 32 | `Return BHP 4` | `float64` | - |
+| 33 | `Return BHP 5` | `float64` | - |
+| 34 | `Stock Akhir BHP 1` | `int64` | 0 |
+| 35 | `Stock Akhir BHP 2` | `int64` | 0 |
+| 36 | `Stock Akhir BHP 3` | `object` | 2788 |
+| 37 | `Stock Akhir AHP 1` | `float64` | 0.0 |
+| 38 | `Stock Akhir BHP 4` | `int64` | 3691 |
+| 39 | `Stock Akhir BHP 5` | `int64` | 0 |
+
+---
 ## Sheet: `STOCK TSP`
 - **Jumlah Baris**: 139
 - **Jumlah Kolom**: 30
@@ -170,46 +218,6 @@
 | 28 | `Unnamed: 27` | `float64` | - |
 | 29 | `Unnamed: 28` | `float64` | - |
 | 30 | `Unnamed: 29` | `float64` | - |
-
----
-## Sheet: `STOCK MESIN`
-- **Jumlah Baris**: 139
-- **Jumlah Kolom**: 31
-
-### Daftar Kolom & Data Type
-| No | Nama Kolom | Type Data | Sample Nilai |
-|---|---|---|---|
-| 1 | `No.` | `int64` | 1 |
-| 2 | `Tanggal` | `float64` | - |
-| 3 | `Shift` | `float64` | - |
-| 4 | `Mesin` | `float64` | - |
-| 5 | `NIK TSP` | `float64` | - |
-| 6 | `Nama TSP` | `float64` | - |
-| 7 | `MID` | `int64` | 20000000 |
-| 8 | `Deskripsi` | `str` | KRAFT BLEACHED WOODPULP FR 411-48X120 |
-| 9 | `UOM` | `str` | KG |
-| 10 | `Stok Awal` | `float64` | 0.0 |
-| 11 | `Barang Masuk` | `int64` | 6479 |
-| 12 | `Kirim BHP 1` | `float64` | - |
-| 13 | `Kirim BHP 2` | `float64` | - |
-| 14 | `Kirim BHP 3` | `float64` | 2788.0 |
-| 15 | `Kirim AHP 1` | `float64` | - |
-| 16 | `Kirim BHP 4` | `float64` | 3691.0 |
-| 17 | `Kirim BHP 5` | `float64` | - |
-| 18 | `Return BHP 1` | `float64` | - |
-| 19 | `Return BHP 2` | `float64` | - |
-| 20 | `Return BHP 3` | `str` | - |
-| 21 | `Return AHP 1` | `float64` | - |
-| 22 | `Return BHP 4` | `float64` | - |
-| 23 | `Return BHP 5` | `float64` | - |
-| 24 | `MATCLAIM WRM` | `float64` | - |
-| 25 | `Stock Akhir (RUMUS)` | `object` | 0 |
-| 26 | `Stock Akhir (HITUNG AKTUAL)` | `float64` | 0.0 |
-| 27 | `Check` | `object` | True |
-| 28 | `Unnamed: 27` | `float64` | - |
-| 29 | `Unnamed: 28` | `float64` | - |
-| 30 | `Unnamed: 29` | `float64` | - |
-| 31 | `Unnamed: 30` | `float64` | - |
 
 ---
 ## Sheet: `Daily TSP`

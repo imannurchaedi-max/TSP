@@ -9,14 +9,20 @@ Verifies:
 5. GitNexus status and repository index
 """
 
-import os
 import sys
-import subprocess
+import os
 from pathlib import Path
+import subprocess
+
+# Reconfigure stdout/stderr encoding for Windows console to handle UTF-8/emojis
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 WORKSPACE_ROOT = Path(__file__).parent.parent
 
-# Ensure .venv site-packages is in sys.path if invoked directly
+# Ensure .venv site-packages is in sys.path
 venv_site_packages = WORKSPACE_ROOT / ".venv" / "Lib" / "site-packages"
 if venv_site_packages.exists() and str(venv_site_packages) not in sys.path:
     sys.path.insert(0, str(venv_site_packages))
@@ -124,10 +130,13 @@ def check_gitnexus():
     stderr = (res.stderr or "").strip()
     if res.returncode == 0:
         print("  [OK] GitNexus status:")
-        print(f"       {stdout}")
+        # Sanitize stdout for safe console printing
+        safe_output = stdout.encode("ascii", errors="replace").decode("ascii")
+        print(f"       {safe_output}")
         return True
     else:
-        print(f"  [FAIL] GitNexus status error: {stderr if stderr else stdout}")
+        safe_output = (stderr if stderr else stdout).encode("ascii", errors="replace").decode("ascii")
+        print(f"  [FAIL] GitNexus status error: {safe_output}")
         return False
 
 
