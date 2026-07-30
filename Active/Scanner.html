@@ -4,8 +4,12 @@
 
 <div id="extra-view">
   <div id="reservasi-field" style="display:none;">
-    <p>Masukkan Nomor Reservasi:</p>
-    <input type="text" id="reservasi-input" placeholder="Contoh: 4900640869">
+    <p>Pilih Nomor Reservasi (Filtered per Shift &amp; Tanggal):</p>
+    <select id="reservasi-select"></select>
+    <div id="reservasi-manual-wrap" style="display:none; margin-top:10px;">
+      <p style="margin-bottom:4px; font-size:12px; color:var(--text-sub);">Atau ketik Nomor Reservasi manual:</p>
+      <input type="text" id="reservasi-input" placeholder="Contoh: 4900640869">
+    </div>
   </div>
   <div id="mesin-field" style="display:none;">
     <p>Pilih mesin tujuan:</p>
@@ -73,7 +77,7 @@
       document.getElementById('jumlah-field').style.display = ev.requiresJumlah ? 'block' : 'none';
 
       if (ev.requiresReservasi) {
-        document.getElementById('reservasi-input').value = '';
+        setupReservasiPicker();
       }
       if (ev.requiresMesin) {
         var select = document.getElementById('mesin-select');
@@ -95,6 +99,45 @@
       startScanner();
     }
   }
+
+  function setupReservasiPicker() {
+    var select = document.getElementById('reservasi-select');
+    var manualWrap = document.getElementById('reservasi-manual-wrap');
+    document.getElementById('reservasi-input').value = '';
+    select.innerHTML = '<option value="">Memuat daftar reservasi...</option>';
+
+    google.script.run.withSuccessHandler(function (res) {
+      select.innerHTML = '';
+      if (res.success && res.data && res.data.length > 0) {
+        res.data.forEach(function (r) {
+          var opt = document.createElement('option');
+          opt.value = r.noReservasi;
+          var label = r.noReservasi;
+          if (r.deskripsi) label += ' - ' + r.deskripsi;
+          if (r.jumlah) label += ' (' + r.jumlah + ')';
+          opt.textContent = label;
+          select.appendChild(opt);
+        });
+        var optManual = document.createElement('option');
+        optManual.value = '__manual__';
+        optManual.textContent = '-- Input Manual No. Reservasi --';
+        select.appendChild(optManual);
+        manualWrap.style.display = 'none';
+      } else {
+        var opt = document.createElement('option');
+        opt.value = '__manual__';
+        opt.textContent = '-- Tidak ada reservasi di shift ini (Input Manual) --';
+        select.appendChild(opt);
+        manualWrap.style.display = 'block';
+      }
+    }).getReservasiOptions();
+  }
+
+  document.getElementById('reservasi-select').addEventListener('change', function () {
+    var val = this.value;
+    var manualWrap = document.getElementById('reservasi-manual-wrap');
+    manualWrap.style.display = (val === '__manual__') ? 'block' : 'none';
+  });
 
   function startScanner() {
     showView('scanner-view');
@@ -157,9 +200,15 @@
 
     document.getElementById('extra-continue').onclick = function () {
       if (currentEvent.requiresReservasi) {
-        currentReservasi = document.getElementById('reservasi-input').value.trim();
+        var selectVal = document.getElementById('reservasi-select').value;
+        if (selectVal === '__manual__' || !selectVal) {
+          currentReservasi = document.getElementById('reservasi-input').value.trim();
+        } else {
+          currentReservasi = selectVal;
+        }
+
         if (!currentReservasi) {
-          alert('Isi Nomor Reservasi terlebih dahulu.');
+          alert('Pilih atau isi Nomor Reservasi terlebih dahulu.');
           return;
         }
       }

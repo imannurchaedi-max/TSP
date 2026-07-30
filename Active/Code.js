@@ -77,6 +77,15 @@ function getMesinList() {
   return MESIN_LIST;
 }
 
+/** Ambil daftar reservasi aktif dari tab RESERVASI berdasarkan tanggal & shift aktif. */
+function getReservasiOptions() {
+  try {
+    return { success: true, data: getReservasiListForShift_(new Date()) };
+  } catch (err) {
+    return { success: false, message: err.message, data: [] };
+  }
+}
+
 /** Stock yang sedang dipegang TSP (semua mesin), untuk dashboard tab "Stock". */
 function getTspStock() {
   try {

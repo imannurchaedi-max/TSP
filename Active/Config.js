@@ -24,6 +24,7 @@ var SHEET_NAMES = {
   MB51: 'MB51 ', // perhatikan ada spasi di akhir nama sheet aslinya
   WRM_INCOMING: 'BARCODE INCOMING WRM', // registry pallet dari WRM, sumber lookup MID/Qty/status saat Terima dari WRM
   REPRINT: 'REPRINT BARCODE', // registry log barcode anak/reprint yang dibuat TSP
+  RESERVASI: 'RESERVASI', // tab reservasi berdasarkan tanggal & shift
   STOCK_TSP: 'STOCK TSP',
   STOCK_MESIN: 'STOCK MESIN'
 };
@@ -98,7 +99,7 @@ var EVENTS = {
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false, // Jumlah otomatis dari lookup "BARCODE INCOMING WRM" (Qty /Palet)
-    requiresReservasi: true, // Input No. Reservasi saat Terima dari WRM
+    requiresReservasi: true, // Input/Pilih No. Reservasi dari tab RESERVASI
     label: 'Terima dari WRM'
   },
   kirim_mesin: {

@@ -24,7 +24,7 @@ function getSheet_(name) {
 }
 
 /**
- * Pastikan sheet BARCODE MATERIAL PRODUKSI, REPRINT BARCODE, dan LOG siap pakai.
+ * Pastikan sheet BARCODE MATERIAL PRODUKSI, REPRINT BARCODE, RESERVASI, dan LOG siap pakai.
  */
 function ensureSheetsReady_() {
   var barcodeSheet = getSheet_(SHEET_NAMES.BARCODE);
@@ -104,7 +104,6 @@ function findRowByColumnValue_(sheet, columnName, value) {
 
 /**
  * Cari baris di sheet BARCODE MATERIAL PRODUKSI berdasarkan kode barcode.
- * Mendukung pencarian kolom 'BARCODE' atau 'Barcode'.
  */
 function findBarcodeRow_(barcodeText) {
   var sheet = getSheet_(SHEET_NAMES.BARCODE);
@@ -136,6 +135,89 @@ function lookupWrmIncoming_(kodeUnik) {
 }
 
 /**
+ * Baca daftar Reservasi dari sheet RESERVASI berdasarkan tanggal & shift aktif.
+ */
+function getReservasiListForShift_(now) {
+  try {
+    var sheet = getSheet_(SHEET_NAMES.RESERVASI);
+    var headerMap = getHeaderMap_(sheet);
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+
+    var tz = Session.getScriptTimeZone();
+    var activeShift = getShift_(now); // e.g. 'Shift 1'
+    var activeDateStr = Utilities.formatDate(now, tz, 'dd/MM/yyyy');
+
+    var data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
+    var colTanggal = headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'];
+    var colShift = headerMap['SHIFT'] || headerMap['Shift'] || headerMap['shift'];
+    var colNoRes = headerMap['NO RESERVASI'] || headerMap['No. Reservasi'] || headerMap['No Reservasi'] || headerMap['no reservasi'];
+    var colMid = headerMap['MID'] || headerMap['Mid'] || headerMap['mid'];
+    var colDesc = headerMap['MATERIAL DESCRIPTION'] || headerMap['Material Description'] || headerMap['Material description'];
+    var colQty = headerMap['JUMLAH'] || headerMap['Jumlah'] || headerMap['jumlah'] || headerMap['Qty'];
+
+    var list = [];
+    var seen = {};
+
+    data.forEach(function (row) {
+      if (!colNoRes) return;
+      var noRes = String(row[colNoRes - 1] || '').trim();
+      if (!noRes) return;
+
+      var rawDate = colTanggal ? row[colTanggal - 1] : null;
+      var rawShift = colShift ? String(row[colShift - 1] || '').trim() : '';
+
+      var dateStr = '';
+      if (rawDate instanceof Date) {
+        dateStr = Utilities.formatDate(rawDate, tz, 'dd/MM/yyyy');
+      } else if (rawDate) {
+        dateStr = String(rawDate).trim();
+      }
+
+      var isShiftMatch = !rawShift || rawShift.toLowerCase() === activeShift.toLowerCase();
+      var isDateMatch = !dateStr || dateStr === activeDateStr;
+
+      if (isShiftMatch && isDateMatch) {
+        var itemKey = noRes;
+        if (!seen[itemKey]) {
+          seen[itemKey] = true;
+          list.push({
+            noReservasi: noRes,
+            tanggal: dateStr || activeDateStr,
+            shift: rawShift || activeShift,
+            mid: colMid ? String(row[colMid - 1] || '').trim() : '',
+            deskripsi: colDesc ? String(row[colDesc - 1] || '').trim() : '',
+            jumlah: colQty ? (Number(row[colQty - 1]) || 0) : 0
+          });
+        }
+      }
+    });
+
+    // Jika tidak ada yang persis match tanggal/shift, kembalikan semua reservasi unik yang ada
+    if (list.length === 0) {
+      data.forEach(function (row) {
+        if (!colNoRes) return;
+        var noRes = String(row[colNoRes - 1] || '').trim();
+        if (!noRes || seen[noRes]) return;
+        seen[noRes] = true;
+        list.push({
+          noReservasi: noRes,
+          tanggal: activeDateStr,
+          shift: activeShift,
+          mid: colMid ? String(row[colMid - 1] || '').trim() : '',
+          deskripsi: colDesc ? String(row[colDesc - 1] || '').trim() : '',
+          jumlah: colQty ? (Number(row[colQty - 1]) || 0) : 0
+        });
+      });
+    }
+
+    return list;
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
  * Append 1 baris baru ke sheet BARCODE MATERIAL PRODUKSI.
  */
 function appendBarcodeRow_(rowObject) {
@@ -157,9 +239,9 @@ function appendBarcodeRow_(rowObject) {
 }
 
 /**
- * Append 1 baris log penerbitan kode reprint ke sheet REPRINT BARCODE.
+ * Append 1 baris baru ke sheet REPRINT BARCODE.
  */
-function appendReprintRow_(reprintObject) {
+function appendReprintRow_(rowObject) {
   var sheet = getSheet_(SHEET_NAMES.REPRINT);
   var headerMap = getHeaderMap_(sheet);
   var lastCol = sheet.getLastColumn();
@@ -167,10 +249,10 @@ function appendReprintRow_(reprintObject) {
 
   for (var i = 0; i < lastCol; i++) rowValues[i] = '';
 
-  Object.keys(reprintObject).forEach(function (colName) {
+  Object.keys(rowObject).forEach(function (colName) {
     var colIndex = headerMap[colName] || headerMap[String(colName).toLowerCase()];
     if (colIndex) {
-      rowValues[colIndex - 1] = reprintObject[colName];
+      rowValues[colIndex - 1] = rowObject[colName];
     }
   });
 
@@ -178,35 +260,35 @@ function appendReprintRow_(reprintObject) {
 }
 
 /**
- * Update 1 sel spesifik di sheet Barcode.
+ * Update nilai 1 cell di sheet BARCODE MATERIAL PRODUKSI pada baris `rowIndex` dan kolom `columnName`.
  */
 function updateBarcodeCell_(rowIndex, columnName, value) {
   var sheet = getSheet_(SHEET_NAMES.BARCODE);
   var headerMap = getHeaderMap_(sheet);
   var col = headerMap[columnName] || headerMap[String(columnName).toLowerCase()];
+
   if (!col) throw new Error('Kolom "' + columnName + '" tidak ditemukan di sheet Barcode.');
 
   sheet.getRange(rowIndex, col).setValue(value);
 }
 
 /**
- * Append 1 baris ke sheet Log Aktivitas Barcode.
+ * Log aktivitas scan ke sheet "Log Aktivitas Barcode".
  */
-function appendLog_(logObject) {
-  try {
-    var sheet = getSheet_(SHEET_NAMES.LOG);
-    var rowValues = [
-      new Date(),
-      logObject.barcode || '',
-      logObject.event || '',
-      logObject.actor || '',
-      logObject.role || '',
-      logObject.mesin || '',
-      logObject.hasil || '',
-      logObject.pesan || ''
-    ];
-    sheet.appendRow(rowValues);
-  } catch (e) {
-    Logger.log('Gagal menulis log: ' + e.message);
-  }
+function appendLog_(logData) {
+  var sheet = getSheet_(SHEET_NAMES.LOG);
+  var headerMap = getHeaderMap_(sheet);
+  var lastCol = sheet.getLastColumn();
+  var rowValues = new Array(lastCol);
+
+  for (var i = 0; i < lastCol; i++) rowValues[i] = '';
+
+  Object.keys(logData).forEach(function (colName) {
+    var colIndex = headerMap[colName] || headerMap[String(colName).toLowerCase()];
+    if (colIndex) {
+      rowValues[colIndex - 1] = logData[colName];
+    }
+  });
+
+  sheet.appendRow(rowValues);
 }
