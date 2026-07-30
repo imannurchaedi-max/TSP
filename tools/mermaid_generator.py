@@ -2,6 +2,7 @@
 Mermaid Generator for TSP Modul
 ------------------------------
 Generates Mermaid diagrams for 6 Checkpoint State Machine and Barcode Lifecycle.
+Reflects that Barcode Anak == Barcode Reprint (generated during Reprint action).
 """
 
 from pathlib import Path
@@ -17,12 +18,13 @@ graph TD
     classDef tsp fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
     classDef operator fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
 
-    WRM[WRM Gudang: Pallet Registry]:::wrm -->|1. terima_wrm| StockTSP[Stock TSP Barcode Induk]:::tsp
-    StockTSP -->|2. kirim_mesin: Split Qty| ChildBarcode[Barcode Anak - Urutan 01, 02...]:::tsp
-    ChildBarcode -->|3. terima_operator| OperatorStock[Stock Mesin / Operator]:::operator
-    OperatorStock -->|4. consume_operator| Consumed[Barang Diconsume / Habis]:::operator
+    WRM[BARCODE INCOMING WRM: Kode Unik Mother / Pallet Utuh]:::wrm -->|1. terima_wrm: Scan & Confirm| StockTSP[STOCK TSP: Stock Barcode Induk]:::tsp
+    StockTSP -->|2. kirim_mesin: Split Qty & REPRINT| ReprintGen[PEMBENTUKAN KODE REPRINT / KODE ANAK: KodeInduk-01, KodeInduk-02...]:::tsp
+    ReprintGen -->|Log Registry| ReprintSheet[REPRINT BARCODE Sheet]:::tsp
+    ReprintGen -->|3. terima_operator: Scan Kode Reprint| OperatorStock[STOCK MESIN: Stock Area Mesin]:::operator
+    OperatorStock -->|4. consume_operator: Scan Kode Reprint| Consumed[Barang Diconsume / Habis]:::operator
     OperatorStock -->|5. retur_dari_mesin| StockTSP
-    StockTSP -->|6. retur_ke_wrm| WRM
+    StockTSP -->|6. retur_ke_wrm: MatClaim| WRM
 ```"""
 
 
@@ -35,14 +37,13 @@ def generate_mermaid_docs():
     mermaid_md_path.write_text(content, encoding="utf-8")
     
     mmd_path = DOCS_DIR / "state_machine.mmd"
-    # Clean code block ticks
     raw_mermaid = CHECKPOINT_MERMAID.replace("```mermaid\n", "").replace("\n```", "")
     mmd_path.write_text(raw_mermaid, encoding="utf-8")
     
     print(f"[Mermaid Generator] Written diagram to {mermaid_md_path}")
     print(f"[Mermaid Generator] Written raw .mmd to {mmd_path}")
 
-    # Attempt rendering PNG via npx @mermaid-js/mermaid-cli if installed
+    # Attempt rendering PNG via npx @mermaid-js/mermaid-cli
     png_path = DOCS_DIR / "state_machine.png"
     try:
         res = subprocess.run(
