@@ -18,28 +18,41 @@ var JABATAN_ROLE_MAP = {
 };
 
 var SHEET_NAMES = {
-  BARCODE: 'Barcode Material Produksi',
+  BARCODE: 'BARCODE MATERIAL PRODUKSI',
   MATERIAL_MASTER: 'MID EXISTING',
   LOG: 'Log Aktivitas Barcode',
   MB51: 'MB51 ', // perhatikan ada spasi di akhir nama sheet aslinya
-  WRM_INCOMING: 'BARCODE INCOMING WRM' // registry pallet dari WRM, sumber lookup MID/Qty/status saat Terima dari WRM
+  WRM_INCOMING: 'BARCODE INCOMING WRM', // registry pallet dari WRM, sumber lookup MID/Qty/status saat Terima dari WRM
+  REPRINT: 'REPRINT BARCODE', // registry log barcode anak/reprint yang dibuat TSP
+  STOCK_TSP: 'STOCK TSP',
+  STOCK_MESIN: 'STOCK MESIN'
 };
 
+// Header resmi sheet "BARCODE MATERIAL PRODUKSI" (selaras dengan Excel REF)
 var BARCODE_COLUMNS = [
-  'Tanggal',
-  'Shift',
-  'Barcode',
-  'Parent Barcode',
+  'TANGGAL',
+  'SHIFT',
+  'BARCODE',
+  'NO RESERVASI',
   'MID',
-  'Material Description',
-  'Jumlah',
-  'Mesin',
-  'Diterima Oleh TSP dari WRM',
-  'Dikirim Oleh TSP ke Mesin',
-  'Retur Ditarik Oleh TSP dari Mesin',
-  'Diterima Oleh Operator dari TSP',
-  'Diconsume Oleh Operator',
-  'Retur Dikirim Kembali Oleh TSP ke WRM'
+  'MATERIAL DESCRIPTION',
+  'JUMLAH',
+  'DITERIMA OLEH TSP DARI WRM',
+  'DIKIRIM OLEH TSP KE MESIN',
+  'RETUR DITARIK OLEH TSP DARI MESIN',
+  'DITERIMA OLEH OPERATOR DARI TSP',
+  'DICONSUME OLEH OPERATOR',
+  'RETUR DIKIRIM KEMBALI OLEH TSP KE WRM'
+];
+
+var REPRINT_COLUMNS = [
+  'TANGGAL',
+  'SHIFT',
+  'BARCODE',
+  'MID',
+  'MATERIAL DESCRIPTION',
+  'BARCODE REPRINT',
+  'JUMLAH'
 ];
 
 var LOG_COLUMNS = [
@@ -53,13 +66,11 @@ var LOG_COLUMNS = [
   'Pesan'
 ];
 
-// Mesin aktif saat ini (per konfirmasi user, 29/07/2026). Rencana ke depan akan nambah
-// NAP1 & PNL1 -- baru ditambahkan ke daftar ini kalau sudah benar-benar aktif dipakai.
-var MESIN_LIST = ['BHP1', 'BHP2', 'BHP3', 'BHP4', 'BHP5', 'AHP1'];
+// Mesin aktif saat ini di area produksi PANTS
+var MESIN_LIST = ['BHP 1', 'BHP 2', 'BHP 3', 'AHP 1', 'BHP 4', 'BHP 5'];
 
 // Window shift: jam mulai (inclusive) per shift, dipakai untuk menentukan
-// kolom "Shift" saat scan. Sesuai aturan di sheet Workflow:
-// Shift 1: 06:00-14:00, Shift 2: 14:00-22:00, Shift 3: 22:00-06:00
+// kolom "Shift" saat scan: Shift 1 (06:00-14:00), Shift 2 (14:00-22:00), Shift 3 (22:00-06:00)
 var SHIFT_WINDOWS = [
   { shift: 'Shift 1', startHour: 6 },
   { shift: 'Shift 2', startHour: 14 },
@@ -69,23 +80,21 @@ var SHIFT_WINDOWS = [
 /**
  * Event checkpoint yang dikenal sistem.
  *
- * "terima_wrm" dan "kirim_mesin" ditangani khusus di processScan_ (lihat
- * BarcodeService.js) karena punya semantik beda dari 4 event lain:
- *  - terima_wrm: scan barcode ASLI WRM (format INDUK, 3 segmen) -> bikin baris INDUK.
- *  - kirim_mesin: scan barcode ASLI WRM yang SAMA (bukan kode baru) -> sistem generate
- *    kode reprint (barcode ANAK, INDUK + "-" + nomor urut) dan bikin baris ANAK baru.
+ * Alur Paralel:
+ * Level 1 (WRM -> TSP):
+ *  - terima_wrm: Scan Kode Unik Induk dari WRM -> Bikin baris Induk di BARCODE MATERIAL PRODUKSI.
  *
- * 4 event sisanya (retur_dari_mesin, retur_ke_wrm, terima_operator, consume_operator)
- * beroperasi pada baris ANAK yang sudah ada (di-scan pakai kode reprint), mengikuti
- * prerequisite chain generik: kolom `prerequisite` di baris yang sama harus terisi,
- * dan kolom `column` event ini sendiri harus masih kosong.
- *
- * requiresMesin / requiresJumlah: apakah UI perlu minta input tambahan saat submit event ini.
+ * Level 2 (TSP -> Mesin / Operator):
+ *  - kirim_mesin: Scan Kode Unik Induk -> Sistem REPRINT Kode Anak (<KodeInduk>-01, -02...) -> Catat di REPRINT BARCODE & BARCODE MATERIAL PRODUKSI.
+ *  - terima_operator: Operator scan Kode Reprint di Mesin.
+ *  - consume_operator: Operator scan Kode Reprint saat material dipakai/habis di Mesin.
+ *  - retur_dari_mesin: TSP menarik retur Kode Reprint dari Mesin kembali ke TSP.
+ *  - retur_ke_wrm: TSP mengembalikan retur ke WRM (MatClaim).
  */
 var EVENTS = {
   terima_wrm: {
     prerequisite: null,
-    column: 'Diterima Oleh TSP dari WRM',
+    column: 'DITERIMA OLEH TSP DARI WRM',
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false, // Jumlah otomatis dari lookup "BARCODE INCOMING WRM" (Qty /Palet)
@@ -93,15 +102,31 @@ var EVENTS = {
   },
   kirim_mesin: {
     prerequisite: 'terima_wrm',
-    column: 'Dikirim Oleh TSP ke Mesin',
+    column: 'DIKIRIM OLEH TSP KE MESIN',
     role: 'tsp',
     requiresMesin: true,
     requiresJumlah: true,
-    label: 'Kirim ke Mesin'
+    label: 'Kirim ke Mesin (Reprint Barcode)'
+  },
+  terima_operator: {
+    prerequisite: 'kirim_mesin',
+    column: 'DITERIMA OLEH OPERATOR DARI TSP',
+    role: 'operator',
+    requiresMesin: false,
+    requiresJumlah: false,
+    label: 'Terima dari TSP (Operator Scan)'
+  },
+  consume_operator: {
+    prerequisite: 'terima_operator',
+    column: 'DICONSUME OLEH OPERATOR',
+    role: 'operator',
+    requiresMesin: false,
+    requiresJumlah: false,
+    label: 'Consume (Material Digunakan)'
   },
   retur_dari_mesin: {
     prerequisite: 'kirim_mesin',
-    column: 'Retur Ditarik Oleh TSP dari Mesin',
+    column: 'RETUR DITARIK OLEH TSP DARI MESIN',
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false,
@@ -109,26 +134,10 @@ var EVENTS = {
   },
   retur_ke_wrm: {
     prerequisite: 'retur_dari_mesin',
-    column: 'Retur Dikirim Kembali Oleh TSP ke WRM',
+    column: 'RETUR DIKIRIM KEMBALI OLEH TSP KE WRM',
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false,
     label: 'Retur ke WRM (MatClaim)'
-  },
-  terima_operator: {
-    prerequisite: 'kirim_mesin',
-    column: 'Diterima Oleh Operator dari TSP',
-    role: 'operator',
-    requiresMesin: false,
-    requiresJumlah: false,
-    label: 'Terima dari TSP'
-  },
-  consume_operator: {
-    prerequisite: 'terima_operator',
-    column: 'Diconsume Oleh Operator',
-    role: 'operator',
-    requiresMesin: false,
-    requiresJumlah: false,
-    label: 'Consume'
   }
 };

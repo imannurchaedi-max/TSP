@@ -1,10 +1,10 @@
 /**
- * Perhitungan stock real-time dari sheet "Barcode Material Produksi" (ledger on-the-fly,
- * tanpa sheet snapshot tambahan) + validator vs MB51.
+ * Perhitungan stock real-time dari sheet "BARCODE MATERIAL PRODUKSI" (ledger on-the-fly)
+ * + Validator vs MB51.
  *
- * MB51 di sini HANYA validator pembanding, bukan sumber angka "Masuk" -- angka Masuk/Keluar
- * di dashboard murni dari checkpoint timestamp+Jumlah hasil scan barcode (lihat
- * BarcodeService.js / Config.js EVENTS).
+ * Alur Perhitungan Dual Level:
+ * 1. Stock TSP: Mutasi stok area TSP (Terima WRM, Kirim Mesin, Retur dari Mesin, Retur ke WRM).
+ * 2. Stock Mesin: Mutasi stok 6 area Mesin (BHP 1..5, AHP 1) per Operator & Consume.
  */
 
 function toDateOrNull_(value) {
@@ -12,7 +12,7 @@ function toDateOrNull_(value) {
   return value instanceof Date ? value : new Date(value);
 }
 
-/** Baca seluruh sheet Barcode Material Produksi sekali, parse jadi array baris ringkas. */
+/** Baca seluruh sheet BARCODE MATERIAL PRODUKSI. */
 function readAllBarcodeRows_() {
   var sheet = getSheet_(SHEET_NAMES.BARCODE);
   var headerMap = getHeaderMap_(sheet);
@@ -24,27 +24,22 @@ function readAllBarcodeRows_() {
 
   return data.map(function (row) {
     return {
-      barcode: row[col['Barcode'] - 1],
-      mid: String(row[col['MID'] - 1] || '').trim(),
-      deskripsi: row[col['Material Description'] - 1],
-      jumlah: Number(row[col['Jumlah'] - 1]) || 0,
-      mesin: row[col['Mesin'] - 1],
-      tsTerimaWrm: toDateOrNull_(row[col['Diterima Oleh TSP dari WRM'] - 1]),
-      tsKirimMesin: toDateOrNull_(row[col['Dikirim Oleh TSP ke Mesin'] - 1]),
-      tsRetDariMesin: toDateOrNull_(row[col['Retur Ditarik Oleh TSP dari Mesin'] - 1]),
-      tsTerimaOperator: toDateOrNull_(row[col['Diterima Oleh Operator dari TSP'] - 1]),
-      tsConsume: toDateOrNull_(row[col['Diconsume Oleh Operator'] - 1]),
-      tsRetKeWrm: toDateOrNull_(row[col['Retur Dikirim Kembali Oleh TSP ke WRM'] - 1])
+      barcode: row[(col['BARCODE'] || col['Barcode']) - 1],
+      parentBarcode: row[(col['NO RESERVASI'] || col['Parent Barcode']) - 1],
+      mid: String(row[(col['MID'] || col['mid']) - 1] || '').trim(),
+      deskripsi: row[(col['MATERIAL DESCRIPTION'] || col['Material Description']) - 1],
+      jumlah: Number(row[(col['JUMLAH'] || col['Jumlah']) - 1]) || 0,
+      mesin: row[(col['MESIN'] || col['Mesin']) - 1],
+      tsTerimaWrm: toDateOrNull_(row[(col['DITERIMA OLEH TSP DARI WRM'] || col['Diterima Oleh TSP dari WRM']) - 1]),
+      tsKirimMesin: toDateOrNull_(row[(col['DIKIRIM OLEH TSP KE MESIN'] || col['Dikirim Oleh TSP ke Mesin']) - 1]),
+      tsRetDariMesin: toDateOrNull_(row[(col['RETUR DITARIK OLEH TSP DARI MESIN'] || col['Retur Ditarik Oleh TSP dari Mesin']) - 1]),
+      tsTerimaOperator: toDateOrNull_(row[(col['DITERIMA OLEH OPERATOR DARI TSP'] || col['Diterima Oleh Operator dari TSP']) - 1]),
+      tsConsume: toDateOrNull_(row[(col['DICONSUME OLEH OPERATOR'] || col['Diconsume Oleh Operator']) - 1]),
+      tsRetKeWrm: toDateOrNull_(row[(col['RETUR DIKIRIM KEMBALI OLEH TSP KE WRM'] || col['Retur Dikirim Kembali Oleh TSP ke WRM']) - 1])
     };
   }).filter(function (r) { return r.mid; });
 }
 
-/**
- * Inisialisasi accumulator dari SELURUH material master ("MID EXISTING", via
- * `getMaterialMap_()` di MaterialService.js), nilai 0 semua -- supaya tabel Stock selalu
- * menampilkan semua material yang ditangani TSP/Operator, bukan cuma yang sudah ada
- * aktivitas scan.
- */
 function seedAccFromMaterialMap_() {
   var acc = {};
   var materialMap = getMaterialMap_();
@@ -59,7 +54,7 @@ function bucketAdd_(acc, mid, deskripsi, field, qty, ts, shiftStart) {
     acc[mid] = { deskripsi: deskripsi, mb: 0, kb: 0, rib: 0, rob: 0, ms: 0, ks: 0, ris: 0, ros: 0 };
   }
   var before = ts < shiftStart;
-  var key = field + (before ? 'b' : 's'); // mis. 'm'+'b' -> 'mb', 'm'+'s' -> 'ms'... lihat map di bawah
+  var key = field + (before ? 'b' : 's');
   acc[mid][key] += qty;
 }
 
@@ -92,85 +87,59 @@ function computeTspStock_(now) {
   return { shift: bounds.shift, date: formatDateLabel_(now), rows: result };
 }
 
-/** Stock yang sedang ada di 1 mesin tertentu, per MID, untuk shift aktif. */
-function computeMesinStock_(mesinCode, now) {
+/** Perhitungan 39 Kolom STOCK MESIN untuk 6 area Mesin (BHP 1..5, AHP 1). */
+function computeMesinStockBreakdown_(now) {
   var bounds = getShiftBounds_(now);
-  var rows = readAllBarcodeRows_().filter(function (r) { return r.mesin === mesinCode; });
-  var acc = seedAccFromMaterialMap_();
+  var rows = readAllBarcodeRows_();
+  var materialMap = getMaterialMap_();
+
+  var acc = {};
+  Object.keys(materialMap).forEach(function (mid) {
+    acc[mid] = {
+      mid: mid,
+      deskripsi: materialMap[mid].deskripsi,
+      uom: materialMap[mid].uom || 'KG',
+      machines: {}
+    };
+    MESIN_LIST.forEach(function (m) {
+      acc[mid].machines[m] = { stockAwal: 0, terima: 0, consume: 0, return: 0, stockAkhir: 0 };
+    });
+  });
 
   rows.forEach(function (r) {
-    if (r.tsTerimaOperator) bucketAdd_(acc, r.mid, r.deskripsi, 'm', r.jumlah, r.tsTerimaOperator, bounds.start);
-    if (r.tsConsume) bucketAdd_(acc, r.mid, r.deskripsi, 'k', r.jumlah, r.tsConsume, bounds.start);
-    if (r.tsRetDariMesin) bucketAdd_(acc, r.mid, r.deskripsi, 'k', r.jumlah, r.tsRetDariMesin, bounds.start);
+    var m = r.mesin;
+    if (!m || !acc[r.mid] || !acc[r.mid].machines[m]) return;
+    var targetMachine = acc[r.mid].machines[m];
+
+    if (r.tsTerimaOperator) {
+      if (r.tsTerimaOperator < bounds.start) targetMachine.stockAwal += r.jumlah;
+      else targetMachine.terima += r.jumlah;
+    }
+    if (r.tsConsume) {
+      if (r.tsConsume < bounds.start) targetMachine.stockAwal -= r.jumlah;
+      else targetMachine.consume += r.jumlah;
+    }
+    if (r.tsRetDariMesin) {
+      if (r.tsRetDariMesin < bounds.start) targetMachine.stockAwal -= r.jumlah;
+      else targetMachine.return += r.jumlah;
+    }
   });
 
-  var result = [];
   Object.keys(acc).forEach(function (mid) {
-    var e = acc[mid];
-    var stockAwal = e.mb - e.kb;
-    var masuk = e.ms, keluar = e.ks;
-    var stockAkhir = stockAwal + masuk - keluar;
-    result.push({ mid: mid, deskripsi: e.deskripsi, stockAwal: stockAwal, masuk: masuk, keluar: keluar, stockAkhir: stockAkhir });
+    MESIN_LIST.forEach(function (m) {
+      var tm = acc[mid].machines[m];
+      tm.stockAkhir = tm.stockAwal + tm.terima - tm.consume - tm.return;
+    });
   });
-  result.sort(function (a, b) { return String(a.deskripsi).localeCompare(String(b.deskripsi)); });
-  return { shift: bounds.shift, date: formatDateLabel_(now), mesin: mesinCode, rows: result };
+
+  return { shift: bounds.shift, date: formatDateLabel_(now), data: acc };
 }
 
 function formatDateLabel_(date) {
   return Utilities.formatDate(date, Session.getScriptTimeZone(), 'dd/MM/yyyy');
 }
 
-/**
- * N baris penerimaan terakhir (baris INDUK dengan "Diterima Oleh TSP dari WRM" terisi),
- * diurutkan dari yang paling baru, buat panel "Penerimaan Terakhir" di tab Stock (role TSP).
- */
-function computeRecentReceipts_(limit) {
-  var tz = Session.getScriptTimeZone();
-  var rows = readAllBarcodeRows_()
-    .filter(function (r) { return r.tsTerimaWrm; })
-    .sort(function (a, b) { return b.tsTerimaWrm - a.tsTerimaWrm; })
-    .slice(0, limit)
-    .map(function (r) {
-      return {
-        waktu: Utilities.formatDate(r.tsTerimaWrm, tz, 'dd/MM HH:mm'),
-        barcode: r.barcode,
-        deskripsi: r.deskripsi,
-        jumlah: r.jumlah
-      };
-    });
-  return rows;
-}
-
-/**
- * Gabungkan tanggal (bisa Date atau teks "DD.MM.YYYY") dengan jam dari cell Time (Date)
- * jadi 1 timestamp lengkap, dalam timezone script.
- */
-function parseMb51Timestamp_(dateCell, timeCell, tz) {
-  if (!dateCell || !timeCell) return null;
-
-  var y, mo, d;
-  if (dateCell instanceof Date) {
-    y = parseInt(Utilities.formatDate(dateCell, tz, 'yyyy'), 10);
-    mo = parseInt(Utilities.formatDate(dateCell, tz, 'M'), 10) - 1;
-    d = parseInt(Utilities.formatDate(dateCell, tz, 'd'), 10);
-  } else {
-    var parts = String(dateCell).trim().split('.'); // DD.MM.YYYY
-    if (parts.length !== 3) return null;
-    d = parseInt(parts[0], 10);
-    mo = parseInt(parts[1], 10) - 1;
-    y = parseInt(parts[2], 10);
-  }
-
-  var timeStr = timeCell instanceof Date ? Utilities.formatDate(timeCell, tz, 'HH:mm:ss') : String(timeCell);
-  var timeParts = timeStr.split(':');
-  var h = parseInt(timeParts[0], 10) || 0;
-  var mi = parseInt(timeParts[1], 10) || 0;
-  var s = parseInt(timeParts[2], 10) || 0;
-
-  return new Date(y, mo, d, h, mi, s);
-}
-
-/** Bandingkan Masuk (hasil scan, shift aktif) vs total Quantity MB51 di window shift yang sama. */
+/** Bandingkan Penerimaan TSP vs MB51 SAP. */
 function computeValidator_(now) {
   var bounds = getShiftBounds_(now);
   var tz = Session.getScriptTimeZone();
@@ -182,12 +151,12 @@ function computeValidator_(now) {
   var lastRow = mb51Sheet.getLastRow();
   var mb51ByMid = {};
   if (lastRow >= 3) {
-    var data = mb51Sheet.getRange(3, 1, lastRow - 2, 13).getValues(); // kolom A..M
+    var data = mb51Sheet.getRange(3, 1, lastRow - 2, 13).getValues();
     data.forEach(function (row) {
       var mid = row[0];
       if (mid === '' || mid === null) return;
-      var qty = Number(row[3]) || 0; // D = Quantity
-      var ts = parseMb51Timestamp_(row[11], row[12], tz); // L=Posting Date, M=Time
+      var qty = Number(row[3]) || 0;
+      var ts = parseMb51Timestamp_(row[11], row[12], tz);
       if (!ts || ts < bounds.start || ts >= bounds.end) return;
       var midKey = String(mid).trim();
       mb51ByMid[midKey] = (mb51ByMid[midKey] || 0) + qty;
@@ -216,4 +185,26 @@ function computeValidator_(now) {
   });
   result.sort(function (a, b) { return String(a.deskripsi).localeCompare(String(b.deskripsi)); });
   return { shift: bounds.shift, rows: result };
+}
+
+function parseMb51Timestamp_(dateCell, timeCell, tz) {
+  if (!dateCell || !timeCell) return null;
+  var y, mo, d;
+  if (dateCell instanceof Date) {
+    y = parseInt(Utilities.formatDate(dateCell, tz, 'yyyy'), 10);
+    mo = parseInt(Utilities.formatDate(dateCell, tz, 'M'), 10) - 1;
+    d = parseInt(Utilities.formatDate(dateCell, tz, 'd'), 10);
+  } else {
+    var parts = String(dateCell).trim().split('.');
+    if (parts.length !== 3) return null;
+    d = parseInt(parts[0], 10);
+    mo = parseInt(parts[1], 10) - 1;
+    y = parseInt(parts[2], 10);
+  }
+  var timeStr = timeCell instanceof Date ? Utilities.formatDate(timeCell, tz, 'HH:mm:ss') : String(timeCell);
+  var timeParts = timeStr.split(':');
+  var h = parseInt(timeParts[0], 10) || 0;
+  var mi = parseInt(timeParts[1], 10) || 0;
+  var s = parseInt(timeParts[2], 10) || 0;
+  return new Date(y, mo, d, h, mi, s);
 }

@@ -1,17 +1,12 @@
 /**
- * Business logic scan barcode: klasifikasi induk/anak, penentuan shift, dan state machine
+ * Business logic scan barcode: klasifikasi induk/anak (reprint), penentuan shift, dan state machine
  * pergerakan material (lihat EVENTS di Config.js).
  *
- * Kode Unik dari WRM (label pallet fisik, mis. "DTA15M2708199") adalah kode OPAK -- tidak
- * mengandung MID/qty di dalamnya. MID/Deskripsi/Qty/status pallet di-LOOKUP dari sheet
- * "BARCODE INCOMING WRM" (lihat lookupWrmIncoming_ di SheetService.js), bukan diparsing dari
- * teks barcode-nya.
- *
- * Barcode reprint (dibuat TSP saat "Kirim ke Mesin") = KodeUnikInduk + "-" + urutan 2 digit,
- * mis. "DTA15M2708199-01". Klasifikasi induk vs anak (lihat classifyBarcode_) dilakukan
- * dengan mengecek pola suffix ini + apakah bagian sebelum suffix sudah terdaftar sebagai
- * baris induk -- BUKAN dengan asumsi format Kode Unik WRM (supaya tahan kalau WRM ganti
- * format kode-nya lagi).
+ * Alur Paralel 2 Level:
+ * - Level 1 (WRM -> TSP): Scan Kode Unik (Mother Barcode) dari WRM gudang -> terima_wrm.
+ * - Level 2 (TSP -> Mesin / Operator): Scan Kode Unik Induk untuk dikirim ke Mesin -> kirim_mesin
+ *   (Sistem secara otomatis me-reprint Barcode Anak: <KodeInduk>-01, -02... dan mencatatnya ke REPRINT BARCODE).
+ * - Operator Mesin scan Kode Reprint tersebut saat terima_operator dan consume_operator.
  */
 
 function padSeq_(n) {
@@ -19,15 +14,15 @@ function padSeq_(n) {
 }
 
 /**
- * Klasifikasikan barcode yang discan: ANAK (kode reprint buatan TSP sendiri) atau
- * INDUK (Kode Unik mentah dari WRM, atau barcode apapun yang belum dikenali sebagai anak).
+ * Klasifikasikan barcode yang discan: Kode Reprint / Kode Anak (dibuat TSP) atau
+ * Kode Induk (Mother Barcode dari WRM).
  */
 function classifyBarcode_(raw) {
   var match = /^(.+)-(\d{2})$/.exec(raw);
   if (match) {
     var potentialParent = match[1];
     var parentRow = findBarcodeRow_(potentialParent);
-    if (parentRow.rowIndex !== -1 && getCellValue_(parentRow, 'Diterima Oleh TSP dari WRM')) {
+    if (parentRow.rowIndex !== -1 && getCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM')) {
       return { raw: raw, isChild: true, isParent: false, parentBarcode: potentialParent };
     }
   }
@@ -35,8 +30,7 @@ function classifyBarcode_(raw) {
 }
 
 /**
- * Hitung nomor urut reprint berikutnya untuk 1 barcode induk, dengan menghitung
- * berapa baris ANAK yang sudah punya "Parent Barcode" = parentBarcode tsb.
+ * Hitung nomor urut reprint berikutnya untuk 1 barcode induk.
  */
 function getNextChildSequence_(parentBarcode) {
   var sheet = getSheet_(SHEET_NAMES.BARCODE);
@@ -44,7 +38,9 @@ function getNextChildSequence_(parentBarcode) {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return 1;
 
-  var parentCol = headerMap['Parent Barcode'];
+  var parentCol = headerMap['NO RESERVASI'] || headerMap['Parent Barcode'] || headerMap['parent barcode'];
+  if (!parentCol) return 1;
+
   var values = sheet.getRange(2, parentCol, lastRow - 1, 1).getValues();
   var count = 0;
   for (var i = 0; i < values.length; i++) {
@@ -58,8 +54,7 @@ function getShift_(date) {
 }
 
 /**
- * Return { shift, start, end } (Date objects) untuk shift yang mengandung `date`.
- * Shift 3 (22:00-06:00) membungkus tengah malam, jadi start/end bisa beda hari kalender.
+ * Return { shift, start, end } untuk shift yang mengandung `date`.
  */
 function getShiftBounds_(date) {
   var tz = Session.getScriptTimeZone();
@@ -77,7 +72,6 @@ function getShiftBounds_(date) {
   if (hour >= 22) {
     return { shift: 'Shift 3', start: new Date(y, mo, d, 22, 0, 0), end: new Date(y, mo, d + 1, 6, 0, 0) };
   }
-  // hour < 6 -> masih bagian shift 3 yang mulai kemarin malam
   return { shift: 'Shift 3', start: new Date(y, mo, d - 1, 22, 0, 0), end: new Date(y, mo, d, 6, 0, 0) };
 }
 
@@ -88,28 +82,26 @@ function formatTimestamp_(value) {
 }
 
 function getCellValue_(rowResult, columnName) {
-  var col = rowResult.headerMap[columnName];
+  var col = rowResult.headerMap[columnName] || rowResult.headerMap[String(columnName).toLowerCase()];
   if (!col) return '';
   return rowResult.values[col - 1];
 }
 
 /**
- * Proses satu event scan. Melempar Error dengan pesan yang aman ditampilkan ke user
- * kalau validasi gagal; return objek hasil kalau sukses.
+ * Utama handler proses scan barcode.
  */
 function processScan_(barcodeText, eventCode, mesinCode, jumlah, actorEmail, role) {
   ensureSheetsReady_();
 
   var eventDef = EVENTS[eventCode];
-  if (!eventDef) {
-    throw new Error('Event "' + eventCode + '" tidak dikenali.');
-  }
+  if (!eventDef) throw new Error('Event code "' + eventCode + '" tidak dikenal.');
+
   if (eventDef.role !== role) {
-    throw new Error('Aksi "' + eventDef.label + '" bukan untuk role ini.');
+    throw new Error('Akses ditolak: role "' + role + '" tidak berhak melakukan event "' + eventDef.label + '".');
   }
 
-  var now = new Date();
   var raw = String(barcodeText).trim();
+  var now = new Date();
 
   if (eventCode === 'terima_wrm') {
     return handleTerimaWrm_(raw, now);
@@ -123,116 +115,142 @@ function processScan_(barcodeText, eventCode, mesinCode, jumlah, actorEmail, rol
 }
 
 /**
- * Scan Kode Unik mentah dari WRM -> bikin baris induk baru.
- * MID/Deskripsi/Jumlah/status pallet SEMUA di-lookup dari sheet "BARCODE INCOMING WRM"
- * (fungsi `lookupWrmIncoming_` di SheetService.js) -- tidak ada input manual, dan tidak ada
- * parsing teks barcode, sesuai tujuan "otomatis lewat scan, tanpa catat manual".
+ * Event 1: terima_wrm -> scan Kode Unik Mother dari WRM Gudang.
  */
 function handleTerimaWrm_(raw, now) {
-  var existing = findBarcodeRow_(raw);
-  if (existing.rowIndex !== -1) {
-    throw new Error('Barcode "' + raw + '" sudah pernah diterima dari WRM pada ' +
-      formatTimestamp_(getCellValue_(existing, 'Diterima Oleh TSP dari WRM')) + '.');
+  var existingRow = findBarcodeRow_(raw);
+  if (existingRow.rowIndex !== -1) {
+    throw new Error('Barcode "' + raw + '" sudah terdaftar sebelumnya di sheet Barcode.');
   }
 
-  var wrmData = lookupWrmIncoming_(raw);
-  if (!wrmData) {
-    throw new Error('Kode Unik "' + raw + '" tidak ditemukan di data WRM (BARCODE INCOMING WRM).');
-  }
-  if (String(wrmData.aksi).trim() !== 'VERIFIED') {
-    throw new Error('Pallet ini belum diverifikasi WRM (status: ' + wrmData.aksi + ').');
-  }
-  if (/^HOLD/i.test(String(wrmData.keterangan || '').trim())) {
-    throw new Error('Pallet ini sedang "' + wrmData.keterangan + '", tidak bisa diterima.');
+  var wrmRow = lookupWrmIncoming_(raw);
+  if (wrmRow.rowIndex === -1) {
+    throw new Error('Barcode "' + raw + '" tidak ditemukan di sheet BARCODE INCOMING WRM.');
   }
 
-  appendBarcodeRow_({
-    'Tanggal': now,
-    'Shift': getShift_(now),
-    'Barcode': raw,
-    'MID': wrmData.mid,
-    'Material Description': wrmData.deskripsi,
-    'Jumlah': wrmData.qty,
-    'Diterima Oleh TSP dari WRM': now
-  });
+  var aksiStatus = getCellValue_(wrmRow, 'AKSI');
+  if (aksiStatus && String(aksiStatus).trim().toUpperCase() === 'HOLD') {
+    var reason = getCellValue_(wrmRow, 'Reason hold') || 'Dalam status HOLD di WRM';
+    throw new Error('Barcode "' + raw + '" tidak dapat diterima: ' + reason);
+  }
+
+  var mid = getCellValue_(wrmRow, 'Mid');
+  var deskripsi = getCellValue_(wrmRow, 'Description');
+  var qtyPalet = Number(getCellValue_(wrmRow, 'Qty /Palet')) || Number(getCellValue_(wrmRow, 'Qty Kirim')) || 0;
+
+  var newRow = {
+    'TANGGAL': formatTimestamp_(now),
+    'SHIFT': getShift_(now),
+    'BARCODE': raw,
+    'NO RESERVASI': '', // Induk tidak punya parent
+    'MID': mid,
+    'MATERIAL DESCRIPTION': deskripsi,
+    'JUMLAH': qtyPalet,
+    'DITERIMA OLEH TSP DARI WRM': formatTimestamp_(now)
+  };
+
+  appendBarcodeRow_(newRow);
 
   return {
-    message: 'Terima dari WRM berhasil: ' + wrmData.deskripsi + ' (' + wrmData.qty + ' ' + wrmData.uom + ')'
+    success: true,
+    barcode: raw,
+    event: 'terima_wrm',
+    message: 'Berhasil menerima Barcode Induk dari WRM: ' + raw + ' (MID: ' + mid + ', Qty: ' + qtyPalet + ')',
+    details: newRow
   };
 }
 
 /**
- * Scan Kode Unik WRM yang sama (induk) untuk mengirim sebagian qty ke mesin.
- * Sistem generate kode reprint (anak) baru & bikin baris baru untuk pecahan ini.
+ * Event 2: kirim_mesin -> scan Kode Unik Induk, REPRINT Barcode Anak (<KodeInduk>-01), dan kirim ke Mesin.
  */
 function handleKirimMesin_(raw, mesinCode, jumlah, now) {
-  if (!mesinCode || MESIN_LIST.indexOf(mesinCode) === -1) {
-    throw new Error('Pilih mesin tujuan yang valid.');
-  }
+  if (!mesinCode) throw new Error('Mesin harus dipilih untuk event Kirim ke Mesin.');
   var qtyNum = Number(jumlah);
-  if (!jumlah || isNaN(qtyNum) || qtyNum <= 0) {
-    throw new Error('Isi jumlah yang dikirim (angka lebih dari 0).');
-  }
+  if (isNaN(qtyNum) || qtyNum <= 0) throw new Error('Jumlah yang dikirim harus lebih besar dari 0.');
 
   var parentRow = findBarcodeRow_(raw);
-  if (parentRow.rowIndex === -1 || !getCellValue_(parentRow, 'Diterima Oleh TSP dari WRM')) {
-    throw new Error('Barcode "' + raw + '" belum diterima dari WRM. Scan "Terima dari WRM" dulu.');
+  if (parentRow.rowIndex === -1) {
+    throw new Error('Barcode Induk "' + raw + '" belum diterima oleh TSP dari WRM.');
   }
 
+  var tsTerima = getCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM');
+  if (!tsTerima) {
+    throw new Error('Barcode Induk "' + raw + '" belum dikonfirmasi penerimaannya dari WRM.');
+  }
+
+  var parentMid = getCellValue_(parentRow, 'MID');
+  var parentDesc = getCellValue_(parentRow, 'MATERIAL DESCRIPTION');
+
+  // Generate Kode Reprint / Kode Anak
   var seq = getNextChildSequence_(raw);
   var childBarcode = raw + '-' + padSeq_(seq);
-  var mid = getCellValue_(parentRow, 'MID');
-  var deskripsi = getCellValue_(parentRow, 'Material Description');
 
-  appendBarcodeRow_({
-    'Tanggal': now,
-    'Shift': getShift_(now),
-    'Barcode': childBarcode,
-    'Parent Barcode': raw,
-    'MID': mid,
-    'Material Description': deskripsi,
-    'Jumlah': qtyNum,
-    'Mesin': mesinCode,
-    'Dikirim Oleh TSP ke Mesin': now
-  });
+  var childRow = {
+    'TANGGAL': formatTimestamp_(now),
+    'SHIFT': getShift_(now),
+    'BARCODE': childBarcode,
+    'NO RESERVASI': raw,
+    'MID': parentMid,
+    'MATERIAL DESCRIPTION': parentDesc,
+    'JUMLAH': qtyNum,
+    'DITERIMA OLEH TSP DARI WRM': formatTimestamp_(now),
+    'DIKIRIM OLEH TSP KE MESIN': formatTimestamp_(now)
+  };
+
+  appendBarcodeRow_(childRow);
+
+  // Log penerbitan barcode reprint ke sheet REPRINT BARCODE
+  var reprintLog = {
+    'TANGGAL': formatTimestamp_(now),
+    'SHIFT': getShift_(now),
+    'BARCODE': raw,
+    'MID': parentMid,
+    'MATERIAL DESCRIPTION': parentDesc,
+    'BARCODE REPRINT': childBarcode,
+    'JUMLAH': qtyNum
+  };
+  appendReprintRow_(reprintLog);
 
   return {
-    message: 'Kirim ke Mesin berhasil: ' + deskripsi + ' (' + qtyNum + ') ke ' + mesinCode +
-      '. Cetak label baru dengan kode: ' + childBarcode,
-    childBarcode: childBarcode
+    success: true,
+    barcode: childBarcode,
+    parentBarcode: raw,
+    event: 'kirim_mesin',
+    message: 'Berhasil reprint Kode Anak "' + childBarcode + '" (Qty: ' + qtyNum + ') dikirim ke ' + mesinCode,
+    details: childRow
   };
 }
 
 /**
- * Event terminal (retur_dari_mesin, retur_ke_wrm, terima_operator, consume_operator):
- * beroperasi pada baris ANAK yang sudah ada, discan pakai kode reprint.
+ * Event 3, 4, 5, 6 -> Operasi pada Barcode Reprint / Kode Anak.
  */
 function handleChildCheckpoint_(classified, eventDef, now) {
-  if (!classified.isChild) {
-    throw new Error('Untuk aksi ini, scan kode REPRINT dari TSP (bukan Kode Unik asli WRM).');
+  var raw = classified.raw;
+  var barcodeRow = findBarcodeRow_(raw);
+
+  if (barcodeRow.rowIndex === -1) {
+    throw new Error('Kode Reprint "' + raw + '" tidak ditemukan di sistem.');
   }
 
-  var rowResult = findBarcodeRow_(classified.raw);
-  if (rowResult.rowIndex === -1) {
-    throw new Error('Kode reprint "' + classified.raw + '" belum terdaftar di sistem.');
+  var prereqCol = eventDef.prerequisite ? EVENTS[eventDef.prerequisite].column : null;
+  if (prereqCol) {
+    var prereqVal = getCellValue_(barcodeRow, prereqCol);
+    if (!prereqVal) {
+      throw new Error('Prasyarat "' + EVENTS[eventDef.prerequisite].label + '" belum dilakukan untuk barcode "' + raw + '".');
+    }
   }
 
-  var prereqDef = EVENTS[eventDef.prerequisite];
-  var prereqValue = getCellValue_(rowResult, prereqDef.column);
-  if (!prereqValue) {
-    throw new Error('Barcode ini belum melewati tahap "' + prereqDef.label + '".');
+  var currentVal = getCellValue_(barcodeRow, eventDef.column);
+  if (currentVal) {
+    throw new Error('Event "' + eventDef.label + '" sudah pernah dicatat sebelumnya untuk barcode "' + raw + '".');
   }
 
-  var currentValue = getCellValue_(rowResult, eventDef.column);
-  if (currentValue) {
-    throw new Error('Barcode ini sudah "' + eventDef.label + '" pada ' + formatTimestamp_(currentValue) + '.');
-  }
+  updateBarcodeCell_(barcodeRow.rowIndex, eventDef.column, formatTimestamp_(now));
 
-  updateBarcodeCell_(rowResult.rowIndex, eventDef.column, now);
-
-  var deskripsi = getCellValue_(rowResult, 'Material Description');
-  var jumlahVal = getCellValue_(rowResult, 'Jumlah');
   return {
-    message: eventDef.label + ' berhasil: ' + deskripsi + ' (' + jumlahVal + ')'
+    success: true,
+    barcode: raw,
+    event: eventDef.label,
+    message: 'Berhasil mencatat checkpoint "' + eventDef.label + '" untuk barcode ' + raw
   };
 }
