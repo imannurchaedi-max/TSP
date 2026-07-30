@@ -100,14 +100,14 @@
     var CURRENT_NIK = null;
 
     var TSP_EVENTS = [
-      { code: 'terima_wrm', label: 'Terima dari WRM', requiresMesin: false, requiresJumlah: false },
-      { code: 'kirim_mesin', label: 'Kirim ke Mesin', requiresMesin: true, requiresJumlah: true },
-      { code: 'retur_dari_mesin', label: 'Retur dari Mesin', requiresMesin: false, requiresJumlah: false },
-      { code: 'retur_ke_wrm', label: 'Retur ke WRM (MatClaim)', requiresMesin: false, requiresJumlah: false }
+      { code: 'terima_wrm', label: 'Terima dari WRM', requiresMesin: false, requiresJumlah: false, requiresReservasi: true },
+      { code: 'kirim_mesin', label: 'Kirim ke Mesin', requiresMesin: true, requiresJumlah: true, requiresReservasi: false },
+      { code: 'retur_dari_mesin', label: 'Retur dari Mesin', requiresMesin: false, requiresJumlah: false, requiresReservasi: false },
+      { code: 'retur_ke_wrm', label: 'Retur ke WRM (MatClaim)', requiresMesin: false, requiresJumlah: false, requiresReservasi: false }
     ];
     var OPERATOR_EVENTS = [
-      { code: 'terima_operator', label: 'Terima dari TSP', requiresMesin: false, requiresJumlah: false },
-      { code: 'consume_operator', label: 'Consume', requiresMesin: false, requiresJumlah: false }
+      { code: 'terima_operator', label: 'Terima dari TSP', requiresMesin: false, requiresJumlah: false, requiresReservasi: false },
+      { code: 'consume_operator', label: 'Consume', requiresMesin: false, requiresJumlah: false, requiresReservasi: false }
     ];
 
     var STOCK_COLUMNS = [

@@ -3,11 +3,15 @@
 </div>
 
 <div id="extra-view">
-  <div id="mesin-field">
+  <div id="reservasi-field" style="display:none;">
+    <p>Masukkan Nomor Reservasi:</p>
+    <input type="text" id="reservasi-input" placeholder="Contoh: 4900640869">
+  </div>
+  <div id="mesin-field" style="display:none;">
     <p>Pilih mesin tujuan:</p>
     <select id="mesin-select"></select>
   </div>
-  <div id="jumlah-field">
+  <div id="jumlah-field" style="display:none;">
     <p>Jumlah yang dikirim:</p>
     <input type="number" id="jumlah-input" min="0" step="any" placeholder="Contoh: 200">
   </div>
@@ -25,8 +29,8 @@
 </div>
 
 <div id="result-view">
-  <div class="result-box" id="result-box"></div>
-  <div class="result-box" id="child-barcode-box" style="display:none; background:#e0e7ff; color:#3730a3; font-size:20px; font-weight:bold; text-align:center;"></div>
+  <div class="result-box" id="result-box" style="white-space: pre-line; line-height: 1.6;"></div>
+  <div class="result-box" id="child-barcode-box" style="display:none; background:#e0e7ff; color:#3730a3; font-size:18px; font-weight:bold; text-align:center; margin-top:10px;"></div>
   <button class="action-btn" id="scan-again" style="margin-top:10px;">Scan Lagi</button>
   <button class="secondary-btn" id="back-to-menu">Kembali ke Menu</button>
 </div>
@@ -37,6 +41,7 @@
   var currentEvent = null;
   var currentMesin = null;
   var currentJumlah = null;
+  var currentReservasi = null;
 
   function showView(id) {
     ['action-view', 'extra-view', 'scanner-view', 'result-view'].forEach(function (v) {
@@ -60,11 +65,16 @@
     currentEvent = ev;
     currentMesin = null;
     currentJumlah = null;
+    currentReservasi = null;
 
-    if (ev.requiresMesin || ev.requiresJumlah) {
+    if (ev.requiresMesin || ev.requiresJumlah || ev.requiresReservasi) {
+      document.getElementById('reservasi-field').style.display = ev.requiresReservasi ? 'block' : 'none';
       document.getElementById('mesin-field').style.display = ev.requiresMesin ? 'block' : 'none';
       document.getElementById('jumlah-field').style.display = ev.requiresJumlah ? 'block' : 'none';
 
+      if (ev.requiresReservasi) {
+        document.getElementById('reservasi-input').value = '';
+      }
       if (ev.requiresMesin) {
         var select = document.getElementById('mesin-select');
         select.innerHTML = '';
@@ -86,12 +96,6 @@
     }
   }
 
-  /**
-   * Dulu pakai kamera live (getUserMedia), tapi web app Apps Script selalu dirender di
-   * iframe bawaan Google yang tidak mendelegasikan izin kamera -> selalu NotAllowedError
-   * apapun setting browser/OS-nya. Solusinya: ambil FOTO (via <input capture>, buka app
-   * kamera native, bukan getUserMedia), lalu decode barcode dari foto itu pakai scanFile().
-   */
   function startScanner() {
     showView('scanner-view');
     document.getElementById('scan-status').style.display = 'none';
@@ -121,7 +125,7 @@
     google.script.run
       .withSuccessHandler(function (res) { showResult(res.success, res.message, res.childBarcode); })
       .withFailureHandler(function (err) { showResult(false, err.message || String(err), null); })
-      .submitScan(decodedText, currentEvent.code, currentMesin, currentJumlah, CURRENT_NIK);
+      .submitScan(decodedText, currentEvent.code, currentMesin, currentJumlah, currentReservasi, CURRENT_NIK);
   }
 
   function showResult(success, message, childBarcode) {
@@ -152,6 +156,13 @@
     });
 
     document.getElementById('extra-continue').onclick = function () {
+      if (currentEvent.requiresReservasi) {
+        currentReservasi = document.getElementById('reservasi-input').value.trim();
+        if (!currentReservasi) {
+          alert('Isi Nomor Reservasi terlebih dahulu.');
+          return;
+        }
+      }
       if (currentEvent.requiresMesin) {
         currentMesin = document.getElementById('mesin-select').value;
       }

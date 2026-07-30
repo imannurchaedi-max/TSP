@@ -98,6 +98,7 @@ var EVENTS = {
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false, // Jumlah otomatis dari lookup "BARCODE INCOMING WRM" (Qty /Palet)
+    requiresReservasi: true, // Input No. Reservasi saat Terima dari WRM
     label: 'Terima dari WRM'
   },
   kirim_mesin: {
@@ -106,6 +107,7 @@ var EVENTS = {
     role: 'tsp',
     requiresMesin: true,
     requiresJumlah: true,
+    requiresReservasi: false,
     label: 'Kirim ke Mesin (Reprint Barcode)'
   },
   terima_operator: {
@@ -114,6 +116,7 @@ var EVENTS = {
     role: 'operator',
     requiresMesin: false,
     requiresJumlah: false,
+    requiresReservasi: false,
     label: 'Terima dari TSP (Operator Scan)'
   },
   consume_operator: {
@@ -122,6 +125,7 @@ var EVENTS = {
     role: 'operator',
     requiresMesin: false,
     requiresJumlah: false,
+    requiresReservasi: false,
     label: 'Consume (Material Digunakan)'
   },
   retur_dari_mesin: {
@@ -130,6 +134,7 @@ var EVENTS = {
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false,
+    requiresReservasi: false,
     label: 'Retur dari Mesin'
   },
   retur_ke_wrm: {
@@ -138,6 +143,7 @@ var EVENTS = {
     role: 'tsp',
     requiresMesin: false,
     requiresJumlah: false,
+    requiresReservasi: false,
     label: 'Retur ke WRM (MatClaim)'
   }
 };

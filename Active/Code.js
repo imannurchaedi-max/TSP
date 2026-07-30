@@ -30,7 +30,7 @@ function login(nik, password) {
 /**
  * Dipanggil dari client (google.script.run) saat barcode berhasil discan.
  */
-function submitScan(barcodeText, eventCode, mesinCode, jumlah, nik) {
+function submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik) {
   var actor;
   try {
     actor = resolveRole_(nik);
@@ -41,7 +41,7 @@ function submitScan(barcodeText, eventCode, mesinCode, jumlah, nik) {
   var actorLabel = actor.nik + ' - ' + actor.nama;
   var result;
   try {
-    result = processScan_(barcodeText, eventCode, mesinCode, jumlah, actorLabel, actor.role);
+    result = processScan_(barcodeText, eventCode, mesinCode, jumlah, noReservasi, actorLabel, actor.role);
     appendLog_({
       'Timestamp': new Date(),
       'Barcode': barcodeText,
@@ -52,7 +52,12 @@ function submitScan(barcodeText, eventCode, mesinCode, jumlah, nik) {
       'Hasil': 'SUKSES',
       'Pesan': result.message
     });
-    return { success: true, message: result.message, childBarcode: result.childBarcode || null };
+    return {
+      success: true,
+      message: result.message,
+      childBarcode: result.childBarcode || null,
+      details: result.details || null
+    };
   } catch (err) {
     appendLog_({
       'Timestamp': new Date(),
@@ -64,7 +69,7 @@ function submitScan(barcodeText, eventCode, mesinCode, jumlah, nik) {
       'Hasil': 'GAGAL',
       'Pesan': err.message
     });
-    return { success: false, message: err.message, childBarcode: null };
+    return { success: false, message: err.message, childBarcode: null, details: null };
   }
 }
 

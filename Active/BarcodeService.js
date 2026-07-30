@@ -90,7 +90,7 @@ function getCellValue_(rowResult, columnName) {
 /**
  * Utama handler proses scan barcode.
  */
-function processScan_(barcodeText, eventCode, mesinCode, jumlah, actorEmail, role) {
+function processScan_(barcodeText, eventCode, mesinCode, jumlah, noReservasi, actorEmail, role) {
   ensureSheetsReady_();
 
   var eventDef = EVENTS[eventCode];
@@ -104,7 +104,7 @@ function processScan_(barcodeText, eventCode, mesinCode, jumlah, actorEmail, rol
   var now = new Date();
 
   if (eventCode === 'terima_wrm') {
-    return handleTerimaWrm_(raw, now);
+    return handleTerimaWrm_(raw, noReservasi, now);
   }
   if (eventCode === 'kirim_mesin') {
     return handleKirimMesin_(raw, mesinCode, jumlah, now);
@@ -115,9 +115,9 @@ function processScan_(barcodeText, eventCode, mesinCode, jumlah, actorEmail, rol
 }
 
 /**
- * Event 1: terima_wrm -> scan Kode Unik Mother dari WRM Gudang.
+ * Event 1: terima_wrm -> scan Kode Unik Mother dari WRM Gudang dengan No. Reservasi.
  */
-function handleTerimaWrm_(raw, now) {
+function handleTerimaWrm_(raw, noReservasi, now) {
   var existingRow = findBarcodeRow_(raw);
   if (existingRow.rowIndex !== -1) {
     throw new Error('Barcode "' + raw + '" sudah terdaftar sebelumnya di sheet Barcode.');
@@ -142,7 +142,7 @@ function handleTerimaWrm_(raw, now) {
     'TANGGAL': formatTimestamp_(now),
     'SHIFT': getShift_(now),
     'BARCODE': raw,
-    'NO RESERVASI': '', // Induk tidak punya parent
+    'NO RESERVASI': noReservasi || '',
     'MID': mid,
     'MATERIAL DESCRIPTION': deskripsi,
     'JUMLAH': qtyPalet,
@@ -151,11 +151,17 @@ function handleTerimaWrm_(raw, now) {
 
   appendBarcodeRow_(newRow);
 
+  var msg = 'Berhasil Menerima Material dari WRM:\n' +
+    '• No. Reservasi: ' + (noReservasi || '-') + '\n' +
+    '• MID: ' + mid + '\n' +
+    '• Nama Material: ' + deskripsi + '\n' +
+    '• Jumlah Diserahkan: ' + qtyPalet;
+
   return {
     success: true,
     barcode: raw,
     event: 'terima_wrm',
-    message: 'Berhasil menerima Barcode Induk dari WRM: ' + raw + ' (MID: ' + mid + ', Qty: ' + qtyPalet + ')',
+    message: msg,
     details: newRow
   };
 }
