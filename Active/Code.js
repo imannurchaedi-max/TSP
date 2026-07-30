@@ -16,7 +16,7 @@ function include(filename) {
 }
 
 /**
- * Dipanggil dari client saat submit form login. Selalu return { success, message, user }.
+ * Dipanggil dari client saat submit form login.
  */
 function login(nik, password) {
   try {
@@ -29,11 +29,6 @@ function login(nik, password) {
 
 /**
  * Dipanggil dari client (google.script.run) saat barcode berhasil discan.
- * Selalu return objek { success, message }, tidak pernah throw ke client,
- * supaya UI bisa selalu menampilkan pesan yang jelas.
- *
- * Role TIDAK dipercaya dari client -- selalu di-derive ulang dari NIK (resolveRole_)
- * supaya user tidak bisa memalsukan role lewat sessionStorage/console.
  */
 function submitScan(barcodeText, eventCode, mesinCode, jumlah, nik) {
   var actor;
@@ -98,7 +93,7 @@ function getMesinStock(mesinCode) {
   }
 }
 
-/** Bandingkan Masuk hasil scan vs MB51 untuk shift aktif (tab "Validasi", khusus role TSP). */
+/** Bandingkan Masuk hasil scan vs MB51 untuk shift aktif. */
 function getValidatorData() {
   try {
     return { success: true, data: computeValidator_(new Date()) };
@@ -107,11 +102,25 @@ function getValidatorData() {
   }
 }
 
-/** Panel "Penerimaan Terakhir" di tab Stock (role TSP). */
-function getRecentReceipts() {
+/** Panel "Penerimaan Shift Ini" di tab Stock (role TSP). */
+function getShiftReceipts() {
   try {
-    return { success: true, data: computeRecentReceipts_(10) };
+    return { success: true, data: computeShiftReceipts_(new Date()) };
   } catch (err) {
     return { success: false, message: err.message, data: null };
   }
+}
+
+/** Panel "Pengiriman Shift Ini" di tab Stock (role TSP). */
+function getShiftDispatches() {
+  try {
+    return { success: true, data: computeShiftDispatches_(new Date()) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+/** Legacy entry point. */
+function getRecentReceipts() {
+  return getShiftReceipts();
 }

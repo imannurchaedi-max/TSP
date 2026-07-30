@@ -69,9 +69,15 @@
           <p class="stock-shift-label" id="stock-shift-label"></p>
           <div class="stock-layout">
             <div class="stock-main"><div id="stock-table-wrap"></div></div>
-            <div class="stock-side panel" id="recent-receipts-panel" style="display:none;">
-              <h3>Penerimaan Terakhir</h3>
-              <div id="recent-receipts-wrap"></div>
+            <div class="stock-side-container" id="recent-receipts-panel" style="display:none;">
+              <div class="panel">
+                <h3>Penerimaan Shift Ini</h3>
+                <div id="recent-receipts-wrap"></div>
+              </div>
+              <div class="panel" style="margin-top: 16px;">
+                <h3>Pengiriman Shift Ini</h3>
+                <div id="shift-dispatches-wrap"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -130,6 +136,13 @@
     var RECEIPT_COLUMNS = [
       { key: 'waktu', label: 'Waktu' },
       { key: 'barcode', label: 'Barcode' },
+      { key: 'deskripsi', label: 'Material' },
+      { key: 'jumlah', label: 'Jumlah', numeric: true }
+    ];
+    var DISPATCH_COLUMNS = [
+      { key: 'waktu', label: 'Waktu' },
+      { key: 'barcode', label: 'Barcode' },
+      { key: 'mesin', label: 'Mesin' },
       { key: 'deskripsi', label: 'Material' },
       { key: 'jumlah', label: 'Jumlah', numeric: true }
     ];
@@ -230,7 +243,7 @@
             res.data.date + ' — Shift aktif: ' + res.data.shift;
           renderTable('stock-table-wrap', res.data.rows, STOCK_COLUMNS);
         }).getTspStock();
-        loadRecentReceipts();
+        loadShiftPanels();
       } else {
         var select = document.getElementById('mesin-picker');
         var selectedMesin = select.value;
@@ -245,13 +258,23 @@
       }
     }
 
-    function loadRecentReceipts() {
-      var wrap = document.getElementById('recent-receipts-wrap');
-      wrap.innerHTML = '<p>Memuat...</p>';
+    function loadShiftPanels() {
+      var recWrap = document.getElementById('recent-receipts-wrap');
+      var dispWrap = document.getElementById('shift-dispatches-wrap');
+      recWrap.innerHTML = '<p>Memuat penerimaan...</p>';
+      dispWrap.innerHTML = '<p>Memuat pengiriman...</p>';
+
+      // Fetch Penerimaan Shift Ini
       google.script.run.withSuccessHandler(function (res) {
-        if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+        if (!res.success) { recWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
         renderTable('recent-receipts-wrap', res.data, RECEIPT_COLUMNS);
-      }).getRecentReceipts();
+      }).getShiftReceipts();
+
+      // Fetch Pengiriman Shift Ini
+      google.script.run.withSuccessHandler(function (res) {
+        if (!res.success) { dispWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+        renderTable('shift-dispatches-wrap', res.data, DISPATCH_COLUMNS);
+      }).getShiftDispatches();
     }
 
     function loadValidatorTab() {

@@ -139,6 +139,58 @@ function formatDateLabel_(date) {
   return Utilities.formatDate(date, Session.getScriptTimeZone(), 'dd/MM/yyyy');
 }
 
+/**
+ * Daftar transaksi Penerimaan dari WRM pada SHIFT AKTIF saat ini.
+ */
+function computeShiftReceipts_(now) {
+  var bounds = getShiftBounds_(now);
+  var tz = Session.getScriptTimeZone();
+  var rows = readAllBarcodeRows_()
+    .filter(function (r) {
+      return r.tsTerimaWrm && r.tsTerimaWrm >= bounds.start && r.tsTerimaWrm < bounds.end;
+    })
+    .sort(function (a, b) { return b.tsTerimaWrm - a.tsTerimaWrm; })
+    .map(function (r) {
+      return {
+        waktu: Utilities.formatDate(r.tsTerimaWrm, tz, 'HH:mm'),
+        barcode: r.barcode,
+        deskripsi: r.deskripsi,
+        jumlah: r.jumlah
+      };
+    });
+  return rows;
+}
+
+/**
+ * Daftar transaksi Pengiriman ke Mesin (Reprint) pada SHIFT AKTIF saat ini.
+ */
+function computeShiftDispatches_(now) {
+  var bounds = getShiftBounds_(now);
+  var tz = Session.getScriptTimeZone();
+  var rows = readAllBarcodeRows_()
+    .filter(function (r) {
+      return r.tsKirimMesin && r.tsKirimMesin >= bounds.start && r.tsKirimMesin < bounds.end;
+    })
+    .sort(function (a, b) { return b.tsKirimMesin - a.tsKirimMesin; })
+    .map(function (r) {
+      return {
+        waktu: Utilities.formatDate(r.tsKirimMesin, tz, 'HH:mm'),
+        barcode: r.barcode,
+        mesin: r.mesin || '-',
+        deskripsi: r.deskripsi,
+        jumlah: r.jumlah
+      };
+    });
+  return rows;
+}
+
+/**
+ * Legacy helper untuk kompatibilitas.
+ */
+function computeRecentReceipts_(limit) {
+  return computeShiftReceipts_(new Date()).slice(0, limit);
+}
+
 /** Bandingkan Penerimaan TSP vs MB51 SAP. */
 function computeValidator_(now) {
   var bounds = getShiftBounds_(now);
