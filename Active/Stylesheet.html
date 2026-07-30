@@ -208,7 +208,7 @@
     .app-content { padding: 14px; }
   }
 
-  .app-header { display: none; } /* kelas lama, sudah digantikan sidebar+topbar */
+  .app-header { display: none; }
   .logout-btn { width: 100%; margin-top: 0; padding: 10px 16px; font-size: 14px; }
 
   .btn-grid { display: flex; flex-direction: column; gap: 12px; }
@@ -273,15 +273,34 @@
   .result-success { background: #d1fae5; color: #065f46; }
   .result-error { background: #fee2e2; color: #991b1b; }
 
-  /* ---------- Tab panel (Stock / Scan / Validasi), navigasi ada di sidebar ---------- */
+  /* ---------- Tab panel (Stock / Scan / Validasi) ---------- */
   .tab-panel { margin-top: 4px; max-width: 900px; }
   #tab-stock.tab-panel { max-width: none; }
 
   .stock-shift-label { font-weight: 600; color: var(--text-main); margin-bottom: 14px; }
 
   .stock-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+  
+  /* Sticky right-side panel container */
+  .stock-side-container {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .stock-side-container::-webkit-scrollbar {
+    width: 5px;
+  }
+  .stock-side-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+  }
+
   @media (max-width: 900px) {
     .stock-layout { grid-template-columns: 1fr; }
+    .stock-side-container { position: static; max-height: none; }
   }
   .panel {
     background: #fff;
