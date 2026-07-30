@@ -135,9 +135,57 @@ function lookupWrmIncoming_(kodeUnik) {
 }
 
 /**
- * Baca daftar Reservasi dari sheet RESERVASI berdasarkan tanggal & shift aktif.
+ * Helper parsing tanggal dari tab RESERVASI (Format SAP MM/DD/YYYY, M/D/YYYY, atau Date object).
+ * Mengembalikan object: { key: 'YYYY-MM-DD', display: 'DD/MM/YYYY', rawDate: Date }
  */
-function getReservasiListForShift_(now) {
+function parseSapDate_(val, tz) {
+  if (!tz) tz = Session.getScriptTimeZone();
+  if (!val) return null;
+
+  var y = 0, m = 0, d = 0, rawDate = null;
+
+  if (val instanceof Date) {
+    rawDate = val;
+    y = val.getFullYear();
+    m = val.getMonth() + 1;
+    d = val.getDate();
+  } else {
+    var sVal = String(val).trim();
+    if (!sVal) return null;
+
+    // Cek format SAP MM/DD/YYYY atau M/D/YYYY (misal: "7/1/2026" -> Month 7, Day 1, Year 2026)
+    var parts = sVal.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+    if (parts) {
+      m = parseInt(parts[1], 10);
+      d = parseInt(parts[2], 10);
+      y = parseInt(parts[3], 10);
+      rawDate = new Date(y, m - 1, d);
+    } else {
+      // Cek format YYYY-MM-DD
+      var isoParts = sVal.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      if (isoParts) {
+        y = parseInt(isoParts[1], 10);
+        m = parseInt(isoParts[2], 10);
+        d = parseInt(isoParts[3], 10);
+        rawDate = new Date(y, m - 1, d);
+      } else {
+        return { key: sVal, display: sVal, rawDate: null, y: 0, m: 0, d: 0 };
+      }
+    }
+  }
+
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  var key = y + '-' + pad(m) + '-' + pad(d);
+  var display = pad(d) + '/' + pad(m) + '/' + y;
+
+  return { key: key, display: display, rawDate: rawDate, y: y, m: m, d: d };
+}
+
+/**
+ * Baca semua daftar Reservasi dari sheet RESERVASI.
+ * Menguraikan tanggal SAP (MM/DD/YYYY) dan mengembalikan daftar reservasi lengkap.
+ */
+function getReservasiList_() {
   try {
     var sheet = getSheet_(SHEET_NAMES.RESERVASI);
     var headerMap = getHeaderMap_(sheet);
@@ -145,19 +193,18 @@ function getReservasiListForShift_(now) {
     if (lastRow < 2) return [];
 
     var tz = Session.getScriptTimeZone();
-    var activeShift = getShift_(now); // e.g. 'Shift 1'
-    var activeDateStr = Utilities.formatDate(now, tz, 'dd/MM/yyyy');
-
     var data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     var colTanggal = headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'];
-    var colShift = headerMap['SHIFT'] || headerMap['Shift'] || headerMap['shift'];
     var colNoRes = headerMap['NO RESERVASI'] || headerMap['No. Reservasi'] || headerMap['No Reservasi'] || headerMap['no reservasi'];
     var colMid = headerMap['MID'] || headerMap['Mid'] || headerMap['mid'];
     var colDesc = headerMap['MATERIAL DESCRIPTION'] || headerMap['Material Description'] || headerMap['Material description'];
+    var colMvt = headerMap['MOVEMENT TYPE'] || headerMap['Movement Type'] || headerMap['movement type'] || headerMap['MOVEMENT'] || headerMap['Movement'] || headerMap['mvt'];
     var colQty = headerMap['JUMLAH'] || headerMap['Jumlah'] || headerMap['jumlah'] || headerMap['Qty'];
+    var colUnit = headerMap['UNIT'] || headerMap['Unit'] || headerMap['unit'];
+    var colShift = headerMap['SHIFT'] || headerMap['Shift'] || headerMap['shift'];
 
     var list = [];
-    var seen = {};
+    var seenIndexMap = {};
 
     data.forEach(function (row) {
       if (!colNoRes) return;
@@ -165,56 +212,47 @@ function getReservasiListForShift_(now) {
       if (!noRes) return;
 
       var rawDate = colTanggal ? row[colTanggal - 1] : null;
+      var parsedDate = parseSapDate_(rawDate, tz);
+      var dateDisplay = parsedDate ? parsedDate.display : '';
+      var dateKey = parsedDate ? parsedDate.key : '';
+
+      var midStr = colMid ? String(row[colMid - 1] || '').trim() : '';
+      var descStr = colDesc ? String(row[colDesc - 1] || '').trim() : '';
+      var mvtStr = colMvt ? String(row[colMvt - 1] || '').trim() : '';
+      var qtyNum = colQty ? (Number(row[colQty - 1]) || 0) : 0;
+      var unitStr = colUnit ? String(row[colUnit - 1] || '').trim() : '';
       var rawShift = colShift ? String(row[colShift - 1] || '').trim() : '';
 
-      var dateStr = '';
-      if (rawDate instanceof Date) {
-        dateStr = Utilities.formatDate(rawDate, tz, 'dd/MM/yyyy');
-      } else if (rawDate) {
-        dateStr = String(rawDate).trim();
-      }
-
-      var isShiftMatch = !rawShift || rawShift.toLowerCase() === activeShift.toLowerCase();
-      var isDateMatch = !dateStr || dateStr === activeDateStr;
-
-      if (isShiftMatch && isDateMatch) {
-        var itemKey = noRes;
-        if (!seen[itemKey]) {
-          seen[itemKey] = true;
-          list.push({
-            noReservasi: noRes,
-            tanggal: dateStr || activeDateStr,
-            shift: rawShift || activeShift,
-            mid: colMid ? String(row[colMid - 1] || '').trim() : '',
-            deskripsi: colDesc ? String(row[colDesc - 1] || '').trim() : '',
-            jumlah: colQty ? (Number(row[colQty - 1]) || 0) : 0
-          });
-        }
-      }
-    });
-
-    // Jika tidak ada yang persis match tanggal/shift, kembalikan semua reservasi unik yang ada
-    if (list.length === 0) {
-      data.forEach(function (row) {
-        if (!colNoRes) return;
-        var noRes = String(row[colNoRes - 1] || '').trim();
-        if (!noRes || seen[noRes]) return;
-        seen[noRes] = true;
+      var itemKey = noRes;
+      if (seenIndexMap[itemKey] === undefined) {
+        seenIndexMap[itemKey] = list.length;
         list.push({
           noReservasi: noRes,
-          tanggal: activeDateStr,
-          shift: activeShift,
-          mid: colMid ? String(row[colMid - 1] || '').trim() : '',
-          deskripsi: colDesc ? String(row[colDesc - 1] || '').trim() : '',
-          jumlah: colQty ? (Number(row[colQty - 1]) || 0) : 0
+          tanggal: dateDisplay,
+          dateKey: dateKey,
+          year: parsedDate ? parsedDate.y : 0,
+          month: parsedDate ? parsedDate.m : 0,
+          day: parsedDate ? parsedDate.d : 0,
+          movementType: mvtStr,
+          shift: rawShift,
+          itemCount: 1
         });
-      });
-    }
+      } else {
+        list[seenIndexMap[itemKey]].itemCount += 1;
+      }
+    });
 
     return list;
   } catch (e) {
     return [];
   }
+}
+
+/**
+ * Backward compatibility.
+ */
+function getReservasiListForShift_(now) {
+  return getReservasiList_();
 }
 
 /**

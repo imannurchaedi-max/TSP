@@ -4,11 +4,20 @@
 
 <div id="extra-view">
   <div id="reservasi-field" style="display:none;">
-    <p>Pilih Nomor Reservasi (Filtered per Shift &amp; Tanggal):</p>
+    <p style="margin-bottom:4px; font-weight:600; font-size:13px; color:var(--text-sub);">Filter Tanggal Reservasi (SAP):</p>
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <input type="date" id="reservasi-date-input" style="flex:1; padding:8px; font-size:14px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc;">
+      <button type="button" id="clear-date-btn" class="secondary-btn" style="padding:8px 12px; font-size:12px; width:auto; margin:0;">Semua Tgl</button>
+    </div>
+
+    <p style="margin-bottom:4px; font-weight:600; font-size:13px; color:var(--text-sub);">Filter Movement Type (SAP):</p>
+    <select id="reservasi-mvt-filter" style="margin-bottom:12px; font-size:13px; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; width:100%;"></select>
+
+    <p style="margin-bottom:4px; font-weight:600;">Pilih Nomor Reservasi:</p>
     <select id="reservasi-select"></select>
     <div id="reservasi-manual-wrap" style="display:none; margin-top:10px;">
       <p style="margin-bottom:4px; font-size:12px; color:var(--text-sub);">Atau ketik Nomor Reservasi manual:</p>
-      <input type="text" id="reservasi-input" placeholder="Contoh: 4900640869">
+      <input type="text" id="reservasi-input" placeholder="Contoh: 20748003">
     </div>
   </div>
   <div id="mesin-field" style="display:none;">
@@ -46,6 +55,7 @@
   var currentMesin = null;
   var currentJumlah = null;
   var currentReservasi = null;
+  var rawReservasiData = [];
 
   function showView(id) {
     ['action-view', 'extra-view', 'scanner-view', 'result-view'].forEach(function (v) {
@@ -100,38 +110,146 @@
     }
   }
 
+  function getTodayIsoString() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth() + 1;
+    var d = now.getDate();
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return y + '-' + pad(m) + '-' + pad(d);
+  }
+
   function setupReservasiPicker() {
+    var dateInput = document.getElementById('reservasi-date-input');
+    var mvtFilter = document.getElementById('reservasi-mvt-filter');
     var select = document.getElementById('reservasi-select');
     var manualWrap = document.getElementById('reservasi-manual-wrap');
     document.getElementById('reservasi-input').value = '';
+
+    dateInput.value = getTodayIsoString();
+    mvtFilter.innerHTML = '<option value="__all__">Memuat movement type...</option>';
     select.innerHTML = '<option value="">Memuat daftar reservasi...</option>';
+    manualWrap.style.display = 'none';
 
     google.script.run.withSuccessHandler(function (res) {
-      select.innerHTML = '';
       if (res.success && res.data && res.data.length > 0) {
-        res.data.forEach(function (r) {
-          var opt = document.createElement('option');
-          opt.value = r.noReservasi;
-          var label = r.noReservasi;
-          if (r.deskripsi) label += ' - ' + r.deskripsi;
-          if (r.jumlah) label += ' (' + r.jumlah + ')';
-          opt.textContent = label;
-          select.appendChild(opt);
+        rawReservasiData = res.data;
+
+        // Extract unique movement types
+        var mvtMap = {};
+        var uniqueMvts = [];
+        rawReservasiData.forEach(function (r) {
+          if (r.movementType && !mvtMap[r.movementType]) {
+            mvtMap[r.movementType] = true;
+            uniqueMvts.push(r.movementType);
+          }
         });
-        var optManual = document.createElement('option');
-        optManual.value = '__manual__';
-        optManual.textContent = '-- Input Manual No. Reservasi --';
-        select.appendChild(optManual);
-        manualWrap.style.display = 'none';
+        uniqueMvts.sort();
+
+        mvtFilter.innerHTML = '';
+        var optMvtAll = document.createElement('option');
+        optMvtAll.value = '__all__';
+        optMvtAll.textContent = '-- Semua Movement Type --';
+        mvtFilter.appendChild(optMvtAll);
+
+        uniqueMvts.forEach(function (mvt) {
+          var opt = document.createElement('option');
+          opt.value = mvt;
+          opt.textContent = 'Movement Type ' + mvt;
+          mvtFilter.appendChild(opt);
+        });
+
+        renderReservasiOptions();
       } else {
-        var opt = document.createElement('option');
-        opt.value = '__manual__';
-        opt.textContent = '-- Tidak ada reservasi di shift ini (Input Manual) --';
-        select.appendChild(opt);
+        rawReservasiData = [];
+        mvtFilter.innerHTML = '<option value="__all__">-- Semua Movement Type --</option>';
+        select.innerHTML = '<option value="__manual__">-- Tidak ada reservasi (Input Manual) --</option>';
         manualWrap.style.display = 'block';
       }
     }).getReservasiOptions();
   }
+
+  function isDateMatch(r, selectedDateIso) {
+    if (!selectedDateIso) return true;
+    if (r.dateKey === selectedDateIso) return true;
+    var p = selectedDateIso.split('-');
+    if (p.length === 3) {
+      var y = parseInt(p[0], 10);
+      var m = parseInt(p[1], 10);
+      var d = parseInt(p[2], 10);
+      if (r.year === y && r.month === m && r.day === d) return true;
+    }
+    return false;
+  }
+
+  function renderReservasiOptions() {
+    var selectedDateIso = document.getElementById('reservasi-date-input').value;
+    var selectedMvt = document.getElementById('reservasi-mvt-filter').value;
+    var select = document.getElementById('reservasi-select');
+    var manualWrap = document.getElementById('reservasi-manual-wrap');
+
+    select.innerHTML = '';
+    var filtered = rawReservasiData;
+
+    // Filter per Date
+    if (selectedDateIso) {
+      filtered = filtered.filter(function (r) {
+        return isDateMatch(r, selectedDateIso);
+      });
+    }
+
+    // Filter per Movement Type
+    if (selectedMvt && selectedMvt !== '__all__') {
+      filtered = filtered.filter(function (r) {
+        return String(r.movementType).trim() === String(selectedMvt).trim();
+      });
+    }
+
+    if (filtered.length > 0) {
+      var defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = '-- Pilih Nomor Reservasi (' + filtered.length + ' item) --';
+      select.appendChild(defaultOpt);
+
+      filtered.forEach(function (r) {
+        var opt = document.createElement('option');
+        opt.value = r.noReservasi;
+        var label = r.noReservasi;
+        if (r.itemCount && r.itemCount > 1) label += ' (' + r.itemCount + ' item material)';
+        if (r.movementType) label += ' [Mvt: ' + r.movementType + ']';
+        if (!selectedDateIso && r.tanggal) label += ' [Tgl: ' + r.tanggal + ']';
+        opt.textContent = label;
+        select.appendChild(opt);
+      });
+
+      var optManual = document.createElement('option');
+      optManual.value = '__manual__';
+      optManual.textContent = '-- Input Manual No. Reservasi --';
+      select.appendChild(optManual);
+      manualWrap.style.display = 'none';
+    } else {
+      var opt = document.createElement('option');
+      opt.value = '__manual__';
+      opt.textContent = (selectedDateIso || (selectedMvt && selectedMvt !== '__all__'))
+        ? '-- Tidak ada reservasi yang sesuai filter (Input Manual) --'
+        : '-- Tidak ada reservasi (Input Manual) --';
+      select.appendChild(opt);
+      manualWrap.style.display = 'block';
+    }
+  }
+
+  document.getElementById('reservasi-date-input').addEventListener('change', function () {
+    renderReservasiOptions();
+  });
+
+  document.getElementById('reservasi-mvt-filter').addEventListener('change', function () {
+    renderReservasiOptions();
+  });
+
+  document.getElementById('clear-date-btn').addEventListener('click', function () {
+    document.getElementById('reservasi-date-input').value = '';
+    renderReservasiOptions();
+  });
 
   document.getElementById('reservasi-select').addEventListener('change', function () {
     var val = this.value;

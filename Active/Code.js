@@ -77,10 +77,10 @@ function getMesinList() {
   return MESIN_LIST;
 }
 
-/** Ambil daftar reservasi aktif dari tab RESERVASI berdasarkan tanggal & shift aktif. */
+/** Ambil semua daftar nomor reservasi dari tab RESERVASI. */
 function getReservasiOptions() {
   try {
-    return { success: true, data: getReservasiListForShift_(new Date()) };
+    return { success: true, data: getReservasiList_() };
   } catch (err) {
     return { success: false, message: err.message, data: [] };
   }
