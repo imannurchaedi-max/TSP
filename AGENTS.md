@@ -19,7 +19,7 @@ This project is indexed by GitNexus as **0. TSP MODUL** (251 symbols, 456 relati
 - **MUST ALWAYS run `clasp push` and `clasp deploy` immediately after finishing any coding or file modification in `Active/`.**
 - Command sequence to execute from directory `Active/`:
   1. `npx @google/clasp push -f`
-  2. `npx @google/clasp deploy -d "Automated deployment after code update"`
+  2. `npx @google/clasp deploy -i AKfycby138TTFstXSl6X2B46nmFgT9o-Eia4bTiS8UNK1kE4IPXEcWVEvik1hkYBUjteT4ZVlQ -d "Automated deployment after code update"`
 
 ## Never Do
 
