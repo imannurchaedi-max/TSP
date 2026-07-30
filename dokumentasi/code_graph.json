@@ -7,35 +7,19 @@
       }
     ],
     [
+      "AuthService.js::getKaryawanRows_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "getKaryawanRows_"
+      }
+    ],
+    [
       "AuthService.js::roleFromJabatan_",
       {
         "type": "function",
         "file": "AuthService.js",
         "name": "roleFromJabatan_"
-      }
-    ],
-    [
-      "AuthService.js::clearLoginAttempts_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "clearLoginAttempts_"
-      }
-    ],
-    [
-      "AuthService.js::resolveRole_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "resolveRole_"
-      }
-    ],
-    [
-      "AuthService.js::getLoginAttemptCount_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "getLoginAttemptCount_"
       }
     ],
     [
@@ -55,14 +39,6 @@
       }
     ],
     [
-      "AuthService.js::readKaryawanRowsFromCache_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "readKaryawanRowsFromCache_"
-      }
-    ],
-    [
       "AuthService.js::findKaryawanByNik_",
       {
         "type": "function",
@@ -71,11 +47,11 @@
       }
     ],
     [
-      "AuthService.js::getKaryawanRows_",
+      "AuthService.js::readKaryawanRowsFromCache_",
       {
         "type": "function",
         "file": "AuthService.js",
-        "name": "getKaryawanRows_"
+        "name": "readKaryawanRowsFromCache_"
       }
     ],
     [
@@ -87,65 +63,33 @@
       }
     ],
     [
+      "AuthService.js::clearLoginAttempts_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "clearLoginAttempts_"
+      }
+    ],
+    [
+      "AuthService.js::getLoginAttemptCount_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "getLoginAttemptCount_"
+      }
+    ],
+    [
+      "AuthService.js::resolveRole_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "resolveRole_"
+      }
+    ],
+    [
       "BarcodeService.js",
       {
         "type": "file"
-      }
-    ],
-    [
-      "BarcodeService.js::handleKirimMesin_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "handleKirimMesin_"
-      }
-    ],
-    [
-      "BarcodeService.js::getShiftBounds_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "getShiftBounds_"
-      }
-    ],
-    [
-      "BarcodeService.js::processScan_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "processScan_"
-      }
-    ],
-    [
-      "BarcodeService.js::handleTerimaWrm_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "handleTerimaWrm_"
-      }
-    ],
-    [
-      "BarcodeService.js::getCellValue_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "getCellValue_"
-      }
-    ],
-    [
-      "BarcodeService.js::padSeq_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "padSeq_"
-      }
-    ],
-    [
-      "BarcodeService.js::handleChildCheckpoint_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "handleChildCheckpoint_"
       }
     ],
     [
@@ -165,11 +109,11 @@
       }
     ],
     [
-      "BarcodeService.js::getShift_",
+      "BarcodeService.js::handleKirimMesin_",
       {
         "type": "function",
         "file": "BarcodeService.js",
-        "name": "getShift_"
+        "name": "handleKirimMesin_"
       }
     ],
     [
@@ -181,17 +125,73 @@
       }
     ],
     [
+      "BarcodeService.js::processScan_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "processScan_"
+      }
+    ],
+    [
+      "BarcodeService.js::getShift_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getShift_"
+      }
+    ],
+    [
+      "BarcodeService.js::handleTerimaWrm_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "handleTerimaWrm_"
+      }
+    ],
+    [
+      "BarcodeService.js::getShiftBounds_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getShiftBounds_"
+      }
+    ],
+    [
+      "BarcodeService.js::getCellValue_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getCellValue_"
+      }
+    ],
+    [
+      "BarcodeService.js::handleChildCheckpoint_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "handleChildCheckpoint_"
+      }
+    ],
+    [
+      "BarcodeService.js::padSeq_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "padSeq_"
+      }
+    ],
+    [
       "Code.js",
       {
         "type": "file"
       }
     ],
     [
-      "Code.js::getValidatorData",
+      "Code.js::getReservasiOptions",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "getValidatorData"
+        "name": "getReservasiOptions"
       }
     ],
     [
@@ -203,14 +203,6 @@
       }
     ],
     [
-      "Code.js::getMesinStock",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getMesinStock"
-      }
-    ],
-    [
       "Code.js::getTspStock",
       {
         "type": "function",
@@ -219,11 +211,19 @@
       }
     ],
     [
-      "Code.js::include",
+      "Code.js::doGet",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "include"
+        "name": "doGet"
+      }
+    ],
+    [
+      "Code.js::getShiftReceipts",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getShiftReceipts"
       }
     ],
     [
@@ -235,6 +235,30 @@
       }
     ],
     [
+      "Code.js::include",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "include"
+      }
+    ],
+    [
+      "Code.js::getValidatorData",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getValidatorData"
+      }
+    ],
+    [
+      "Code.js::getMesinStock",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getMesinStock"
+      }
+    ],
+    [
       "Code.js::getRecentReceipts",
       {
         "type": "function",
@@ -243,11 +267,11 @@
       }
     ],
     [
-      "Code.js::doGet",
+      "Code.js::getShiftDispatches",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "doGet"
+        "name": "getShiftDispatches"
       }
     ],
     [
@@ -293,27 +317,11 @@
       }
     ],
     [
-      "SheetService.js::lookupWrmIncoming_",
+      "SheetService.js::ensureSheetsReady_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "lookupWrmIncoming_"
-      }
-    ],
-    [
-      "SheetService.js::appendLog_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "appendLog_"
-      }
-    ],
-    [
-      "SheetService.js::findBarcodeRow_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "findBarcodeRow_"
+        "name": "ensureSheetsReady_"
       }
     ],
     [
@@ -325,6 +333,22 @@
       }
     ],
     [
+      "SheetService.js::updateBarcodeCell_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "updateBarcodeCell_"
+      }
+    ],
+    [
+      "SheetService.js::appendLog_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "appendLog_"
+      }
+    ],
+    [
       "SheetService.js::appendBarcodeRow_",
       {
         "type": "function",
@@ -333,11 +357,11 @@
       }
     ],
     [
-      "SheetService.js::updateBarcodeCell_",
+      "SheetService.js::getReservasiListForShift_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "updateBarcodeCell_"
+        "name": "getReservasiListForShift_"
       }
     ],
     [
@@ -357,11 +381,11 @@
       }
     ],
     [
-      "SheetService.js::ensureSheetsReady_",
+      "SheetService.js::findBarcodeRow_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "ensureSheetsReady_"
+        "name": "findBarcodeRow_"
       }
     ],
     [
@@ -373,73 +397,49 @@
       }
     ],
     [
+      "SheetService.js::appendReprintRow_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "appendReprintRow_"
+      }
+    ],
+    [
+      "SheetService.js::lookupWrmIncoming_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "lookupWrmIncoming_"
+      }
+    ],
+    [
       "StockService.js",
       {
         "type": "file"
       }
     ],
     [
-      "StockService.js::formatDateLabel_",
+      "StockService.js::computeMesinStockBreakdown_",
       {
         "type": "function",
         "file": "StockService.js",
-        "name": "formatDateLabel_"
+        "name": "computeMesinStockBreakdown_"
       }
     ],
     [
-      "StockService.js::parseMb51Timestamp_",
+      "StockService.js::computeShiftReceipts_",
       {
         "type": "function",
         "file": "StockService.js",
-        "name": "parseMb51Timestamp_"
+        "name": "computeShiftReceipts_"
       }
     ],
     [
-      "StockService.js::computeValidator_",
+      "StockService.js::computeShiftDispatches_",
       {
         "type": "function",
         "file": "StockService.js",
-        "name": "computeValidator_"
-      }
-    ],
-    [
-      "StockService.js::computeMesinStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeMesinStock_"
-      }
-    ],
-    [
-      "StockService.js::bucketAdd_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "bucketAdd_"
-      }
-    ],
-    [
-      "StockService.js::toDateOrNull_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "toDateOrNull_"
-      }
-    ],
-    [
-      "StockService.js::computeTspStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeTspStock_"
-      }
-    ],
-    [
-      "StockService.js::computeRecentReceipts_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeRecentReceipts_"
+        "name": "computeShiftDispatches_"
       }
     ],
     [
@@ -451,39 +451,81 @@
       }
     ],
     [
+      "StockService.js::toDateOrNull_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "toDateOrNull_"
+      }
+    ],
+    [
+      "StockService.js::computeRecentReceipts_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeRecentReceipts_"
+      }
+    ],
+    [
+      "StockService.js::bucketAdd_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "bucketAdd_"
+      }
+    ],
+    [
+      "StockService.js::parseMb51Timestamp_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "parseMb51Timestamp_"
+      }
+    ],
+    [
+      "StockService.js::formatDateLabel_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "formatDateLabel_"
+      }
+    ],
+    [
       "StockService.js::readAllBarcodeRows_",
       {
         "type": "function",
         "file": "StockService.js",
         "name": "readAllBarcodeRows_"
       }
+    ],
+    [
+      "StockService.js::computeValidator_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeValidator_"
+      }
+    ],
+    [
+      "StockService.js::computeTspStock_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeTspStock_"
+      }
     ]
   ],
   "edges": [
     [
       "AuthService.js",
+      "AuthService.js::getKaryawanRows_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "AuthService.js",
       "AuthService.js::roleFromJabatan_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "AuthService.js",
-      "AuthService.js::clearLoginAttempts_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "AuthService.js",
-      "AuthService.js::resolveRole_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "AuthService.js",
-      "AuthService.js::getLoginAttemptCount_",
       {
         "relation": "defines"
       }
@@ -504,13 +546,6 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::readKaryawanRowsFromCache_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "AuthService.js",
       "AuthService.js::findKaryawanByNik_",
       {
         "relation": "defines"
@@ -518,7 +553,7 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::getKaryawanRows_",
+      "AuthService.js::readKaryawanRowsFromCache_",
       {
         "relation": "defines"
       }
@@ -531,50 +566,22 @@
       }
     ],
     [
-      "BarcodeService.js",
-      "BarcodeService.js::handleKirimMesin_",
+      "AuthService.js",
+      "AuthService.js::clearLoginAttempts_",
       {
         "relation": "defines"
       }
     ],
     [
-      "BarcodeService.js",
-      "BarcodeService.js::getShiftBounds_",
+      "AuthService.js",
+      "AuthService.js::getLoginAttemptCount_",
       {
         "relation": "defines"
       }
     ],
     [
-      "BarcodeService.js",
-      "BarcodeService.js::processScan_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::handleTerimaWrm_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::getCellValue_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::padSeq_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::handleChildCheckpoint_",
+      "AuthService.js",
+      "AuthService.js::resolveRole_",
       {
         "relation": "defines"
       }
@@ -595,7 +602,7 @@
     ],
     [
       "BarcodeService.js",
-      "BarcodeService.js::getShift_",
+      "BarcodeService.js::handleKirimMesin_",
       {
         "relation": "defines"
       }
@@ -603,6 +610,55 @@
     [
       "BarcodeService.js",
       "BarcodeService.js::getNextChildSequence_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::processScan_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getShift_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::handleTerimaWrm_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getShiftBounds_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getCellValue_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::handleChildCheckpoint_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::padSeq_",
       {
         "relation": "defines"
       }
@@ -651,6 +707,13 @@
     ],
     [
       "BarcodeService.js",
+      "SheetService.js::appendReprintRow_",
+      {
+        "relation": "calls"
+      }
+    ],
+    [
+      "BarcodeService.js",
       "SheetService.js::updateBarcodeCell_",
       {
         "relation": "calls"
@@ -658,7 +721,7 @@
     ],
     [
       "Code.js",
-      "Code.js::getValidatorData",
+      "Code.js::getReservasiOptions",
       {
         "relation": "defines"
       }
@@ -672,13 +735,6 @@
     ],
     [
       "Code.js",
-      "Code.js::getMesinStock",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
       "Code.js::getTspStock",
       {
         "relation": "defines"
@@ -686,7 +742,14 @@
     ],
     [
       "Code.js",
-      "Code.js::include",
+      "Code.js::doGet",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getShiftReceipts",
       {
         "relation": "defines"
       }
@@ -700,6 +763,27 @@
     ],
     [
       "Code.js",
+      "Code.js::include",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getValidatorData",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getMesinStock",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
       "Code.js::getRecentReceipts",
       {
         "relation": "defines"
@@ -707,7 +791,7 @@
     ],
     [
       "Code.js",
-      "Code.js::doGet",
+      "Code.js::getShiftDispatches",
       {
         "relation": "defines"
       }
@@ -749,14 +833,14 @@
     ],
     [
       "Code.js",
-      "StockService.js::computeTspStock_",
+      "SheetService.js::getReservasiListForShift_",
       {
         "relation": "calls"
       }
     ],
     [
       "Code.js",
-      "StockService.js::computeMesinStock_",
+      "StockService.js::computeTspStock_",
       {
         "relation": "calls"
       }
@@ -770,14 +854,14 @@
     ],
     [
       "Code.js",
-      "StockService.js::computeRecentReceipts_",
+      "StockService.js::computeShiftReceipts_",
       {
         "relation": "calls"
       }
     ],
     [
-      "Config.js",
-      "BarcodeService.js::processScan_",
+      "Code.js",
+      "StockService.js::computeShiftDispatches_",
       {
         "relation": "calls"
       }
@@ -812,21 +896,7 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::lookupWrmIncoming_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::appendLog_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::findBarcodeRow_",
+      "SheetService.js::ensureSheetsReady_",
       {
         "relation": "defines"
       }
@@ -840,6 +910,20 @@
     ],
     [
       "SheetService.js",
+      "SheetService.js::updateBarcodeCell_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::appendLog_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
       "SheetService.js::appendBarcodeRow_",
       {
         "relation": "defines"
@@ -847,7 +931,7 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::updateBarcodeCell_",
+      "SheetService.js::getReservasiListForShift_",
       {
         "relation": "defines"
       }
@@ -868,7 +952,7 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::ensureSheetsReady_",
+      "SheetService.js::findBarcodeRow_",
       {
         "relation": "defines"
       }
@@ -881,57 +965,43 @@
       }
     ],
     [
+      "SheetService.js",
+      "SheetService.js::appendReprintRow_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::lookupWrmIncoming_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "BarcodeService.js::getShift_",
+      {
+        "relation": "calls"
+      }
+    ],
+    [
       "StockService.js",
-      "StockService.js::formatDateLabel_",
+      "StockService.js::computeMesinStockBreakdown_",
       {
         "relation": "defines"
       }
     ],
     [
       "StockService.js",
-      "StockService.js::parseMb51Timestamp_",
+      "StockService.js::computeShiftReceipts_",
       {
         "relation": "defines"
       }
     ],
     [
       "StockService.js",
-      "StockService.js::computeValidator_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeMesinStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::bucketAdd_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::toDateOrNull_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeTspStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeRecentReceipts_",
+      "StockService.js::computeShiftDispatches_",
       {
         "relation": "defines"
       }
@@ -945,7 +1015,56 @@
     ],
     [
       "StockService.js",
+      "StockService.js::toDateOrNull_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeRecentReceipts_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::bucketAdd_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::parseMb51Timestamp_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::formatDateLabel_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
       "StockService.js::readAllBarcodeRows_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeValidator_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeTspStock_",
       {
         "relation": "defines"
       }
@@ -980,68 +1099,75 @@
     ]
   ],
   "metrics": {
-    "num_nodes": 59,
-    "num_edges": 74,
+    "num_nodes": 66,
+    "num_edges": 83,
     "degree_centrality": {
-      "AuthService.js": 0.1724137931034483,
-      "AuthService.js::roleFromJabatan_": 0.017241379310344827,
-      "AuthService.js::clearLoginAttempts_": 0.017241379310344827,
-      "AuthService.js::resolveRole_": 0.034482758620689655,
-      "AuthService.js::getLoginAttemptCount_": 0.017241379310344827,
-      "AuthService.js::registerLoginFailure_": 0.017241379310344827,
-      "AuthService.js::login_": 0.034482758620689655,
-      "AuthService.js::readKaryawanRowsFromCache_": 0.017241379310344827,
-      "AuthService.js::findKaryawanByNik_": 0.017241379310344827,
-      "AuthService.js::getKaryawanRows_": 0.017241379310344827,
-      "AuthService.js::writeKaryawanRowsToCache_": 0.017241379310344827,
-      "BarcodeService.js": 0.3103448275862069,
-      "BarcodeService.js::handleKirimMesin_": 0.017241379310344827,
-      "BarcodeService.js::getShiftBounds_": 0.034482758620689655,
-      "BarcodeService.js::processScan_": 0.05172413793103448,
-      "BarcodeService.js::handleTerimaWrm_": 0.017241379310344827,
-      "BarcodeService.js::getCellValue_": 0.017241379310344827,
-      "BarcodeService.js::padSeq_": 0.017241379310344827,
-      "BarcodeService.js::handleChildCheckpoint_": 0.017241379310344827,
-      "BarcodeService.js::classifyBarcode_": 0.017241379310344827,
-      "BarcodeService.js::formatTimestamp_": 0.017241379310344827,
-      "BarcodeService.js::getShift_": 0.017241379310344827,
-      "BarcodeService.js::getNextChildSequence_": 0.017241379310344827,
-      "Code.js": 0.29310344827586204,
-      "Code.js::getValidatorData": 0.017241379310344827,
-      "Code.js::login": 0.017241379310344827,
-      "Code.js::getMesinStock": 0.017241379310344827,
-      "Code.js::getTspStock": 0.017241379310344827,
-      "Code.js::include": 0.017241379310344827,
-      "Code.js::submitScan": 0.017241379310344827,
-      "Code.js::getRecentReceipts": 0.017241379310344827,
-      "Code.js::doGet": 0.017241379310344827,
-      "Code.js::getMesinList": 0.017241379310344827,
-      "Config.js": 0.017241379310344827,
-      "MaterialService.js": 0.06896551724137931,
-      "MaterialService.js::getMaterialMap_": 0.034482758620689655,
-      "MaterialService.js::lookupMaterial_": 0.017241379310344827,
-      "SheetService.js": 0.1724137931034483,
-      "SheetService.js::lookupWrmIncoming_": 0.034482758620689655,
-      "SheetService.js::appendLog_": 0.034482758620689655,
-      "SheetService.js::findBarcodeRow_": 0.034482758620689655,
-      "SheetService.js::getSheet_": 0.06896551724137931,
-      "SheetService.js::appendBarcodeRow_": 0.034482758620689655,
-      "SheetService.js::updateBarcodeCell_": 0.034482758620689655,
-      "SheetService.js::getHeaderMap_": 0.06896551724137931,
-      "SheetService.js::getSpreadsheet_": 0.017241379310344827,
-      "SheetService.js::ensureSheetsReady_": 0.034482758620689655,
-      "SheetService.js::findRowByColumnValue_": 0.017241379310344827,
-      "StockService.js": 0.24137931034482757,
-      "StockService.js::formatDateLabel_": 0.017241379310344827,
-      "StockService.js::parseMb51Timestamp_": 0.017241379310344827,
-      "StockService.js::computeValidator_": 0.034482758620689655,
-      "StockService.js::computeMesinStock_": 0.034482758620689655,
-      "StockService.js::bucketAdd_": 0.017241379310344827,
-      "StockService.js::toDateOrNull_": 0.017241379310344827,
-      "StockService.js::computeTspStock_": 0.034482758620689655,
-      "StockService.js::computeRecentReceipts_": 0.034482758620689655,
-      "StockService.js::seedAccFromMaterialMap_": 0.017241379310344827,
-      "StockService.js::readAllBarcodeRows_": 0.017241379310344827
+      "AuthService.js": 0.15384615384615385,
+      "AuthService.js::getKaryawanRows_": 0.015384615384615385,
+      "AuthService.js::roleFromJabatan_": 0.015384615384615385,
+      "AuthService.js::registerLoginFailure_": 0.015384615384615385,
+      "AuthService.js::login_": 0.03076923076923077,
+      "AuthService.js::findKaryawanByNik_": 0.015384615384615385,
+      "AuthService.js::readKaryawanRowsFromCache_": 0.015384615384615385,
+      "AuthService.js::writeKaryawanRowsToCache_": 0.015384615384615385,
+      "AuthService.js::clearLoginAttempts_": 0.015384615384615385,
+      "AuthService.js::getLoginAttemptCount_": 0.015384615384615385,
+      "AuthService.js::resolveRole_": 0.03076923076923077,
+      "BarcodeService.js": 0.2923076923076923,
+      "BarcodeService.js::classifyBarcode_": 0.015384615384615385,
+      "BarcodeService.js::formatTimestamp_": 0.015384615384615385,
+      "BarcodeService.js::handleKirimMesin_": 0.015384615384615385,
+      "BarcodeService.js::getNextChildSequence_": 0.015384615384615385,
+      "BarcodeService.js::processScan_": 0.03076923076923077,
+      "BarcodeService.js::getShift_": 0.03076923076923077,
+      "BarcodeService.js::handleTerimaWrm_": 0.015384615384615385,
+      "BarcodeService.js::getShiftBounds_": 0.03076923076923077,
+      "BarcodeService.js::getCellValue_": 0.015384615384615385,
+      "BarcodeService.js::handleChildCheckpoint_": 0.015384615384615385,
+      "BarcodeService.js::padSeq_": 0.015384615384615385,
+      "Code.js": 0.3230769230769231,
+      "Code.js::getReservasiOptions": 0.015384615384615385,
+      "Code.js::login": 0.015384615384615385,
+      "Code.js::getTspStock": 0.015384615384615385,
+      "Code.js::doGet": 0.015384615384615385,
+      "Code.js::getShiftReceipts": 0.015384615384615385,
+      "Code.js::submitScan": 0.015384615384615385,
+      "Code.js::include": 0.015384615384615385,
+      "Code.js::getValidatorData": 0.015384615384615385,
+      "Code.js::getMesinStock": 0.015384615384615385,
+      "Code.js::getRecentReceipts": 0.015384615384615385,
+      "Code.js::getShiftDispatches": 0.015384615384615385,
+      "Code.js::getMesinList": 0.015384615384615385,
+      "Config.js": 0.0,
+      "MaterialService.js": 0.06153846153846154,
+      "MaterialService.js::getMaterialMap_": 0.03076923076923077,
+      "MaterialService.js::lookupMaterial_": 0.015384615384615385,
+      "SheetService.js": 0.2,
+      "SheetService.js::ensureSheetsReady_": 0.03076923076923077,
+      "SheetService.js::getSheet_": 0.06153846153846154,
+      "SheetService.js::updateBarcodeCell_": 0.03076923076923077,
+      "SheetService.js::appendLog_": 0.03076923076923077,
+      "SheetService.js::appendBarcodeRow_": 0.03076923076923077,
+      "SheetService.js::getReservasiListForShift_": 0.03076923076923077,
+      "SheetService.js::getHeaderMap_": 0.06153846153846154,
+      "SheetService.js::getSpreadsheet_": 0.015384615384615385,
+      "SheetService.js::findBarcodeRow_": 0.03076923076923077,
+      "SheetService.js::findRowByColumnValue_": 0.015384615384615385,
+      "SheetService.js::appendReprintRow_": 0.03076923076923077,
+      "SheetService.js::lookupWrmIncoming_": 0.03076923076923077,
+      "StockService.js": 0.24615384615384617,
+      "StockService.js::computeMesinStockBreakdown_": 0.015384615384615385,
+      "StockService.js::computeShiftReceipts_": 0.03076923076923077,
+      "StockService.js::computeShiftDispatches_": 0.03076923076923077,
+      "StockService.js::seedAccFromMaterialMap_": 0.015384615384615385,
+      "StockService.js::toDateOrNull_": 0.015384615384615385,
+      "StockService.js::computeRecentReceipts_": 0.015384615384615385,
+      "StockService.js::bucketAdd_": 0.015384615384615385,
+      "StockService.js::parseMb51Timestamp_": 0.015384615384615385,
+      "StockService.js::formatDateLabel_": 0.015384615384615385,
+      "StockService.js::readAllBarcodeRows_": 0.015384615384615385,
+      "StockService.js::computeValidator_": 0.03076923076923077,
+      "StockService.js::computeTspStock_": 0.03076923076923077
     }
   }
 }
