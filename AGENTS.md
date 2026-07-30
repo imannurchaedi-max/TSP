@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **0. TSP MODUL** (155 symbols, 342 relationships, 20 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **0. TSP MODUL** (251 symbols, 456 relationships, 20 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -14,12 +14,20 @@ This project is indexed by GitNexus as **0. TSP MODUL** (155 symbols, 342 relati
 - When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
 - For security review, `explain({target: "fileOrSymbol"})` lists taint findings (source→sink flows; needs `analyze --pdg`).
 
+## Mandatory Post-Coding Workflow (Clasp Push & Deploy)
+
+- **MUST ALWAYS run `clasp push` and `clasp deploy` immediately after finishing any coding or file modification in `Active/`.**
+- Command sequence to execute from directory `Active/`:
+  1. `npx @google/clasp push -f`
+  2. `npx @google/clasp deploy -d "Automated deployment after code update"`
+
 ## Never Do
 
 - NEVER edit a function, class, or method without first running `impact` on it.
 - NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
 - NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
 - NEVER commit changes without running `detect_changes()` to check affected scope.
+- NEVER leave code changes un-pushed or un-deployed in Google Apps Script after completing edits.
 
 ## Resources
 
