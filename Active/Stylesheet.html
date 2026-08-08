@@ -738,17 +738,20 @@
   /* Kolom "dibekukan" (freeze) di sisi kiri tabel lebar, agar tetap terlihat saat scroll horizontal ke kolom mesin. */
   .data-table th.sticky-col, .data-table td.sticky-col {
     position: sticky;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .data-table th.sticky-col {
     z-index: 11;
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .data-table td.sticky-col {
     z-index: 2;
     background: #ffffff;
+    /* Nama material tidak dipotong dengan "..." — biarkan bungkus ke baris berikutnya kalau panjang. */
+    white-space: normal;
+    word-break: break-word;
   }
   .data-table tbody tr:nth-child(even) td.sticky-col { background: #f8fafc; }
   .data-table tbody tr:hover td.sticky-col { background-color: #eff6ff !important; }

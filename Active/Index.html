@@ -605,7 +605,7 @@
       document.getElementById('tab-btn-reprint').style.display  = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('tab-btn-minmax').style.display   = (user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('mesin-picker-wrap').style.display = user.role === 'operator' ? 'block' : 'none';
-      document.getElementById('recent-receipts-panel').style.display = (user.role === 'tsp' || user.role === 'spv' || user.role === 'operator' || user.role === 'leader_mesin') ? 'block' : 'none';
+      document.getElementById('recent-receipts-panel').style.display = (user.role === 'tsp' || user.role === 'spv' || user.role === 'operator' || user.role === 'leader_mesin') ? 'grid' : 'none';
 
       renderActions();
 
