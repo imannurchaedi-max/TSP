@@ -44,14 +44,23 @@ dipanggil client lewat `google.script.run`.
 
 ---
 
-## MaterialService.js — lookup master material
+## MaterialService.js — lookup master material + sesi "Material List"
+
+Sumber sheet: `SHEET_NAMES.MATERIAL_MASTER` = `'MATERIAL MASTER'` (sebelumnya `'MID EXISTING'`,
+lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 
 | Fungsi | Parameter | Calls | Called by |
 |---|---|---|---|
+| `resolveDeskCol_(headerMap)` | header map sheet | — | `getMaterialList_`, `getMaterialMap_`, `saveMaterialMaster_`, `saveMaterialBatch_`, `migrateMaterialMasterIfEmpty_` — terima header `"Deskripsi"` ATAU `"MATERIAL DESCRIPTION"` |
 | `getSupplierMap_()` | — | `getMaterialMap_` (fallback), `getSheet_`, `getHeaderMap_` (prioritas: histori `BARCODE OUTBOUND WRM`) | `computeTspStock_`, `computeMesinStock_`, `computeValidator_`, `computeShiftReceipts_`, `computeShiftDispatches_`, `computeOperatorReceipts_`, `computeOperatorConsumption_`, `computePortalHistory_`, `getMinMaxSettings` |
-| `getMaterialList_()` | — | `getSheet_`, `getHeaderMap_` | `executeShiftRollover_`, `tarikStokAwalShift_` |
-| `getMaterialMap_()` | — | `getSheet_`, `getHeaderMap_` | `getSupplierMap_`, `computeTspStock_` (fallback), `computeValidator_`, `getMinMaxSettings`, `saveMinMaxSetting`, `saveMinMaxBatch_` — return sekarang termasuk field `supplier` (kosong kalau kolom Supplier belum ada di sheet) |
-| `upsertMaterialMaster_(mid, deskripsi, uom, supplier)` | MID, deskripsi, UOM, supplier | `getSheet_`, `getHeaderMap_`, `normalizeMid_` | `saveMinMaxSetting` — insert baris baru di MID EXISTING (auto-tambah kolom "Supplier" kalau belum ada) atau isi field kosong pada baris yang sudah ada; tidak pernah menimpa data yang sudah terisi; invalidate `materialCache_`/`materialListCache_`/`supplierMapCache_` |
+| `getMaterialList_()` | — | `getSheet_`, `getHeaderMap_`, `resolveDeskCol_` | `executeShiftRollover_`, `tarikStokAwalShift_`, `getMaterialListApi` (Code.js) — return `[{mid, deskripsi, uom, supplier}]` |
+| `getMaterialMap_()` | — | `getSheet_`, `getHeaderMap_`, `resolveDeskCol_` | `getSupplierMap_`, `computeTspStock_` (fallback), `computeValidator_`, `getMinMaxSettings`, `saveMinMaxSetting`, `saveMinMaxBatch_` |
+| `saveMaterialMaster_(nik, mid, deskripsi, uom, supplier)` | NIK aktor, MID, deskripsi, UOM, supplier | `getSheet_`, `getHeaderMap_`, `resolveDeskCol_`, `normalizeMid_` | `saveMaterialApi` (Code.js) — insert/update 1 baris; **selalu menimpa** field dgn nilai baru (beda dari `upsertMaterialMaster_` lama yang sudah dihapus); auto-tambah kolom "Supplier" kalau belum ada; invalidate 3 cache |
+| `saveMaterialBatch_(nik, items)` | NIK aktor, array `{mid,deskripsi,uom,supplier}` | `getSheet_`, `getHeaderMap_`, `resolveDeskCol_`, `normalizeMid_` | `saveMaterialBatchApi` (Code.js) — import CSV Material List |
+| `isMidUsedAnywhere_(mid)` | MID | `getSheet_`, `getHeaderMap_`, `normalizeMid_` | `deleteMaterial_` — cek kolom MID di STOCK_TSP, STOCK_MESIN, BARCODE, WRM_INCOMING |
+| `deleteMaterialMaster_(mid)` | MID | `getSheet_`, `getHeaderMap_`, `normalizeMid_` | `deleteMaterial_`, `deleteMinMaxSetting_` *(tidak lagi dipanggil sejak v95 — lihat StockService.js)* — hapus 1 baris dari Material Master |
+| `deleteMaterial_(nik, mid)` | NIK aktor, MID | `isMidUsedAnywhere_`, `deleteMaterialMaster_`, `getMinMaxSheet_` (StockService.js) | `deleteMaterialApi` (Code.js) — tolak kalau MID pernah dipakai di transaksi; kalau berhasil, cascade-delete semua baris MIN MAX STOCK terkait MID tsb |
+| `migrateMaterialMasterIfEmpty_()` | — | `getSheet_`, `getHeaderMap_`, `resolveDeskCol_` | `getMaterialListApi` (Code.js) — migrasi sekali-jalan dari `MID EXISTING` ke `MATERIAL MASTER` kalau sheet baru masih kosong |
 
 ---
 
@@ -95,7 +104,9 @@ dipanggil client lewat `google.script.run`.
 | `computeShiftDispatches_(now)` | waktu referensi | `getShiftBounds_`, `readAllBarcodeRows_`, `getSupplierMap_` | `getShiftDispatches` (Code.js) |
 | `computeValidator_(now)` | waktu referensi | `getShiftBounds_`, `computeTspStock_`, `getSheet_`, `parseMb51Timestamp_`, `getSupplierMap_` | `getValidatorData` (Code.js) |
 | `incrementStockCell_(sheetName, mid, colName, amountToAdd, dateOverride)` | nama sheet (STOCK TSP/MESIN), MID, nama kolom, jumlah, override tanggal | `getShiftBounds_`, `getSheet_`, `getHeaderMap_`, `normalizeMid_` | `handleTerimaWrm_`, `handleKirimMesin_`, `handleChildCheckpoint_` (BarcodeService.js) — **return `true`/`false`** (bukan tanpa nilai balik): `false` kalau tidak ada baris shift aktif yang cocok (mis. Tarik Stok Awal Shift belum dilakukan), caller WAJIB cek ini dan tampilkan warning ke operator, jangan diam-diam ditelan |
-| `saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier)` | NIK aktor, MID, deskripsi, lokasi, min, max, UOM (opsional), supplier (opsional) | `getMinMaxSheet_`, `getMaterialMap_`, `upsertMaterialMaster_` (MaterialService.js), `normalizeMid_` | `saveMinMaxSettingApi` (Code.js) |
+| `saveMinMaxSetting(nik, mid, lokasi, minStock, maxStock)` | NIK aktor, MID, lokasi, min, max | `getMinMaxSheet_`, `getMaterialMap_`, `normalizeMid_` | `saveMinMaxSettingApi` (Code.js) — **sejak v95** menolak MID yang belum terdaftar di Material Master (tidak lagi auto-register lewat `upsertMaterialMaster_`, fungsi itu sudah dihapus); parameter `deskripsi`/`uom`/`supplier` juga sudah dihapus dari signature (pindah ke sesi Material List) |
+| `saveMinMaxBatch_(nik, items)` | NIK aktor, array `{mid,lokasi,minStock,maxStock}` | `getMinMaxSheet_`, `getMaterialMap_`, `normalizeMid_` | `saveMinMaxBatchApi` (Code.js) — import CSV; baris dengan MID belum terdaftar di Material Master di-skip & dilaporkan di pesan hasil |
+| `deleteMinMaxSetting_(nik, mid, lokasi)` | NIK aktor, MID, lokasi | `getMinMaxSheet_`, `normalizeMid_` | `deleteMinMaxSettingApi` (Code.js) — hapus 1 baris threshold MID+Lokasi; **sejak v95 tidak lagi** menyentuh Material Master (dulu sempat cascade-delete di v93) |
 | `getMinMaxSettings()` | — | `getMinMaxSheet_`, `getMaterialMap_`, `getSupplierMap_` | `getMinMaxSettingsApi` (Code.js) — tiap baris sekarang termasuk field `uom` |
 
 ---
@@ -113,5 +124,11 @@ dipanggil client lewat `google.script.run`.
 | `getShiftReceipts()` | — | `computeShiftReceipts_` | `Index.html` |
 | `getShiftDispatches()` | — | `computeShiftDispatches_` | `Index.html` |
 | `getValidatorData()` | — | `computeValidator_` | `Index.html` |
-| `getMinMaxSettingsApi()` | — | `getMinMaxSettings` (StockService.js) | `Index.html` |
-| `saveMinMaxSettingApi(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier)` | NIK, MID, deskripsi, lokasi, min, max, UOM, supplier | `saveMinMaxSetting` (StockService.js) | `Index.html` — modal "Tambah/Edit Min/Max Stock" |
+| `getMinMaxSettingsApi()` | — | `getMinMaxSettings` (StockService.js) | `Index.html` — sesi "Min/Max Stock" di tab Material Master |
+| `saveMinMaxSettingApi(nik, mid, lokasi, minStock, maxStock)` | NIK, MID, lokasi, min, max | `saveMinMaxSetting` (StockService.js) | `Index.html` — modal `modal-minmax-edit` |
+| `saveMinMaxBatchApi(nik, items)` | NIK, array items | `saveMinMaxBatch_` (StockService.js) | `Index.html` — Upload CSV sesi Min/Max Stock |
+| `deleteMinMaxSettingApi(nik, mid, lokasi)` | NIK, MID, lokasi | `deleteMinMaxSetting_` (StockService.js) | `Index.html` — tombol Hapus sesi Min/Max Stock |
+| `getMaterialListApi()` | — | `migrateMaterialMasterIfEmpty_`, `getMaterialList_` (MaterialService.js) | `Index.html` — sesi "Material List" di tab Material Master |
+| `saveMaterialApi(nik, mid, deskripsi, uom, supplier)` | NIK, MID, deskripsi, UOM, supplier | `saveMaterialMaster_` (MaterialService.js) | `Index.html` — modal `modal-material-edit` |
+| `saveMaterialBatchApi(nik, items)` | NIK, array items | `saveMaterialBatch_` (MaterialService.js) | `Index.html` — Upload CSV sesi Material List |
+| `deleteMaterialApi(nik, mid)` | NIK, MID | `deleteMaterial_` (MaterialService.js) | `Index.html` — tombol Hapus sesi Material List |
