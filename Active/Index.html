@@ -2662,11 +2662,29 @@
     }
 
     // --- Batch Print Modal & Sizing ---
+    // Printer produksi: Tally Dascom DL210 dengan roll label thermal fisik 75x50mm (fixed --
+    // rollnya tidak bisa ganti ukuran per print job). Jadi REPRINT_PAGE_SIZE_MM selalu 75x50mm;
+    // preset kecil/standar/besar cuma mengatur kepadatan konten (ukuran barcode & font) di dalam
+    // kanvas fisik yang tetap itu, bukan ukuran kertas yang berbeda-beda.
+    var REPRINT_PAGE_SIZE_MM = { width: 75, height: 50 };
     var REPRINT_PRESETS = {
-      kecil:   { barcodeHeight: 36, fontSize: 10.5, padding: '10px 14px', maxWidth: '280px', svgMargin: 2 },
-      standar: { barcodeHeight: 55, fontSize: 13,   padding: '18px 20px', maxWidth: '380px', svgMargin: 5 },
-      besar:   { barcodeHeight: 85, fontSize: 15.5, padding: '24px 28px', maxWidth: '480px', svgMargin: 8 }
+      kecil:   { barcodeHeight: 34, fontSize: 7.5, padding: '1.5mm 2.5mm', svgMargin: 0 },
+      standar: { barcodeHeight: 44, fontSize: 8.5, padding: '2mm 3mm',     svgMargin: 1 },
+      besar:   { barcodeHeight: 54, fontSize: 10,  padding: '1mm 2mm',    svgMargin: 1 }
     };
+
+    // Tulis ulang @page CSS supaya browser & driver printer menerima ukuran kertas fisik yang
+    // benar (75x50mm) alih-alih default A4/Letter -- ini yang bikin window.print() otomatis pas
+    // di label Dascom DL210 tanpa perlu user atur manual di dialog print tiap kali.
+    function applyReprintPageSize_() {
+      var styleEl = document.getElementById('reprint-page-size-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'reprint-page-size-style';
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = '@page { size: ' + REPRINT_PAGE_SIZE_MM.width + 'mm ' + REPRINT_PAGE_SIZE_MM.height + 'mm; margin: 0; }';
+    }
 
     function onReprintPresetChange() {
       var presetKey = document.getElementById('reprint-size-preset').value;
@@ -2692,10 +2710,9 @@
       if (presetKey !== 'custom' && REPRINT_PRESETS[presetKey]) {
         return REPRINT_PRESETS[presetKey];
       }
-      var h = parseInt(document.getElementById('reprint-custom-height').value) || 55;
-      var f = parseFloat(document.getElementById('reprint-custom-font').value) || 13;
-      var mw = Math.min(Math.max(Math.round(h * 6.5), 250), 550) + 'px';
-      return { barcodeHeight: h, fontSize: f, padding: '16px 18px', maxWidth: mw, svgMargin: 4 };
+      var h = parseInt(document.getElementById('reprint-custom-height').value) || 44;
+      var f = parseFloat(document.getElementById('reprint-custom-font').value) || 8.5;
+      return { barcodeHeight: h, fontSize: f, padding: '2mm 3mm', svgMargin: 1 };
     }
 
     function _openBatchPrintModal(labels) {
@@ -2724,6 +2741,7 @@
 
     function renderReprintLabelsWithCurrentSize() {
       if (!_reprintPendingLabels || _reprintPendingLabels.length === 0) return;
+      applyReprintPageSize_();
       var container = document.getElementById('reprint-label-pages');
       container.innerHTML = '';
 
@@ -2732,19 +2750,21 @@
       _reprintPendingLabels.forEach(function (lbl, idx) {
         var page = document.createElement('div');
         page.className = 'print-label-page';
-        page.style.cssText = 'page-break-after:always; padding:' + cfg.padding + '; max-width:' + cfg.maxWidth + '; margin:0 auto; font-family:inherit; background:#fff; border:1px solid #e2e8f0; border-radius:8px;';
-        
-        var smallFont = Math.max(cfg.fontSize - 2, 9) + 'px';
+        // Kanvas label fisik tetap 75x50mm (roll Dascom DL210) -- preset cuma mengatur
+        // kepadatan konten (padding/ukuran font/barcode) di dalam kanvas ini, bukan ukurannya.
+        page.style.cssText = 'page-break-after:always; box-sizing:border-box; width:' + REPRINT_PAGE_SIZE_MM.width + 'mm; height:' + REPRINT_PAGE_SIZE_MM.height + 'mm; overflow:hidden; padding:' + cfg.padding + '; margin:0 auto; font-family:inherit; background:#fff; border:1px solid #e2e8f0;';
+
+        var smallFont = Math.max(cfg.fontSize - 1.5, 6) + 'px';
         var mainFont  = cfg.fontSize + 'px';
 
         page.innerHTML =
-          '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto 10px; width:100%; max-width:100%;"></svg>' +
-          '<table style="width:100%; border-collapse:collapse; font-size:' + mainFont + ';">' +
-          '<tr><td style="color:#64748b; padding:3px 0; width:90px;">Kode Anak</td><td style="font-weight:800; color:#0f172a;">' + escapeHtml(lbl.barcodeAnak) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:3px 0;">MID</td><td style="color:#0f172a; font-weight:600;">' + escapeHtml(lbl.mid) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:3px 0;">Material</td><td style="color:#0f172a; font-weight:500;">' + escapeHtml(lbl.deskripsi) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:3px 0;">Qty</td><td style="font-weight:800; color:#16a34a;">' + escapeHtml(String(lbl.jumlah)) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:3px 0;">Ref Induk</td><td style="color:#64748b; font-size:' + smallFont + ';">' + escapeHtml(lbl.barcodeInduk) + '</td></tr>' +
+          '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto 2px; width:100%; max-width:100%;"></svg>' +
+          '<table style="width:100%; border-collapse:collapse; font-size:' + mainFont + '; line-height:1.15;">' +
+          '<tr><td style="color:#64748b; padding:1px 0; width:44px;">Kode Anak</td><td style="font-weight:800; color:#0f172a;">' + escapeHtml(lbl.barcodeAnak) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:1px 0;">MID</td><td style="color:#0f172a; font-weight:600;">' + escapeHtml(lbl.mid) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:1px 0;">Material</td><td style="color:#0f172a; font-weight:500;">' + escapeHtml(lbl.deskripsi) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:1px 0;">Qty</td><td style="font-weight:800; color:#16a34a;">' + escapeHtml(String(lbl.jumlah)) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:1px 0;">Ref Induk</td><td style="color:#64748b; font-size:' + smallFont + ';">' + escapeHtml(lbl.barcodeInduk) + '</td></tr>' +
           '</table>';
         container.appendChild(page);
 
@@ -2753,10 +2773,10 @@
           try {
             JsBarcode('#' + svgId, code, {
               format: 'CODE128',
-              width: 2,
+              width: 1.4,
               height: bHeight,
               displayValue: true,
-              fontSize: Math.max(fSize - 1, 10),
+              fontSize: Math.max(fSize - 1, 6),
               margin: mMargin
             });
           } catch(e) {}
@@ -2822,12 +2842,12 @@
       <div style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:10px 20px; display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <label style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px;">
-            <i class="bi bi-aspect-ratio"></i> Ukuran Label:
+            <i class="bi bi-aspect-ratio"></i> Kepadatan Label <span style="font-weight:500; color:#94a3b8;">(kertas tetap 75x50mm — Dascom DL210)</span>:
           </label>
           <select id="reprint-size-preset" onchange="onReprintPresetChange()" style="padding:4px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; font-weight:600; font-family:inherit; background:#fff; cursor:pointer;">
             <option value="standar">Standar (Default)</option>
-            <option value="kecil">Kecil / Compact (50x30mm)</option>
-            <option value="besar">Besar / Large (100x75mm)</option>
+            <option value="kecil">Kecil / Compact</option>
+            <option value="besar">Besar / Large</option>
             <option value="custom">Custom (Atur Sendiri)</option>
           </select>
         </div>
@@ -2836,12 +2856,12 @@
         <div id="reprint-custom-controls" style="display:none; gap:12px; align-items:center; flex-wrap:wrap; padding-top:6px; border-top:1px dashed #cbd5e1; margin-top:4px;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-size:11.5px; color:#64748b; font-weight:600;">Tinggi Barcode:</span>
-            <input type="number" id="reprint-custom-height" min="20" max="150" value="55" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
+            <input type="number" id="reprint-custom-height" min="20" max="65" value="44" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
             <span style="font-size:11px; color:#94a3b8;">px</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-size:11.5px; color:#64748b; font-weight:600;">Ukuran Font:</span>
-            <input type="number" id="reprint-custom-font" min="8" max="24" value="13" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
+            <input type="number" id="reprint-custom-font" min="6" max="14" value="8.5" step="0.5" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
             <span style="font-size:11px; color:#94a3b8;">pt</span>
           </div>
         </div>
@@ -2866,7 +2886,7 @@
       #reprint-label-overlay > div > div:first-child,
       #reprint-label-overlay > div > div:nth-child(2),
       #reprint-label-overlay > div > div:last-child { display: none !important; }
-      .print-label-page { border: 1px solid #cbd5e1 !important; margin-bottom: 0 !important; box-shadow: none !important; }
+      .print-label-page { border: none !important; margin: 0 !important; box-shadow: none !important; }
       .print-label-page button { display: none !important; }
     }
   </style>
