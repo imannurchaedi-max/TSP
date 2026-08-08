@@ -631,9 +631,6 @@
   /* Panel Penerimaan/Pengiriman Shift: 2 kolom di atas tabel stock. Tiap panel dibatasi ~4 baris lalu scroll
      (data terbaru selalu di atas — urutan sudah descending dari backend). */
   .stock-shift-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-  @media (max-width: 700px) {
-    .stock-shift-panels { grid-template-columns: 1fr; }
-  }
   #recent-receipts-wrap .table-scroll,
   #shift-dispatches-wrap .table-scroll {
     max-height: 205px;
