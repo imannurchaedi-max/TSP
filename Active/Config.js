@@ -24,7 +24,9 @@ var JABATAN_ROLE_MAP = {
 
 var SHEET_NAMES = {
   BARCODE: 'BARCODE MATERIAL PRODUKSI',
-  MATERIAL_MASTER: 'MID EXISTING',
+  MATERIAL_MASTER: 'MATERIAL MASTER', // sheet baru untuk sesi "Material List". Data lama ada di
+                                       // OLD_MATERIAL_MASTER_SHEET_NAME_ (MaterialService.js) dan
+                                       // dimigrasikan otomatis sekali jalan kalau sheet ini masih kosong.
   LOG: 'Log Aktivitas Barcode',
   MB51: 'MB51 ', // perhatikan ada spasi di akhir nama sheet aslinya
   WRM_INCOMING: 'BARCODE OUTBOUND WRM', // registry pallet dari WRM, sumber lookup MID/QTY saat Terima dari WRM

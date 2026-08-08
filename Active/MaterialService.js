@@ -1,5 +1,5 @@
 /**
- * Lookup master material dari sheet "MID EXISTING" (MID -> Deskripsi, UOM).
+ * Lookup master material dari sheet Material Master (MID -> Deskripsi, UOM, Supplier).
  * Di-cache per eksekusi (variable global) supaya tidak baca sheet berkali-kali
  * dalam satu request.
  */
@@ -7,6 +7,19 @@
 var materialCache_ = null;
 var materialListCache_ = null;
 var supplierMapCache_ = null;
+
+// Nama sheet Material Master versi lama, sebelum dipindah ke SHEET_NAMES.MATERIAL_MASTER
+// ('MATERIAL MASTER'). Dipakai satu kali oleh migrateMaterialMasterIfEmpty_ untuk menyalin
+// data lama ke sheet baru; tidak dipakai lagi setelah migrasi selesai.
+var OLD_MATERIAL_MASTER_SHEET_NAME_ = 'MID EXISTING';
+
+// Kolom "Deskripsi" di sheet Material Master kadang ditulis sebagai "MATERIAL DESCRIPTION"
+// (mengikuti header template CSV) -- terima kedua penamaan supaya sheet manapun yang dipakai
+// user tetap kebaca dengan benar.
+function resolveDeskCol_(headerMap) {
+  return headerMap['Deskripsi'] || headerMap['deskripsi'] ||
+         headerMap['MATERIAL DESCRIPTION'] || headerMap['material description'];
+}
 
 // Prioritas Supplier: transaksi BARCODE OUTBOUND WRM (data riil terbaru) menang atas
 // Supplier default di Material Master (MID EXISTING) -- Material Master hanya dipakai
@@ -52,9 +65,9 @@ function getMaterialList_() {
   var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
   var lastRow = sheet.getLastRow();
   var headerMap = getHeaderMap_(sheet);
-  var midCol = headerMap['MID'];
-  var deskripsiCol = headerMap['Deskripsi'];
-  var uomCol = headerMap['UOM'];
+  var midCol = headerMap['MID'] || headerMap['mid'] || 1;
+  var deskripsiCol = resolveDeskCol_(headerMap) || 2;
+  var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
   var suppCol = headerMap['Supplier'] || headerMap['supplier'];
 
   var list = [];
@@ -82,9 +95,9 @@ function getMaterialMap_() {
   var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
   var lastRow = sheet.getLastRow();
   var headerMap = getHeaderMap_(sheet);
-  var midCol = headerMap['MID'];
-  var deskripsiCol = headerMap['Deskripsi'];
-  var uomCol = headerMap['UOM'];
+  var midCol = headerMap['MID'] || headerMap['mid'] || 1;
+  var deskripsiCol = resolveDeskCol_(headerMap) || 2;
+  var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
   var suppCol = headerMap['Supplier'] || headerMap['supplier'];
 
   var map = {};
@@ -122,7 +135,7 @@ function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier) {
     var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
     var headerMap = getHeaderMap_(sheet);
     var midCol = headerMap['MID'] || headerMap['mid'] || 1;
-    var deskCol = headerMap['Deskripsi'] || headerMap['deskripsi'] || 2;
+    var deskCol = resolveDeskCol_(headerMap) || 2;
     var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
     var suppCol = headerMap['Supplier'] || headerMap['supplier'];
 
@@ -180,7 +193,7 @@ function saveMaterialBatch_(nik, items) {
     var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
     var headerMap = getHeaderMap_(sheet);
     var midCol = headerMap['MID'] || headerMap['mid'] || 1;
-    var deskCol = headerMap['Deskripsi'] || headerMap['deskripsi'] || 2;
+    var deskCol = resolveDeskCol_(headerMap) || 2;
     var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
     var suppCol = headerMap['Supplier'] || headerMap['supplier'];
 
@@ -327,6 +340,71 @@ function deleteMaterialMaster_(mid) {
     }
   }
   return false;
+}
+
+/**
+ * Migrasi sekali-jalan: kalau sheet Material Master baru (SHEET_NAMES.MATERIAL_MASTER,
+ * 'MATERIAL MASTER') masih kosong, salin semua data dari sheet lama
+ * (OLD_MATERIAL_MASTER_SHEET_NAME_, 'MID EXISTING') ke situ. Aman dipanggil berkali-kali --
+ * setelah baris pertama berhasil ditulis, sheet baru tidak lagi kosong sehingga fungsi ini
+ * langsung return di percobaan berikutnya. Kalau sheet lama sudah tidak ada (mis. sudah
+ * dihapus manual setelah migrasi selesai), fungsi ini diam saja -- tidak ada yang perlu
+ * dimigrasikan lagi.
+ */
+function migrateMaterialMasterIfEmpty_() {
+  var sheet;
+  try {
+    sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
+  } catch (e) {
+    return; // sheet baru belum dibuat -- tidak ada yang bisa dimigrasikan ke situ
+  }
+  if (sheet.getLastRow() >= 2) return;
+
+  var oldSheet;
+  try {
+    oldSheet = getSheet_(OLD_MATERIAL_MASTER_SHEET_NAME_);
+  } catch (e) {
+    return;
+  }
+  if (oldSheet.getSheetId() === sheet.getSheetId()) return;
+
+  var oldLastRow = oldSheet.getLastRow();
+  if (oldLastRow < 2) return;
+
+  var oldHeaderMap = getHeaderMap_(oldSheet);
+  var oldMidCol = oldHeaderMap['MID'] || oldHeaderMap['mid'] || 1;
+  var oldDeskCol = resolveDeskCol_(oldHeaderMap) || 2;
+  var oldUomCol = oldHeaderMap['UOM'] || oldHeaderMap['uom'] || 3;
+  var oldSuppCol = oldHeaderMap['Supplier'] || oldHeaderMap['supplier'];
+
+  var oldData = oldSheet.getRange(2, 1, oldLastRow - 1, oldSheet.getLastColumn()).getValues();
+
+  var newHeaderMap = getHeaderMap_(sheet);
+  var newMidCol = newHeaderMap['MID'] || newHeaderMap['mid'] || 1;
+  var newDeskCol = resolveDeskCol_(newHeaderMap) || 2;
+  var newUomCol = newHeaderMap['UOM'] || newHeaderMap['uom'] || 3;
+  var newSuppCol = newHeaderMap['Supplier'] || newHeaderMap['supplier'];
+  if (!newSuppCol) {
+    newSuppCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, newSuppCol).setValue('SUPPLIER').setFontWeight('bold').setBackground('#f1f5f9');
+  }
+
+  var maxCol = Math.max(newMidCol, newDeskCol, newUomCol, newSuppCol);
+  var rowsToWrite = oldData.map(function (r) {
+    var row = [];
+    for (var c = 0; c < maxCol; c++) row.push('');
+    row[newMidCol - 1] = r[oldMidCol - 1];
+    row[newDeskCol - 1] = r[oldDeskCol - 1];
+    row[newUomCol - 1] = r[oldUomCol - 1];
+    if (oldSuppCol) row[newSuppCol - 1] = r[oldSuppCol - 1];
+    return row;
+  });
+
+  sheet.getRange(2, 1, rowsToWrite.length, maxCol).setValues(rowsToWrite);
+
+  materialCache_ = null;
+  materialListCache_ = null;
+  supplierMapCache_ = null;
 }
 
 

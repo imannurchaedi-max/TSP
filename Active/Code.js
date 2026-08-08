@@ -293,6 +293,7 @@ function deleteMinMaxSettingApi(nik, mid, lokasi) {
 /** Endpoint API Daftar Material List -- sesi 1 di menu Material Master (TSP/SPV) */
 function getMaterialListApi() {
   try {
+    migrateMaterialMasterIfEmpty_();
     return { success: true, data: getMaterialList_() };
   } catch (err) {
     return { success: false, message: err.message, data: [] };
