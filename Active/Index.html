@@ -52,7 +52,7 @@
         <a class="nav-link" id="tab-btn-validasi" href="<?= appUrl ?>?tab=validasi" style="display:none;"><i class="bi bi-clipboard-check"></i><span>Validasi</span></a>
         <a class="nav-link" id="tab-btn-history" href="<?= appUrl ?>?tab=history"><i class="bi bi-clock-history"></i><span>Riwayat</span></a>
         <a class="nav-link" id="tab-btn-reprint" href="<?= appUrl ?>?tab=reprint" style="display:none;"><i class="bi bi-printer-fill"></i><span>Reprint</span></a>
-        <a class="nav-link" id="tab-btn-minmax" href="<?= appUrl ?>?tab=minmax" style="display:none;"><i class="bi bi-sliders"></i><span>Min/Max Stock</span></a>
+        <a class="nav-link" id="tab-btn-minmax" href="<?= appUrl ?>?tab=minmax" style="display:none;"><i class="bi bi-database-fill-gear"></i><span>Material Master</span></a>
       </nav>
       <div class="sidebar-footer">
         <button class="secondary-btn logout-btn" id="logout-btn">Logout</button>
@@ -101,9 +101,6 @@
 
             <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
               <p class="stock-shift-label" id="stock-shift-label" style="margin-bottom: 0;"></p>
-              <button class="primary-btn" id="btn-tambah-material-header" onclick="openAddMinMaxModal()" style="display:none; padding: 8px 14px; font-size: 0.88rem; background: #fff; border-radius: 6px; align-items: center; gap: 6px; cursor: pointer; border: 1px solid #cbd5e1; color: #334155; font-weight: 500;">
-                <i class="bi bi-plus-lg"></i> <span>Tambah Material</span>
-              </button>
               <button class="primary-btn" id="btn-tarik-stok-header" onclick="tarikStokAwalHandler('aktif')" style="padding: 8px 14px; font-size: 0.88rem; background: linear-gradient(135deg, #16a34a, #15803d); border-radius: 6px; display: flex; align-items: center; gap: 6px; cursor: pointer; border: none; color: #fff; font-weight: 500; box-shadow: 0 2px 5px rgba(22,163,74,0.3);">
                 <i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>
               </button>
@@ -323,7 +320,7 @@
                 <i class="bi bi-file-earmark-arrow-up-fill"></i> Upload CSV
               </button>
               <button class="primary-btn" onclick="openAddMinMaxModal()" style="padding: 8px 18px; border-radius: 8px; border:none; background:#0d6efd; color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-plus-lg"></i> Set Threshold
+                <i class="bi bi-plus-lg"></i> Tambah Material
               </button>
               <input type="file" id="minmax-csv-file" accept=".csv" onchange="handleCsvFileSelected(event)" style="display:none;">
             </div>
@@ -606,8 +603,7 @@
 
       document.getElementById('tab-btn-validasi').style.display = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('tab-btn-reprint').style.display  = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
-      document.getElementById('tab-btn-minmax').style.display   = (user.role === 'spv') ? 'flex' : 'none';
-      document.getElementById('btn-tambah-material-header').style.display = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
+      document.getElementById('tab-btn-minmax').style.display   = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('mesin-picker-wrap').style.display = user.role === 'operator' ? 'block' : 'none';
       document.getElementById('recent-receipts-panel').style.display = (user.role === 'tsp' || user.role === 'spv' || user.role === 'operator' || user.role === 'leader_mesin') ? 'grid' : 'none';
 
@@ -638,7 +634,7 @@
       }).getMesinList();
     }
 
-    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi', history: 'Riwayat Stok', reprint: 'Reprint Barcode', minmax: 'Min/Max Stock' };
+    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi', history: 'Riwayat Stok', reprint: 'Reprint Barcode', minmax: 'Material Master' };
     var CURRENT_TAB = 'stock';
 
     // ===== DEEPLINK & URL SESSION HISTORY MANAGEMENT =====
@@ -1784,7 +1780,6 @@
               if (resp && resp.success) {
                 showPopupModal('Berhasil', resp.message, 'success');
                 loadMinMaxTab();
-                if (CURRENT_TAB === 'stock') loadStockTab();
               } else {
                 showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
               }
@@ -1823,7 +1818,6 @@
           if (resp && resp.success) {
             showPopupModal('Berhasil', resp.message, 'success');
             loadMinMaxTab();
-            if (CURRENT_TAB === 'stock') loadStockTab();
           } else {
             showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
           }
