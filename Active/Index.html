@@ -292,42 +292,77 @@
 
         <!-- ===== TAB MIN / MAX STOCK ===== -->
         <div id="tab-minmax" class="tab-panel" style="display:none;">
-          <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;">
-            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-              <div class="filter-group">
-                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Filter Lokasi</label>
-                <select id="minmax-filter-loc" onchange="filterMinMaxTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;">
-                  <option value="ALL">Semua Lokasi</option>
-                  <option value="TSP">Area TSP</option>
-                  <option value="BHP 1">Mesin BHP 1</option>
-                  <option value="BHP 2">Mesin BHP 2</option>
-                  <option value="BHP 3">Mesin BHP 3</option>
-                  <option value="AHP 1">Mesin AHP 1</option>
-                  <option value="BHP 4">Mesin BHP 4</option>
-                  <option value="BHP 5">Mesin BHP 5</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Cari MID / Deskripsi</label>
-                <input type="text" id="minmax-search" onkeyup="filterMinMaxTable()" placeholder="Ketik MID atau deskripsi..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 220px; font-family: inherit;">
-              </div>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <button onclick="downloadCsvTemplate()" style="padding: 8px 14px; border-radius: 8px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-download"></i> Template CSV
-              </button>
-              <button onclick="triggerCsvUpload()" style="padding: 8px 16px; border-radius: 8px; border:none; background:linear-gradient(135deg,#059669,#047857); color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-file-earmark-arrow-up-fill"></i> Upload CSV
-              </button>
-              <button class="primary-btn" onclick="openAddMinMaxModal()" style="padding: 8px 18px; border-radius: 8px; border:none; background:#0d6efd; color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-plus-lg"></i> Tambah Material
-              </button>
-              <input type="file" id="minmax-csv-file" accept=".csv" onchange="handleCsvFileSelected(event)" style="display:none;">
-            </div>
+          <div class="subnav-container" style="margin-bottom:16px;">
+            <button type="button" class="subnav-btn active" id="subnav-material-list" onclick="switchMaterialSubnav('list')">
+              <i class="bi bi-card-list"></i><span>Material List</span>
+            </button>
+            <button type="button" class="subnav-btn" id="subnav-material-minmax" onclick="switchMaterialSubnav('minmax')">
+              <i class="bi bi-sliders"></i><span>Min/Max Stock</span>
+            </button>
           </div>
-          <div id="minmax-table-wrap"></div>
+
+          <!-- SESI 1: MATERIAL LIST (MID, Deskripsi, UOM, Supplier -- tambah/edit/hapus material) -->
+          <div id="subview-material-list" style="display:block;">
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;">
+              <div class="filter-group">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Cari MID / Deskripsi / Supplier</label>
+                <input type="text" id="material-search" onkeyup="filterMaterialListTable()" placeholder="Ketik MID, deskripsi, atau supplier..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 260px; font-family: inherit;">
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button onclick="downloadMaterialCsvTemplate()" style="padding: 8px 14px; border-radius: 8px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-download"></i> Template CSV
+                </button>
+                <button onclick="triggerMaterialCsvUpload()" style="padding: 8px 16px; border-radius: 8px; border:none; background:linear-gradient(135deg,#059669,#047857); color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-file-earmark-arrow-up-fill"></i> Upload CSV
+                </button>
+                <button class="primary-btn" onclick="openAddMaterialModal()" style="padding: 8px 18px; border-radius: 8px; border:none; background:#0d6efd; color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-plus-lg"></i> Tambah Material
+                </button>
+                <input type="file" id="material-csv-file" accept=".csv" onchange="handleMaterialCsvFileSelected(event)" style="display:none;">
+              </div>
+            </div>
+            <div id="material-list-table-wrap"></div>
+          </div>
+
+          <!-- SESI 2: MIN/MAX STOCK (MID + Lokasi + Min + Max -- material harus sudah ada di sesi 1) -->
+          <div id="subview-material-minmax" style="display:none;">
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;">
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div class="filter-group">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Filter Lokasi</label>
+                  <select id="minmax-filter-loc" onchange="filterMinMaxTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;">
+                    <option value="ALL">Semua Lokasi</option>
+                    <option value="TSP">Area TSP</option>
+                    <option value="BHP 1">Mesin BHP 1</option>
+                    <option value="BHP 2">Mesin BHP 2</option>
+                    <option value="BHP 3">Mesin BHP 3</option>
+                    <option value="AHP 1">Mesin AHP 1</option>
+                    <option value="BHP 4">Mesin BHP 4</option>
+                    <option value="BHP 5">Mesin BHP 5</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Cari MID / Deskripsi</label>
+                  <input type="text" id="minmax-search" onkeyup="filterMinMaxTable()" placeholder="Ketik MID atau deskripsi..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 220px; font-family: inherit;">
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button onclick="downloadMinMaxCsvTemplate()" style="padding: 8px 14px; border-radius: 8px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-download"></i> Template CSV
+                </button>
+                <button onclick="triggerMinMaxCsvUpload()" style="padding: 8px 16px; border-radius: 8px; border:none; background:linear-gradient(135deg,#059669,#047857); color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-file-earmark-arrow-up-fill"></i> Upload CSV
+                </button>
+                <button class="primary-btn" onclick="openAddMinMaxModal()" style="padding: 8px 18px; border-radius: 8px; border:none; background:#0d6efd; color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-plus-lg"></i> Tambah Min/Max
+                </button>
+                <input type="file" id="minmax-csv-file" accept=".csv" onchange="handleMinMaxCsvFileSelected(event)" style="display:none;">
+              </div>
+            </div>
+            <div id="minmax-table-wrap"></div>
+          </div>
         </div>
-        <!-- END TAB MIN / MAX STOCK -->
+        <!-- END TAB MATERIAL MASTER -->
 
       </div>
     </div>
@@ -352,9 +387,46 @@
     </div>
   </div>
 
-  <!-- MODAL EDIT MIN MAX STOCK -->
+  <!-- MODAL TAMBAH/EDIT MATERIAL (Sesi 1: Material List) -->
+  <div id="modal-material-edit" class="custom-popup-overlay" style="display:none;">
+    <div class="custom-popup-modal" style="max-width: 460px; text-align: left;">
+      <div class="popup-header-box" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 20px 24px;">
+        <button class="popup-close-icon" onclick="closeMaterialModal()" style="color:#fff;">&times;</button>
+        <h3 style="margin:0; font-size:17px; color:#fff; display:flex; align-items:center; gap:8px;">
+          <i class="bi bi-card-list" style="color:#60a5fa;"></i> Tambah / Edit Material
+        </h3>
+      </div>
+      <div style="padding: 24px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">MID Material *</label>
+          <input type="text" id="material-input-mid" placeholder="Masukkan MID (mis. 20000237)" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
+        </div>
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Deskripsi Material</label>
+          <input type="text" id="material-input-desc" placeholder="Ketik deskripsi..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">UOM</label>
+            <input type="text" id="material-input-uom" placeholder="mis. KG, ROLL" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+          </div>
+          <div style="flex:2;">
+            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Supplier</label>
+            <input type="text" id="material-input-supplier" placeholder="Ketik nama supplier..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+          </div>
+        </div>
+        <p style="font-size:11.5px; color:#94a3b8; margin:0;">Kalau MID belum pernah ada transaksi WRM, Supplier di sini jadi default sampai ada transaksi WRM pertama (yang lalu jadi prioritas).</p>
+      </div>
+      <div class="popup-footer-box" style="padding: 14px 24px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; justify-content:flex-end;">
+        <button class="popup-cancel-btn" onclick="closeMaterialModal()" style="display:inline-block;">Batal</button>
+        <button class="popup-confirm-btn" onclick="saveMaterialFromForm()" style="background:#0d6efd;">Simpan Material</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH/EDIT MIN MAX STOCK (Sesi 2: Min/Max Stock -- MID harus sudah ada di Material List) -->
   <div id="modal-minmax-edit" class="custom-popup-overlay" style="display:none;">
-    <div class="custom-popup-modal" style="max-width: 480px; text-align: left;">
+    <div class="custom-popup-modal" style="max-width: 420px; text-align: left;">
       <div class="popup-header-box" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 20px 24px;">
         <button class="popup-close-icon" onclick="closeMinMaxModal()" style="color:#fff;">&times;</button>
         <h3 style="margin:0; font-size:17px; color:#fff; display:flex; align-items:center; gap:8px;">
@@ -364,23 +436,10 @@
       <div style="padding: 24px; display:flex; flex-direction:column; gap:14px;">
         <div>
           <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">MID Material *</label>
-          <input type="text" id="minmax-input-mid" placeholder="Masukkan MID (mis. 20000237)" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
+          <input type="text" id="minmax-input-mid" list="material-mid-datalist" placeholder="Ketik / pilih MID yang sudah ada di Material List" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
+          <datalist id="material-mid-datalist"></datalist>
+          <p style="font-size:11px; color:#94a3b8; margin:6px 0 0;">MID belum ada di daftar? Tambahkan dulu lewat sesi <b>Material List</b>.</p>
         </div>
-        <div>
-          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Deskripsi Material (Opsional)</label>
-          <input type="text" id="minmax-input-desc" placeholder="Ketik deskripsi..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
-        </div>
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">UOM (Opsional)</label>
-            <input type="text" id="minmax-input-uom" placeholder="mis. KG, ROLL" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
-          </div>
-          <div style="flex:2;">
-            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Supplier (Opsional)</label>
-            <input type="text" id="minmax-input-supplier" placeholder="Ketik nama supplier..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
-          </div>
-        </div>
-        <p style="font-size:11.5px; color:#94a3b8; margin:0;">Kalau MID belum pernah ada transaksi WRM, Supplier di sini jadi default sampai ada transaksi WRM pertama (yang lalu jadi prioritas).</p>
         <div>
           <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Lokasi *</label>
           <select id="minmax-input-loc" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
@@ -1647,11 +1706,316 @@
     }
 
     // ==========================================
-    // MIN / MAX STOCK MANAGEMENT FUNCTIONS (SPV)
+    // MATERIAL MASTER (TSP/SPV) -- 2 sesi terpisah:
+    //   Sesi 1 "Material List"  : MID, Deskripsi, UOM, Supplier (tambah/edit/hapus material)
+    //   Sesi 2 "Min/Max Stock"  : MID + Lokasi + Min + Max (MID harus sudah ada di sesi 1)
     // ==========================================
+    var CURRENT_MATERIAL_SUBNAV = 'list';
+
+    // Entry point saat tab Material Master dibuka (dipanggil dari switchTab).
+    function loadMinMaxTab() {
+      switchMaterialSubnav('list');
+    }
+
+    function switchMaterialSubnav(target) {
+      CURRENT_MATERIAL_SUBNAV = target;
+      var btnList = document.getElementById('subnav-material-list');
+      var btnMinmax = document.getElementById('subnav-material-minmax');
+      var viewList = document.getElementById('subview-material-list');
+      var viewMinmax = document.getElementById('subview-material-minmax');
+
+      if (target === 'list') {
+        if (btnList) btnList.className = 'subnav-btn active';
+        if (btnMinmax) btnMinmax.className = 'subnav-btn';
+        if (viewList) viewList.style.display = 'block';
+        if (viewMinmax) viewMinmax.style.display = 'none';
+        loadMaterialListTab();
+      } else {
+        if (btnList) btnList.className = 'subnav-btn';
+        if (btnMinmax) btnMinmax.className = 'subnav-btn active';
+        if (viewList) viewList.style.display = 'none';
+        if (viewMinmax) viewMinmax.style.display = 'block';
+        loadMinMaxSettingsTab();
+      }
+    }
+
+    // ------------------------------------------
+    // SESI 1: MATERIAL LIST
+    // ------------------------------------------
+    var materialListDataCache = [];
+
+    function loadMaterialListTab() {
+      var wrap = document.getElementById('material-list-table-wrap');
+      wrap.innerHTML = '<p style="text-align:center; color:#64748b; padding:40px;"><i class="bi bi-hourglass-split"></i> Memuat Material List...</p>';
+      showFloatingLoading('Memuat Material List...');
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            materialListDataCache = resp.data || [];
+            populateMaterialMidDatalist();
+            filterMaterialListTable();
+          } else {
+            wrap.innerHTML = '<p style="text-align:center; color:#ef4444; padding:40px;">Gagal memuat data: ' + (resp ? resp.message : 'Error') + '</p>';
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          wrap.innerHTML = '<p style="text-align:center; color:#ef4444; padding:40px;">Error: ' + err.message + '</p>';
+        })
+        .getMaterialListApi();
+    }
+
+    // Isi ulang datalist MID untuk input MID di modal Min/Max (sesi 2), supaya user cuma bisa
+    // pilih MID yang memang sudah terdaftar di Material List.
+    function populateMaterialMidDatalist() {
+      var datalist = document.getElementById('material-mid-datalist');
+      if (!datalist) return;
+      var html = '';
+      materialListDataCache.forEach(function(m) {
+        html += '<option value="' + escapeHtml(m.mid) + '">' + escapeHtml(m.deskripsi || '') + '</option>';
+      });
+      datalist.innerHTML = html;
+    }
+
+    function filterMaterialListTable() {
+      var searchVal = (document.getElementById('material-search').value || '').toLowerCase().trim();
+      var filtered = materialListDataCache.filter(function(item) {
+        if (!searchVal) return true;
+        return (item.mid || '').toLowerCase().includes(searchVal) ||
+               (item.deskripsi || '').toLowerCase().includes(searchVal) ||
+               (item.supplier || '').toLowerCase().includes(searchVal);
+      });
+      renderMaterialListTable(filtered);
+    }
+
+    function renderMaterialListTable(items) {
+      var wrap = document.getElementById('material-list-table-wrap');
+      if (!items || items.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center; padding: 40px; border: 1px dashed #cbd5e1; border-radius: 8px;"><i class="bi bi-card-list" style="font-size: 2rem; color: #94a3b8; display: block; margin-bottom: 8px;"></i><p style="color:#64748b;">Belum ada material terdaftar.</p></div>';
+        return;
+      }
+
+      var html = '<div class="table-responsive" style="overflow-x:auto;"><table class="stock-table" style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+      html += '<thead><tr style="background:#f8fafc; text-align:left; font-size:12px; color:#475569; border-bottom:2px solid #e2e8f0;">' +
+              '<th style="padding:12px 14px;">MID</th>' +
+              '<th style="padding:12px 14px;">MATERIAL DESCRIPTION</th>' +
+              '<th style="padding:12px 14px;">UOM</th>' +
+              '<th style="padding:12px 14px;">SUPPLIER</th>' +
+              '<th style="padding:12px 14px; text-align:center;">AKSI</th>' +
+              '</tr></thead><tbody>';
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        html += '<tr style="border-bottom:1px solid #f1f5f9; font-size:13px;">' +
+                '<td style="padding:12px 14px; font-weight:700; color:#1e293b;">' + escapeHtml(item.mid) + '</td>' +
+                '<td style="padding:12px 14px; color:#334155; font-weight:500;">' + escapeHtml(item.deskripsi || '-') + '</td>' +
+                '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.uom || '-') + '</td>' +
+                '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.supplier || '-') + '</td>' +
+                '<td style="padding:12px 14px; text-align:center; white-space:nowrap;">' +
+                '<button onclick="editMaterialItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.uom || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.supplier || '').replace(/'/g, "\\'") + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                '<button onclick="confirmDeleteMaterialItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi || '').replace(/'/g, "\\'") + '\')" style="margin-left:6px; padding:5px 12px; border-radius:6px; border:1px solid #fecaca; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#dc2626;"><i class="bi bi-trash3"></i> Hapus</button>' +
+                '</td></tr>';
+      }
+      html += '</tbody></table></div>';
+      wrap.innerHTML = html;
+    }
+
+    function openAddMaterialModal() {
+      document.getElementById('material-input-mid').value = '';
+      document.getElementById('material-input-mid').readOnly = false;
+      document.getElementById('material-input-desc').value = '';
+      document.getElementById('material-input-uom').value = '';
+      document.getElementById('material-input-supplier').value = '';
+      document.getElementById('modal-material-edit').style.display = 'flex';
+    }
+
+    function editMaterialItem(mid, desc, uom, supplier) {
+      document.getElementById('material-input-mid').value = mid;
+      document.getElementById('material-input-mid').readOnly = true;
+      document.getElementById('material-input-desc').value = desc || '';
+      document.getElementById('material-input-uom').value = uom || '';
+      document.getElementById('material-input-supplier').value = supplier || '';
+      document.getElementById('modal-material-edit').style.display = 'flex';
+    }
+
+    function closeMaterialModal() {
+      document.getElementById('modal-material-edit').style.display = 'none';
+    }
+
+    function saveMaterialFromForm() {
+      var user = getSavedUser();
+      var nik = user ? user.nik : 'SPV';
+      var mid = document.getElementById('material-input-mid').value.trim();
+      var desc = document.getElementById('material-input-desc').value.trim();
+      var uom = document.getElementById('material-input-uom').value.trim();
+      var supplier = document.getElementById('material-input-supplier').value.trim();
+
+      if (!mid) {
+        showPopupModal('Input Tidak Lengkap', 'MID Material wajib diisi.', 'warning');
+        return;
+      }
+
+      closeMaterialModal();
+      showFloatingLoading('Menyimpan Material...');
+
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            showPopupModal('Berhasil', resp.message, 'success');
+            loadMaterialListTab();
+          } else {
+            showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          showPopupModal('Error', err.message, 'error');
+        })
+        .saveMaterialApi(nik, mid, desc, uom, supplier);
+    }
+
+    function confirmDeleteMaterialItem(mid, deskripsi) {
+      showConfirmModal(
+        'Hapus Material',
+        'Hapus material <b>' + escapeHtml(mid) + ' — ' + escapeHtml(deskripsi) + '</b> dari Material List?<br><br>Kalau material ini sudah pernah dipakai di transaksi stok/barcode manapun, penghapusan akan ditolak. Kalau berhasil dihapus, seluruh pengaturan Min/Max Stock untuk material ini (di semua lokasi) ikut terhapus.',
+        'warning',
+        '🗑️ Ya, Hapus',
+        'Batal',
+        function() {
+          var user = getSavedUser();
+          var nik = user ? user.nik : 'SPV';
+          showFloatingLoading('Menghapus material...');
+          google.script.run
+            .withSuccessHandler(function(resp) {
+              hideFloatingLoading();
+              if (resp && resp.success) {
+                showPopupModal('Berhasil', resp.message, 'success');
+                loadMaterialListTab();
+              } else {
+                showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideFloatingLoading();
+              showPopupModal('Error', err.message, 'error');
+            })
+            .deleteMaterialApi(nik, mid);
+        }
+      );
+    }
+
+    // --- CSV Material List (MID, Deskripsi, UOM, Supplier) ---
+    function downloadMaterialCsvTemplate() {
+      var csvContent = "MID,MATERIAL DESCRIPTION,UOM,SUPPLIER\n" +
+                       "20000186,SAP,KG,DANSON\n" +
+                       "20000237,BOTTOM TISSUE 240MMX9000M 15GSM,ROLL,SUPARMA\n";
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_Material_List.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function triggerMaterialCsvUpload() {
+      var fileInput = document.getElementById('material-csv-file');
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    function handleMaterialCsvFileSelected(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        processMaterialCsvContent(e.target.result);
+      };
+      reader.onerror = function() {
+        showPopupModal('Error File', 'Gagal membaca file CSV.', 'error');
+      };
+      reader.readAsText(file);
+    }
+
+    function processMaterialCsvContent(csvText) {
+      if (!csvText || csvText.trim() === '') {
+        showPopupModal('File Kosong', 'File CSV tidak berisi data.', 'warning');
+        return;
+      }
+
+      var lines = csvText.split(/\r\n|\n/);
+      if (lines.length <= 1) {
+        showPopupModal('File Kosong', 'File CSV hanya berisi baris header.', 'warning');
+        return;
+      }
+
+      var headerLine = lines[0].split(',');
+      var headers = headerLine.map(function(h) { return h.trim().toUpperCase().replace(/"/g, ''); });
+
+      var midIdx  = headers.findIndex(function(h) { return h.includes('MID'); });
+      var descIdx = headers.findIndex(function(h) { return h.includes('DES') || h.includes('MATERIAL'); });
+      var uomIdx  = headers.findIndex(function(h) { return h.includes('UOM') || h.includes('SATUAN'); });
+      var suppIdx = headers.findIndex(function(h) { return h.includes('SUPPLIER'); });
+
+      if (midIdx === -1) {
+        showPopupModal('Header CSV Tidak Valid', 'Kolom "MID" wajib ada di baris pertama CSV.', 'warning');
+        return;
+      }
+
+      var items = [];
+      for (var i = 1; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+
+        var cols = line.split(',');
+        var mid = cols[midIdx] ? cols[midIdx].replace(/"/g, '').trim() : '';
+        if (!mid) continue;
+
+        items.push({
+          mid: mid,
+          deskripsi: descIdx !== -1 && cols[descIdx] ? cols[descIdx].replace(/"/g, '').trim() : '',
+          uom: uomIdx !== -1 && cols[uomIdx] ? cols[uomIdx].replace(/"/g, '').trim() : '',
+          supplier: suppIdx !== -1 && cols[suppIdx] ? cols[suppIdx].replace(/"/g, '').trim() : ''
+        });
+      }
+
+      if (items.length === 0) {
+        showPopupModal('Tidak Ada Data Valid', 'Tidak ditemukan baris data MID yang valid pada file CSV.', 'warning');
+        return;
+      }
+
+      var user = getSavedUser();
+      var nik = user ? user.nik : 'SPV';
+
+      showFloatingLoading('Mengimpor ' + items.length + ' material dari CSV...');
+
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            showPopupModal('Import Berhasil', resp.message, 'success');
+            loadMaterialListTab();
+          } else {
+            showPopupModal('Import Gagal', (resp ? resp.message : 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          showPopupModal('Error Server', err.message, 'error');
+        })
+        .saveMaterialBatchApi(nik, items);
+    }
+
+    // ------------------------------------------
+    // SESI 2: MIN/MAX STOCK (threshold per MID + Lokasi)
+    // ------------------------------------------
     var minMaxDataCache = [];
 
-    function loadMinMaxTab() {
+    function loadMinMaxSettingsTab() {
       var wrap = document.getElementById('minmax-table-wrap');
       wrap.innerHTML = '<p style="text-align:center; color:#64748b; padding:40px;"><i class="bi bi-hourglass-split"></i> Memuat data Min/Max Stock...</p>';
       showFloatingLoading('Memuat Pengaturan Threshold Stock...');
@@ -1696,7 +2060,6 @@
       html += '<thead><tr style="background:#f8fafc; text-align:left; font-size:12px; color:#475569; border-bottom:2px solid #e2e8f0;">' +
               '<th style="padding:12px 14px;">MID</th>' +
               '<th style="padding:12px 14px;">LOKASI</th>' +
-              '<th style="padding:12px 14px;">SUPPLIER</th>' +
               '<th style="padding:12px 14px;">MATERIAL DESCRIPTION</th>' +
               '<th style="padding:12px 14px; text-align:right;">MIN STOCK</th>' +
               '<th style="padding:12px 14px; text-align:right;">MAX STOCK</th>' +
@@ -1708,9 +2071,9 @@
         var item = items[i];
         var isTsp = item.lokasi === 'TSP';
         var locBadge = '<span class="badge" style="background:' + (isTsp ? '#e0f2fe' : '#fef3c7') + '; color:' + (isTsp ? '#0369a1' : '#b45309') + '; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11px;">' + escapeHtml(item.lokasi) + '</span>';
-        
+
         var isConfigured = item.isConfigured !== false && item.updatedAt !== 'Belum Diatur';
-        var statusBadge = isConfigured 
+        var statusBadge = isConfigured
           ? '<span style="font-size:11.5px; color:#64748b;">' + escapeHtml(item.updatedAt) + '<br><small style="color:#94a3b8;">by ' + escapeHtml(item.updatedBy) + '</small></span>'
           : '<span class="badge" style="background:#f1f5f9; color:#94a3b8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:11px;">Belum Diatur (0)</span>';
 
@@ -1721,13 +2084,12 @@
         html += '<tr style="border-bottom:1px solid #f1f5f9; font-size:13px;">' +
                 '<td style="padding:12px 14px; font-weight:700; color:#1e293b;">' + escapeHtml(item.mid) + '</td>' +
                 '<td style="padding:12px 14px;">' + locBadge + '</td>' +
-                '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.supplier || '-') + '</td>' +
                 '<td style="padding:12px 14px; color:#334155; font-weight:500;">' + escapeHtml(item.deskripsi) + '</td>' +
                 '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.minStock > 0 ? '#dc2626' : '#94a3b8') + ';">' + formatNumberDisplay(item.minStock) + '</td>' +
                 '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.maxStock > 0 ? '#2563eb' : '#94a3b8') + ';">' + formatNumberDisplay(item.maxStock) + '</td>' +
                 '<td style="padding:12px 14px;">' + statusBadge + '</td>' +
                 '<td style="padding:12px 14px; text-align:center; white-space:nowrap;">' +
-                '<button onclick="editMinMaxItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi).replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.lokasi) + '\', ' + item.minStock + ', ' + item.maxStock + ', \'' + escapeHtml(item.uom || 'KG') + '\', \'' + escapeHtml(item.supplier === '-' ? '' : (item.supplier || '')).replace(/'/g, "\\'") + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                '<button onclick="editMinMaxItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.lokasi) + '\', ' + item.minStock + ', ' + item.maxStock + ')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
                 deleteBtn +
                 '</td></tr>';
       }
@@ -1738,21 +2100,15 @@
     function openAddMinMaxModal() {
       document.getElementById('minmax-input-mid').value = '';
       document.getElementById('minmax-input-mid').readOnly = false;
-      document.getElementById('minmax-input-desc').value = '';
-      document.getElementById('minmax-input-uom').value = '';
-      document.getElementById('minmax-input-supplier').value = '';
       document.getElementById('minmax-input-loc').value = 'TSP';
       document.getElementById('minmax-input-min').value = '0';
       document.getElementById('minmax-input-max').value = '0';
       document.getElementById('modal-minmax-edit').style.display = 'flex';
     }
 
-    function editMinMaxItem(mid, desc, loc, minVal, maxVal, uom, supplier) {
+    function editMinMaxItem(mid, loc, minVal, maxVal) {
       document.getElementById('minmax-input-mid').value = mid;
       document.getElementById('minmax-input-mid').readOnly = true;
-      document.getElementById('minmax-input-desc').value = desc;
-      document.getElementById('minmax-input-uom').value = uom || '';
-      document.getElementById('minmax-input-supplier').value = supplier || '';
       document.getElementById('minmax-input-loc').value = loc;
       document.getElementById('minmax-input-min').value = minVal;
       document.getElementById('minmax-input-max').value = maxVal;
@@ -1765,8 +2121,8 @@
 
     function confirmDeleteMinMaxItem(mid, lokasi, deskripsi) {
       showConfirmModal(
-        'Hapus Material',
-        'Hapus pengaturan Min/Max untuk <b>' + escapeHtml(mid) + ' — ' + escapeHtml(deskripsi) + '</b> di lokasi <b>' + escapeHtml(lokasi) + '</b>?<br><br>Kalau material ini belum pernah dipakai di transaksi stok manapun, dan tidak punya pengaturan di lokasi lain, materialnya akan hilang sepenuhnya dari daftar. Kalau sudah pernah dipakai, materialnya tetap ada tapi statusnya kembali jadi "Belum Diatur".',
+        'Hapus Pengaturan Min/Max',
+        'Hapus pengaturan Min/Max untuk <b>' + escapeHtml(mid) + ' — ' + escapeHtml(deskripsi) + '</b> di lokasi <b>' + escapeHtml(lokasi) + '</b>?<br><br>Material-nya sendiri tetap ada di Material List -- cuma threshold Min/Max di lokasi ini yang dihapus (status kembali jadi "Belum Diatur").',
         'warning',
         '🗑️ Ya, Hapus',
         'Batal',
@@ -1779,7 +2135,7 @@
               hideFloatingLoading();
               if (resp && resp.success) {
                 showPopupModal('Berhasil', resp.message, 'success');
-                loadMinMaxTab();
+                loadMinMaxSettingsTab();
               } else {
                 showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
               }
@@ -1797,9 +2153,6 @@
       var user = getSavedUser();
       var nik = user ? user.nik : 'SPV';
       var mid = document.getElementById('minmax-input-mid').value.trim();
-      var desc = document.getElementById('minmax-input-desc').value.trim();
-      var uom = document.getElementById('minmax-input-uom').value.trim();
-      var supplier = document.getElementById('minmax-input-supplier').value.trim();
       var loc = document.getElementById('minmax-input-loc').value;
       var minVal = document.getElementById('minmax-input-min').value;
       var maxVal = document.getElementById('minmax-input-max').value;
@@ -1817,7 +2170,7 @@
           hideFloatingLoading();
           if (resp && resp.success) {
             showPopupModal('Berhasil', resp.message, 'success');
-            loadMinMaxTab();
+            loadMinMaxSettingsTab();
           } else {
             showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
           }
@@ -1826,14 +2179,14 @@
           hideFloatingLoading();
           showPopupModal('Error', err.message, 'error');
         })
-        .saveMinMaxSettingApi(nik, mid, desc, loc, minVal, maxVal, uom, supplier);
+        .saveMinMaxSettingApi(nik, mid, loc, minVal, maxVal);
     }
 
-    // --- CSV Template & Upload Handlers ---
-    function downloadCsvTemplate() {
-      var csvContent = "MID,MATERIAL DESCRIPTION,LOKASI,MIN,MAX\n" +
-                       "20000186,SAP,TSP,0,1600\n" +
-                       "20000237,BOTTOM TISSUE 240MMX9000M 15GSM,BHP 1,100,500\n";
+    // --- CSV Min/Max Stock (MID, Lokasi, Min, Max -- MID harus sudah ada di Material List) ---
+    function downloadMinMaxCsvTemplate() {
+      var csvContent = "MID,LOKASI,MIN,MAX\n" +
+                       "20000186,TSP,0,1600\n" +
+                       "20000237,BHP 1,100,500\n";
       var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
@@ -1844,19 +2197,19 @@
       document.body.removeChild(a);
     }
 
-    function triggerCsvUpload() {
+    function triggerMinMaxCsvUpload() {
       var fileInput = document.getElementById('minmax-csv-file');
       fileInput.value = '';
       fileInput.click();
     }
 
-    function handleCsvFileSelected(event) {
+    function handleMinMaxCsvFileSelected(event) {
       var file = event.target.files[0];
       if (!file) return;
 
       var reader = new FileReader();
       reader.onload = function(e) {
-        processCsvContent(e.target.result);
+        processMinMaxCsvContent(e.target.result);
       };
       reader.onerror = function() {
         showPopupModal('Error File', 'Gagal membaca file CSV.', 'error');
@@ -1864,7 +2217,7 @@
       reader.readAsText(file);
     }
 
-    function processCsvContent(csvText) {
+    function processMinMaxCsvContent(csvText) {
       if (!csvText || csvText.trim() === '') {
         showPopupModal('File Kosong', 'File CSV tidak berisi data.', 'warning');
         return;
@@ -1880,7 +2233,6 @@
       var headers = headerLine.map(function(h) { return h.trim().toUpperCase().replace(/"/g, ''); });
 
       var midIdx  = headers.findIndex(function(h) { return h.includes('MID'); });
-      var descIdx = headers.findIndex(function(h) { return h.includes('DES') || h.includes('MATERIAL'); });
       var locIdx  = headers.findIndex(function(h) { return h.includes('LOKASI') || h.includes('LOCATION'); });
       var minIdx  = headers.findIndex(function(h) { return h === 'MIN' || h.includes('MIN_') || h.includes('MINIMUM'); });
       var maxIdx  = headers.findIndex(function(h) { return h === 'MAX' || h.includes('MAX_') || h.includes('MAXIMUM'); });
@@ -1899,14 +2251,12 @@
         var mid = cols[midIdx] ? cols[midIdx].replace(/"/g, '').trim() : '';
         if (!mid) continue;
 
-        var desc = descIdx !== -1 && cols[descIdx] ? cols[descIdx].replace(/"/g, '').trim() : '';
         var loc  = locIdx !== -1 && cols[locIdx] ? cols[locIdx].replace(/"/g, '').trim() : 'TSP';
         var minVal = minIdx !== -1 && cols[minIdx] ? cols[minIdx].replace(/"/g, '').trim() : '0';
         var maxVal = maxIdx !== -1 && cols[maxIdx] ? cols[maxIdx].replace(/"/g, '').trim() : '0';
 
         items.push({
           mid: mid,
-          deskripsi: desc,
           lokasi: loc,
           minStock: minVal,
           maxStock: maxVal
@@ -1928,7 +2278,7 @@
           hideFloatingLoading();
           if (resp && resp.success) {
             showPopupModal('Import Berhasil', resp.message, 'success');
-            loadMinMaxTab();
+            loadMinMaxSettingsTab();
           } else {
             showPopupModal('Import Gagal', (resp ? resp.message : 'Error'), 'error');
           }

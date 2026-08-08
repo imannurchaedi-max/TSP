@@ -106,72 +106,173 @@ function getMaterialMap_() {
 }
 
 /**
- * Insert atau update 1 baris di Material Master (sheet "MID EXISTING"): MID, Deskripsi, UOM, Supplier.
- * Menambahkan kolom "Supplier" ke header sheet secara otomatis kalau belum ada.
- * Tidak pernah menimpa field yang sudah terisi dengan data baru -- hanya mengisi field yang
- * masih kosong, atau membuat baris baru kalau MID belum terdaftar sama sekali.
+ * Sesi "Material List": insert atau update 1 baris di Material Master (sheet "MID EXISTING") --
+ * MID, Deskripsi, UOM, Supplier. Menambahkan kolom "Supplier" ke header sheet otomatis kalau
+ * belum ada. Berbeda dari versi lama (upsertMaterialMaster_), fungsi ini SELALU menimpa field
+ * dengan nilai baru (bukan cuma mengisi yang kosong) -- karena ini dipanggil dari aksi eksplisit
+ * user "Tambah/Edit Material", jadi wajar kalau user memang mau mengubah deskripsi/UOM/supplier.
  */
-function upsertMaterialMaster_(mid, deskripsi, uom, supplier) {
-  var targetMid = normalizeMid_(mid);
-  if (!targetMid) return { created: false, updated: false };
+function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier) {
+  try {
+    var targetMid = normalizeMid_(mid);
+    if (!targetMid) {
+      return { success: false, message: 'MID wajib diisi.' };
+    }
 
-  var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
-  var headerMap = getHeaderMap_(sheet);
-  var midCol = headerMap['MID'] || headerMap['mid'] || 1;
-  var deskCol = headerMap['Deskripsi'] || headerMap['deskripsi'] || 2;
-  var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
-  var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+    var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
+    var headerMap = getHeaderMap_(sheet);
+    var midCol = headerMap['MID'] || headerMap['mid'] || 1;
+    var deskCol = headerMap['Deskripsi'] || headerMap['deskripsi'] || 2;
+    var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
+    var suppCol = headerMap['Supplier'] || headerMap['supplier'];
 
-  if (!suppCol) {
-    suppCol = sheet.getLastColumn() + 1;
-    sheet.getRange(1, suppCol).setValue('Supplier').setFontWeight('bold').setBackground('#f1f5f9');
+    if (!suppCol) {
+      suppCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, suppCol).setValue('Supplier').setFontWeight('bold').setBackground('#f1f5f9');
+    }
+
+    var lastRow = sheet.getLastRow();
+    var targetRow = -1;
+    if (lastRow >= 2) {
+      var midValues = sheet.getRange(2, midCol, lastRow - 1, 1).getValues();
+      for (var i = 0; i < midValues.length; i++) {
+        if (normalizeMid_(midValues[i][0]) === targetMid) { targetRow = i + 2; break; }
+      }
+    }
+
+    var descVal = String(deskripsi || '').trim();
+    var uomVal = String(uom || '').trim() || 'KG';
+    var suppVal = String(supplier || '').trim();
+
+    if (targetRow === -1) {
+      var maxCol = Math.max(midCol, deskCol, uomCol, suppCol);
+      var newRow = [];
+      for (var c = 1; c <= maxCol; c++) newRow.push('');
+      newRow[midCol - 1] = targetMid;
+      newRow[deskCol - 1] = descVal;
+      newRow[uomCol - 1] = uomVal;
+      newRow[suppCol - 1] = suppVal;
+      sheet.appendRow(newRow);
+    } else {
+      sheet.getRange(targetRow, deskCol).setValue(descVal);
+      sheet.getRange(targetRow, uomCol).setValue(uomVal);
+      sheet.getRange(targetRow, suppCol).setValue(suppVal);
+    }
+
+    materialCache_ = null;
+    materialListCache_ = null;
+    supplierMapCache_ = null;
+    return { success: true, message: 'Material ' + targetMid + ' berhasil disimpan.' };
+  } catch (err) {
+    return { success: false, message: 'Gagal menyimpan material: ' + err.message };
   }
+}
 
-  var lastRow = sheet.getLastRow();
-  var targetRow = -1;
-  if (lastRow >= 2) {
-    var midValues = sheet.getRange(2, midCol, lastRow - 1, 1).getValues();
-    for (var i = 0; i < midValues.length; i++) {
-      if (normalizeMid_(midValues[i][0]) === targetMid) { targetRow = i + 2; break; }
+/**
+ * Sesi "Material List": bulk save / update material dari CSV Upload (MID, Deskripsi, UOM, Supplier).
+ */
+function saveMaterialBatch_(nik, items) {
+  try {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return { success: false, message: 'Data import CSV kosong atau tidak valid.' };
     }
+
+    var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
+    var headerMap = getHeaderMap_(sheet);
+    var midCol = headerMap['MID'] || headerMap['mid'] || 1;
+    var deskCol = headerMap['Deskripsi'] || headerMap['deskripsi'] || 2;
+    var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
+    var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+
+    if (!suppCol) {
+      suppCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, suppCol).setValue('Supplier').setFontWeight('bold').setBackground('#f1f5f9');
+    }
+
+    var lastRow = sheet.getLastRow();
+    var rowMap = {};
+    if (lastRow >= 2) {
+      var midValues = sheet.getRange(2, midCol, lastRow - 1, 1).getValues();
+      for (var i = 0; i < midValues.length; i++) {
+        var m = normalizeMid_(midValues[i][0]);
+        if (m) rowMap[m] = i + 2;
+      }
+    }
+
+    var importedCount = 0;
+    for (var j = 0; j < items.length; j++) {
+      var item = items[j];
+      var mid = normalizeMid_(item.mid);
+      if (!mid) continue;
+
+      var descVal = String(item.deskripsi || '').trim();
+      var uomVal = String(item.uom || '').trim() || 'KG';
+      var suppVal = String(item.supplier || '').trim();
+
+      if (rowMap[mid]) {
+        var rIdx = rowMap[mid];
+        sheet.getRange(rIdx, deskCol).setValue(descVal);
+        sheet.getRange(rIdx, uomCol).setValue(uomVal);
+        sheet.getRange(rIdx, suppCol).setValue(suppVal);
+      } else {
+        var maxCol = Math.max(midCol, deskCol, uomCol, suppCol);
+        var newRow = [];
+        for (var c = 1; c <= maxCol; c++) newRow.push('');
+        newRow[midCol - 1] = mid;
+        newRow[deskCol - 1] = descVal;
+        newRow[uomCol - 1] = uomVal;
+        newRow[suppCol - 1] = suppVal;
+        sheet.appendRow(newRow);
+        rowMap[mid] = sheet.getLastRow();
+      }
+      importedCount++;
+    }
+
+    materialCache_ = null;
+    materialListCache_ = null;
+    supplierMapCache_ = null;
+    return { success: true, message: 'Berhasil mengimpor / memperbarui ' + importedCount + ' material.' };
+  } catch (err) {
+    return { success: false, message: 'Gagal mengimpor batch material: ' + err.message };
   }
+}
 
-  var descVal = String(deskripsi || '').trim();
-  var uomVal = String(uom || '').trim();
-  var suppVal = String(supplier || '').trim();
-  var result;
+/**
+ * Sesi "Material List": hapus 1 material dari Material Master. Ditolak kalau MID pernah dipakai
+ * di transaksi stok/barcode manapun (lihat isMidUsedAnywhere_), supaya lookup deskripsi/UOM di
+ * riwayat lama tidak rusak. Kalau berhasil dihapus, seluruh baris Min/Max Stock terkait MID ini
+ * ikut dihapus (cascade) supaya tidak ada pengaturan Min/Max yang jadi yatim piatu.
+ */
+function deleteMaterial_(nik, mid) {
+  try {
+    var targetMid = normalizeMid_(mid);
+    if (!targetMid) {
+      return { success: false, message: 'MID wajib diisi.' };
+    }
 
-  if (targetRow === -1) {
-    var maxCol = Math.max(midCol, deskCol, uomCol, suppCol);
-    var newRow = [];
-    for (var c = 1; c <= maxCol; c++) newRow.push('');
-    newRow[midCol - 1] = targetMid;
-    newRow[deskCol - 1] = descVal;
-    newRow[uomCol - 1] = uomVal || 'KG';
-    newRow[suppCol - 1] = suppVal;
-    sheet.appendRow(newRow);
-    result = { created: true, updated: false };
-  } else {
-    var changed = false;
-    if (descVal) {
-      var curDesc = String(sheet.getRange(targetRow, deskCol).getValue() || '').trim();
-      if (!curDesc) { sheet.getRange(targetRow, deskCol).setValue(descVal); changed = true; }
+    if (isMidUsedAnywhere_(targetMid)) {
+      return { success: false, message: 'Material ' + targetMid + ' tidak bisa dihapus karena sudah pernah dipakai di transaksi stok/barcode.' };
     }
-    if (uomVal) {
-      var curUom = String(sheet.getRange(targetRow, uomCol).getValue() || '').trim();
-      if (!curUom) { sheet.getRange(targetRow, uomCol).setValue(uomVal); changed = true; }
+
+    var removed = deleteMaterialMaster_(targetMid);
+    if (!removed) {
+      return { success: false, message: 'Material tidak ditemukan di Material List.' };
     }
-    if (suppVal) {
-      var curSupp = String(sheet.getRange(targetRow, suppCol).getValue() || '').trim();
-      if (!curSupp) { sheet.getRange(targetRow, suppCol).setValue(suppVal); changed = true; }
+
+    // Cascade: hapus semua baris Min/Max Stock terkait MID ini juga.
+    var mmSheet = getMinMaxSheet_();
+    var lastRow = mmSheet.getLastRow();
+    if (lastRow >= 2) {
+      var data = mmSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = data.length - 1; i >= 0; i--) {
+        if (normalizeMid_(data[i][0]) === targetMid) mmSheet.deleteRow(i + 2);
+      }
     }
-    result = { created: false, updated: changed };
+
+    return { success: true, message: 'Material ' + targetMid + ' berhasil dihapus.' };
+  } catch (err) {
+    return { success: false, message: 'Gagal menghapus material: ' + err.message };
   }
-
-  materialCache_ = null;
-  materialListCache_ = null;
-  supplierMapCache_ = null;
-  return result;
 }
 
 /**

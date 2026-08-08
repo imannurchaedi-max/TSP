@@ -1657,25 +1657,29 @@ function getMinMaxSettings() {
 
 /**
  * Menyimpan / meng-update pengaturan Min/Max Stock per MID dan Lokasi.
+ * Sesi Min/Max Stock ini murni threshold (MID + Lokasi + Min + Max) -- MID harus sudah
+ * terdaftar di Material Master ("MID EXISTING"). Registrasi material baru (Deskripsi, UOM,
+ * Supplier) dilakukan di sesi terpisah "Material List" (lihat saveMaterialMaster_), supaya
+ * kedua sesi tidak tercampur.
  */
-function saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier) {
+function saveMinMaxSetting(nik, mid, lokasi, minStock, maxStock) {
   try {
     if (!mid || !lokasi) {
       return { success: false, message: 'MID dan Lokasi wajib diisi.' };
     }
-    var sheet = getMinMaxSheet_();
-    var lastRow = sheet.getLastRow();
     var targetMid = normalizeMid_(mid);
     var targetLoc = String(lokasi).trim().toUpperCase();
-    var minVal = (minStock !== '' && minStock !== null && !isNaN(Number(minStock))) ? Number(minStock) : 0;
-    var maxVal = (maxStock !== '' && maxStock !== null && !isNaN(Number(maxStock))) ? Number(maxStock) : 0;
 
     var materialMap = getMaterialMap_();
-    var matDesc = String(deskripsi || (materialMap[targetMid] ? materialMap[targetMid].deskripsi : '') || '').trim();
+    if (!materialMap[targetMid]) {
+      return { success: false, message: 'MID ' + targetMid + ' belum terdaftar. Tambahkan dulu di sesi Material List.' };
+    }
+    var matDesc = String(materialMap[targetMid].deskripsi || '').trim();
 
-    // MID baru (belum ada di Material Master "MID EXISTING") otomatis didaftarkan di situ juga,
-    // supaya langsung muncul di tabel Stock, bisa ditarik Stok Awal Shift, dan dapat Supplier.
-    upsertMaterialMaster_(targetMid, matDesc, uom, supplier);
+    var sheet = getMinMaxSheet_();
+    var lastRow = sheet.getLastRow();
+    var minVal = (minStock !== '' && minStock !== null && !isNaN(Number(minStock))) ? Number(minStock) : 0;
+    var maxVal = (maxStock !== '' && maxStock !== null && !isNaN(Number(maxStock))) ? Number(maxStock) : 0;
 
     var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
     var updatedBy = String(nik || 'SPV').trim();
@@ -1704,9 +1708,8 @@ function saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom,
 
 /**
  * Menghapus 1 baris pengaturan Min/Max Stock (MID + Lokasi) dari sheet MIN MAX STOCK.
- * Kalau MID tsb sudah tidak punya baris Min/Max di lokasi manapun DAN belum pernah dipakai
- * di transaksi stok/barcode manapun, MID-nya juga dihapus dari Material Master ("MID EXISTING")
- * supaya benar-benar hilang dari daftar -- bukan cuma balik ke status "Belum Diatur".
+ * Sesi ini murni threshold -- tidak pernah menyentuh Material Master. Hapus material secara
+ * penuh dilakukan di sesi terpisah "Material List" (lihat deleteMaterial_).
  */
 function deleteMinMaxSetting_(nik, mid, lokasi) {
   try {
@@ -1720,15 +1723,11 @@ function deleteMinMaxSetting_(nik, mid, lokasi) {
     var lastRow = sheet.getLastRow();
     var data = lastRow >= 2 ? sheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
     var foundIndex = -1;
-    var hasOtherLocations = false;
 
     for (var i = 0; i < data.length; i++) {
-      if (normalizeMid_(data[i][0]) !== targetMid) continue;
-      var rLoc = String(data[i][2] || '').trim().toUpperCase();
-      if (rLoc === targetLoc && foundIndex === -1) {
+      if (normalizeMid_(data[i][0]) === targetMid && String(data[i][2] || '').trim().toUpperCase() === targetLoc) {
         foundIndex = i + 2;
-      } else {
-        hasOtherLocations = true;
+        break;
       }
     }
 
@@ -1737,18 +1736,7 @@ function deleteMinMaxSetting_(nik, mid, lokasi) {
     }
 
     sheet.deleteRow(foundIndex);
-
-    var removedFromMaster = false;
-    if (!hasOtherLocations && !isMidUsedAnywhere_(targetMid)) {
-      removedFromMaster = deleteMaterialMaster_(targetMid);
-    }
-
-    return {
-      success: true,
-      message: removedFromMaster
-        ? 'Material ' + targetMid + ' dihapus sepenuhnya dari daftar (belum pernah dipakai di transaksi apa pun).'
-        : 'Pengaturan Min/Max untuk lokasi ' + targetLoc + ' dihapus.'
-    };
+    return { success: true, message: 'Pengaturan Min/Max untuk lokasi ' + targetLoc + ' dihapus.' };
   } catch (err) {
     return { success: false, message: 'Gagal menghapus pengaturan Min/Max: ' + err.message };
   }
@@ -1781,6 +1769,7 @@ function saveMinMaxBatch_(nik, items) {
     var timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
     var updatedBy = String(nik || 'SPV').trim();
     var importedCount = 0;
+    var skippedMids = [];
 
     for (var j = 0; j < items.length; j++) {
       var item = items[j];
@@ -1788,7 +1777,14 @@ function saveMinMaxBatch_(nik, items) {
       var lokasi = String(item.lokasi || 'TSP').trim().toUpperCase();
       if (!mid) continue;
 
-      var matDesc = String(item.deskripsi || (materialMap[mid] ? materialMap[mid].deskripsi : '') || '').trim();
+      // MID harus sudah terdaftar di Material List -- sesi Min/Max Stock tidak lagi mendaftarkan
+      // material baru secara implisit, supaya kedua sesi tidak tercampur.
+      if (!materialMap[mid]) {
+        skippedMids.push(mid);
+        continue;
+      }
+
+      var matDesc = String(materialMap[mid].deskripsi || '').trim();
       var minVal = (item.minStock !== '' && item.minStock !== null && !isNaN(Number(item.minStock))) ? Number(item.minStock) : 0;
       var maxVal = (item.maxStock !== '' && item.maxStock !== null && !isNaN(Number(item.maxStock))) ? Number(item.maxStock) : 0;
 
@@ -1803,7 +1799,11 @@ function saveMinMaxBatch_(nik, items) {
       importedCount++;
     }
 
-    return { success: true, message: 'Berhasil mengimpor / memperbarui ' + importedCount + ' item Min/Max Stock.' };
+    var message = 'Berhasil mengimpor / memperbarui ' + importedCount + ' item Min/Max Stock.';
+    if (skippedMids.length > 0) {
+      message += ' ' + skippedMids.length + ' MID dilewati karena belum terdaftar di Material List: ' + skippedMids.slice(0, 10).join(', ') + (skippedMids.length > 10 ? ', ...' : '') + '.';
+    }
+    return { success: true, message: message };
   } catch (err) {
     return { success: false, message: 'Gagal mengimpor batch Min/Max: ' + err.message };
   }

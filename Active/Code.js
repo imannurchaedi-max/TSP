@@ -254,7 +254,7 @@ function saveBatchReprint(labels) {
   }
 }
 
-/** Endpoint API Pengaturan Min/Max Stock (SPV) */
+/** Endpoint API Pengaturan Min/Max Stock -- sesi 2 di menu Material Master (TSP/SPV) */
 function getMinMaxSettingsApi() {
   try {
     return getMinMaxSettings();
@@ -263,16 +263,16 @@ function getMinMaxSettingsApi() {
   }
 }
 
-/** Endpoint API Simpan Min/Max Stock (SPV) */
-function saveMinMaxSettingApi(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier) {
+/** Endpoint API Simpan Min/Max Stock -- sesi 2 (TSP/SPV) */
+function saveMinMaxSettingApi(nik, mid, lokasi, minStock, maxStock) {
   try {
-    return saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier);
+    return saveMinMaxSetting(nik, mid, lokasi, minStock, maxStock);
   } catch (err) {
     return { success: false, message: 'Gagal menyimpan min/max: ' + err.message };
   }
 }
 
-/** Endpoint API Simpan Batch CSV Min/Max Stock (SPV) */
+/** Endpoint API Simpan Batch CSV Min/Max Stock -- sesi 2 (TSP/SPV) */
 function saveMinMaxBatchApi(nik, items) {
   try {
     return saveMinMaxBatch_(nik, items);
@@ -281,11 +281,47 @@ function saveMinMaxBatchApi(nik, items) {
   }
 }
 
-/** Endpoint API Hapus Pengaturan Min/Max Stock (SPV / TSP via tombol Tambah Material) */
+/** Endpoint API Hapus Pengaturan Min/Max Stock -- sesi 2 (TSP/SPV) */
 function deleteMinMaxSettingApi(nik, mid, lokasi) {
   try {
     return deleteMinMaxSetting_(nik, mid, lokasi);
   } catch (err) {
     return { success: false, message: 'Gagal menghapus: ' + err.message };
+  }
+}
+
+/** Endpoint API Daftar Material List -- sesi 1 di menu Material Master (TSP/SPV) */
+function getMaterialListApi() {
+  try {
+    return { success: true, data: getMaterialList_() };
+  } catch (err) {
+    return { success: false, message: err.message, data: [] };
+  }
+}
+
+/** Endpoint API Simpan (Tambah/Edit) Material -- sesi 1 (TSP/SPV) */
+function saveMaterialApi(nik, mid, deskripsi, uom, supplier) {
+  try {
+    return saveMaterialMaster_(nik, mid, deskripsi, uom, supplier);
+  } catch (err) {
+    return { success: false, message: 'Gagal menyimpan material: ' + err.message };
+  }
+}
+
+/** Endpoint API Simpan Batch CSV Material List -- sesi 1 (TSP/SPV) */
+function saveMaterialBatchApi(nik, items) {
+  try {
+    return saveMaterialBatch_(nik, items);
+  } catch (err) {
+    return { success: false, message: 'Gagal mengimpor batch material: ' + err.message };
+  }
+}
+
+/** Endpoint API Hapus Material -- sesi 1 (TSP/SPV) */
+function deleteMaterialApi(nik, mid) {
+  try {
+    return deleteMaterial_(nik, mid);
+  } catch (err) {
+    return { success: false, message: 'Gagal menghapus material: ' + err.message };
   }
 }
