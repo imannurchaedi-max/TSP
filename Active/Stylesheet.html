@@ -607,7 +607,11 @@
 
   /* ---------- Tab panel (Stock / Scan / Validasi) ---------- */
   .tab-panel { margin-top: 4px; max-width: 960px; }
-  #tab-stock.tab-panel { max-width: none; }
+  /* Tab dengan tabel data lebar (sama seperti Stock) dibebaskan dari cap 960px agar full-width mengikuti layar. */
+  #tab-stock.tab-panel,
+  #tab-validasi.tab-panel,
+  #tab-history.tab-panel,
+  #tab-minmax.tab-panel { max-width: none; }
 
   .stock-shift-label {
     display: inline-flex;
