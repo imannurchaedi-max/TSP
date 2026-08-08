@@ -280,3 +280,12 @@ function saveMinMaxBatchApi(nik, items) {
     return { success: false, message: 'Gagal mengimpor batch min/max: ' + err.message };
   }
 }
+
+/** Endpoint API Hapus Pengaturan Min/Max Stock (SPV / TSP via tombol Tambah Material) */
+function deleteMinMaxSettingApi(nik, mid, lokasi) {
+  try {
+    return deleteMinMaxSetting_(nik, mid, lokasi);
+  } catch (err) {
+    return { success: false, message: 'Gagal menghapus: ' + err.message };
+  }
+}

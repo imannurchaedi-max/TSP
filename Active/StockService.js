@@ -1703,6 +1703,58 @@ function saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom,
 }
 
 /**
+ * Menghapus 1 baris pengaturan Min/Max Stock (MID + Lokasi) dari sheet MIN MAX STOCK.
+ * Kalau MID tsb sudah tidak punya baris Min/Max di lokasi manapun DAN belum pernah dipakai
+ * di transaksi stok/barcode manapun, MID-nya juga dihapus dari Material Master ("MID EXISTING")
+ * supaya benar-benar hilang dari daftar -- bukan cuma balik ke status "Belum Diatur".
+ */
+function deleteMinMaxSetting_(nik, mid, lokasi) {
+  try {
+    var targetMid = normalizeMid_(mid);
+    var targetLoc = String(lokasi || '').trim().toUpperCase();
+    if (!targetMid || !targetLoc) {
+      return { success: false, message: 'MID dan Lokasi wajib diisi.' };
+    }
+
+    var sheet = getMinMaxSheet_();
+    var lastRow = sheet.getLastRow();
+    var data = lastRow >= 2 ? sheet.getRange(2, 1, lastRow - 1, 7).getValues() : [];
+    var foundIndex = -1;
+    var hasOtherLocations = false;
+
+    for (var i = 0; i < data.length; i++) {
+      if (normalizeMid_(data[i][0]) !== targetMid) continue;
+      var rLoc = String(data[i][2] || '').trim().toUpperCase();
+      if (rLoc === targetLoc && foundIndex === -1) {
+        foundIndex = i + 2;
+      } else {
+        hasOtherLocations = true;
+      }
+    }
+
+    if (foundIndex === -1) {
+      return { success: false, message: 'Pengaturan Min/Max untuk MID & Lokasi ini tidak ditemukan (mungkin belum pernah disimpan).' };
+    }
+
+    sheet.deleteRow(foundIndex);
+
+    var removedFromMaster = false;
+    if (!hasOtherLocations && !isMidUsedAnywhere_(targetMid)) {
+      removedFromMaster = deleteMaterialMaster_(targetMid);
+    }
+
+    return {
+      success: true,
+      message: removedFromMaster
+        ? 'Material ' + targetMid + ' dihapus sepenuhnya dari daftar (belum pernah dipakai di transaksi apa pun).'
+        : 'Pengaturan Min/Max untuk lokasi ' + targetLoc + ' dihapus.'
+    };
+  } catch (err) {
+    return { success: false, message: 'Gagal menghapus pengaturan Min/Max: ' + err.message };
+  }
+}
+
+/**
  * Bulk save / update list threshold Min/Max Stock dari CSV Upload / batch input.
  */
 function saveMinMaxBatch_(nik, items) {

@@ -1718,6 +1718,10 @@
           ? '<span style="font-size:11.5px; color:#64748b;">' + escapeHtml(item.updatedAt) + '<br><small style="color:#94a3b8;">by ' + escapeHtml(item.updatedBy) + '</small></span>'
           : '<span class="badge" style="background:#f1f5f9; color:#94a3b8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:11px;">Belum Diatur (0)</span>';
 
+        var deleteBtn = item.isConfigured
+          ? '<button onclick="confirmDeleteMinMaxItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.lokasi) + '\', \'' + escapeHtml(item.deskripsi).replace(/'/g, "\\'") + '\')" style="margin-left:6px; padding:5px 12px; border-radius:6px; border:1px solid #fecaca; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#dc2626;"><i class="bi bi-trash3"></i> Hapus</button>'
+          : '';
+
         html += '<tr style="border-bottom:1px solid #f1f5f9; font-size:13px;">' +
                 '<td style="padding:12px 14px; font-weight:700; color:#1e293b;">' + escapeHtml(item.mid) + '</td>' +
                 '<td style="padding:12px 14px;">' + locBadge + '</td>' +
@@ -1726,8 +1730,9 @@
                 '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.minStock > 0 ? '#dc2626' : '#94a3b8') + ';">' + formatNumberDisplay(item.minStock) + '</td>' +
                 '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.maxStock > 0 ? '#2563eb' : '#94a3b8') + ';">' + formatNumberDisplay(item.maxStock) + '</td>' +
                 '<td style="padding:12px 14px;">' + statusBadge + '</td>' +
-                '<td style="padding:12px 14px; text-align:center;">' +
+                '<td style="padding:12px 14px; text-align:center; white-space:nowrap;">' +
                 '<button onclick="editMinMaxItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi).replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.lokasi) + '\', ' + item.minStock + ', ' + item.maxStock + ', \'' + escapeHtml(item.uom || 'KG') + '\', \'' + escapeHtml(item.supplier === '-' ? '' : (item.supplier || '')).replace(/'/g, "\\'") + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                deleteBtn +
                 '</td></tr>';
       }
       html += '</tbody></table></div>';
@@ -1760,6 +1765,37 @@
 
     function closeMinMaxModal() {
       document.getElementById('modal-minmax-edit').style.display = 'none';
+    }
+
+    function confirmDeleteMinMaxItem(mid, lokasi, deskripsi) {
+      showConfirmModal(
+        'Hapus Material',
+        'Hapus pengaturan Min/Max untuk <b>' + escapeHtml(mid) + ' — ' + escapeHtml(deskripsi) + '</b> di lokasi <b>' + escapeHtml(lokasi) + '</b>?<br><br>Kalau material ini belum pernah dipakai di transaksi stok manapun, dan tidak punya pengaturan di lokasi lain, materialnya akan hilang sepenuhnya dari daftar. Kalau sudah pernah dipakai, materialnya tetap ada tapi statusnya kembali jadi "Belum Diatur".',
+        'warning',
+        '🗑️ Ya, Hapus',
+        'Batal',
+        function() {
+          var user = getSavedUser();
+          var nik = user ? user.nik : 'SPV';
+          showFloatingLoading('Menghapus pengaturan Min/Max...');
+          google.script.run
+            .withSuccessHandler(function(resp) {
+              hideFloatingLoading();
+              if (resp && resp.success) {
+                showPopupModal('Berhasil', resp.message, 'success');
+                loadMinMaxTab();
+                if (CURRENT_TAB === 'stock') loadStockTab();
+              } else {
+                showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideFloatingLoading();
+              showPopupModal('Error', err.message, 'error');
+            })
+            .deleteMinMaxSettingApi(nik, mid, lokasi);
+        }
+      );
     }
 
     function saveMinMaxFromForm() {

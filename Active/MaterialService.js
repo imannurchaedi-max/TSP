@@ -174,4 +174,58 @@ function upsertMaterialMaster_(mid, deskripsi, uom, supplier) {
   return result;
 }
 
+/**
+ * Cek apakah MID pernah dipakai di transaksi stok/barcode manapun (Stock TSP, Stock Mesin,
+ * Barcode Material Produksi, Barcode Outbound WRM). Dipakai sebagai guard sebelum menghapus
+ * MID dari Material Master, supaya tidak menghapus material yang datanya masih dirujuk oleh
+ * riwayat transaksi (yang akan membuat lookup deskripsi/UOM di riwayat itu jadi kosong).
+ */
+function isMidUsedAnywhere_(mid) {
+  var targetMid = normalizeMid_(mid);
+  if (!targetMid) return false;
+
+  var sheetsToCheck = [SHEET_NAMES.STOCK_TSP, SHEET_NAMES.STOCK_MESIN, SHEET_NAMES.BARCODE, SHEET_NAMES.WRM_INCOMING];
+
+  for (var s = 0; s < sheetsToCheck.length; s++) {
+    var sheet = getSheet_(sheetsToCheck[s]);
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) continue;
+    var headerMap = getHeaderMap_(sheet);
+    var col = headerMap['MID'] || headerMap['mid'];
+    if (!col) continue;
+    var values = sheet.getRange(2, col, lastRow - 1, 1).getValues();
+    for (var i = 0; i < values.length; i++) {
+      if (normalizeMid_(values[i][0]) === targetMid) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Hapus 1 baris material dari Material Master (sheet "MID EXISTING"). Hanya dipanggil
+ * setelah dipastikan MID tidak lagi dipakai di transaksi stok/barcode manapun.
+ */
+function deleteMaterialMaster_(mid) {
+  var targetMid = normalizeMid_(mid);
+  if (!targetMid) return false;
+
+  var sheet = getSheet_(SHEET_NAMES.MATERIAL_MASTER);
+  var headerMap = getHeaderMap_(sheet);
+  var midCol = headerMap['MID'] || headerMap['mid'] || 1;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return false;
+
+  var midValues = sheet.getRange(2, midCol, lastRow - 1, 1).getValues();
+  for (var i = 0; i < midValues.length; i++) {
+    if (normalizeMid_(midValues[i][0]) === targetMid) {
+      sheet.deleteRow(i + 2);
+      materialCache_ = null;
+      materialListCache_ = null;
+      supplierMapCache_ = null;
+      return true;
+    }
+  }
+  return false;
+}
+
 
