@@ -68,7 +68,7 @@ di `Code.js`), sehingga berbagi 1 scope JavaScript — variabel global yang di-s
 
 ```mermaid
 stateDiagram-v2
-  [*] --> DiterimaWRM: terima_wrm<br/>(scan Kode Unik INDUK,<br/>lookup BARCODE INCOMING WRM)
+  [*] --> DiterimaWRM: terima_wrm<br/>(scan Kode Unik INDUK,<br/>lookup BARCODE OUTBOUND WRM)
   DiterimaWRM --> DikirimMesin: kirim_mesin<br/>(scan Kode Unik INDUK lagi,<br/>generate barcode ANAK baru)
   DikirimMesin --> DiterimaOperator: terima_operator<br/>(scan barcode ANAK)
   DiterimaOperator --> Diconsume: consume_operator<br/>(scan barcode ANAK)
@@ -96,18 +96,20 @@ sequenceDiagram
 
   U->>Scanner: ambil foto barcode
   Scanner->>Scanner: handleCapturedFile() -> scanFile() decode
-  Scanner->>Code: submitScan(barcode, "terima_wrm", ..., nik)
+  Scanner->>Code: submitScan(barcode, "terima_wrm", ..., noReservasi, nik)
   Code->>Auth: resolveRole_(nik)
   Auth->>Sheet: findKaryawanByNik_ -> getKaryawanRows_
   Sheet->>GS: baca sheet KARYAWAN (atau cache)
   Auth-->>Code: {nik, nama, role}
   Code->>Barcode: processScan_(...)
-  Barcode->>Barcode: handleTerimaWrm_(raw, now)
+  Barcode->>Barcode: handleTerimaWrm_(raw, noReservasi, now)
   Barcode->>Sheet: findBarcodeRow_ (cek belum pernah diterima)
   Barcode->>Sheet: lookupWrmIncoming_(raw)
-  Sheet->>GS: baca sheet BARCODE INCOMING WRM
-  Sheet-->>Barcode: {mid, deskripsi, qty, aksi, keterangan}
-  Barcode->>Barcode: cek AKSI=VERIFIED & bukan HOLD
+  Sheet->>GS: baca sheet BARCODE OUTBOUND WRM (Kode Unik)
+  Sheet-->>Barcode: {mid, deskripsi, qty}
+  Barcode->>Sheet: validateMidInReservasi_(noReservasi, mid)
+  Sheet->>GS: baca BARCODE OUTBOUND WRM (MATDOC RESERVASI + MID)
+  Sheet-->>Barcode: validasi OK
   Barcode->>Sheet: appendBarcodeRow_(...)
   Sheet->>GS: tulis baris baru di Barcode Material Produksi
   Code->>Sheet: appendLog_(...)
@@ -157,7 +159,9 @@ appendBarcodeRow_ -> [getSheet_, getHeaderMap_]
 updateBarcodeCell_ -> [getSheet_, getHeaderMap_]
 appendLog_ -> [getSheet_]
 
-getMaterialMap_ -> [getSheet_, getHeaderMap_]
+getMaterialMap_ -> [getSheet_, getHeaderMap_]             # return sekarang termasuk field `supplier`
+getSupplierMap_ -> [getMaterialMap_, getSheet_, getHeaderMap_]  # seed fallback dari Material Master, ditimpa histori BARCODE OUTBOUND WRM
+upsertMaterialMaster_ -> [getSheet_, getHeaderMap_, normalizeMid_]  # dipanggil dari saveMinMaxSetting
 lookupMaterial_ -> [getMaterialMap_]                      # dead code, tidak dipanggil
 
 getKaryawanRows_ -> [readKaryawanRowsFromCache_, writeKaryawanRowsToCache_]
@@ -169,7 +173,7 @@ classifyBarcode_ -> [findBarcodeRow_, getCellValue_]
 getNextChildSequence_ -> [getSheet_, getHeaderMap_]
 getShift_ -> [getShiftBounds_]
 processScan_ -> [ensureSheetsReady_, handleTerimaWrm_, handleKirimMesin_, classifyBarcode_, handleChildCheckpoint_]
-handleTerimaWrm_ -> [findBarcodeRow_, lookupWrmIncoming_, formatTimestamp_, getCellValue_, getShift_, appendBarcodeRow_]
+handleTerimaWrm_ -> [findBarcodeRow_, lookupWrmIncoming_, validateMidInReservasi_, formatTimestamp_, getCellValue_, getShift_, appendBarcodeRow_]
 handleKirimMesin_ -> [findBarcodeRow_, getCellValue_, getNextChildSequence_, padSeq_, getShift_, appendBarcodeRow_]
 handleChildCheckpoint_ -> [findBarcodeRow_, getCellValue_, formatTimestamp_, updateBarcodeCell_]
 
@@ -178,7 +182,12 @@ seedAccFromMaterialMap_ -> [getMaterialMap_]
 computeTspStock_ -> [getShiftBounds_, readAllBarcodeRows_, seedAccFromMaterialMap_, bucketAdd_, formatDateLabel_]
 computeMesinStock_ -> [getShiftBounds_, readAllBarcodeRows_, seedAccFromMaterialMap_, bucketAdd_, formatDateLabel_]
 computeRecentReceipts_ -> [readAllBarcodeRows_]
-computeValidator_ -> [getShiftBounds_, computeTspStock_, getSheet_, parseMb51Timestamp_, getMaterialMap_]
+computeMesinStockBreakdown_ -> [getShiftBounds_, readAllBarcodeRows_, getMaterialMap_]
+computeShiftReceipts_ -> [getShiftBounds_, readAllBarcodeRows_, getSupplierMap_]
+computeShiftDispatches_ -> [getShiftBounds_, readAllBarcodeRows_, getSupplierMap_]
+computeOperatorReceipts_ -> [getShiftBounds_, readAllBarcodeRows_, getSupplierMap_]
+computeOperatorConsumption_ -> [getShiftBounds_, readAllBarcodeRows_, getSupplierMap_]
+computeValidator_ -> [getShiftBounds_, computeTspStock_, getSheet_, parseMb51Timestamp_, getMaterialMap_, getSupplierMap_]
 
 doGet -> [HtmlService.createTemplateFromFile]
 login -> [login_]
@@ -187,14 +196,15 @@ getMesinList -> []                                        # baca MESIN_LIST lang
 getTspStock -> [computeTspStock_]
 getMesinStock -> [computeMesinStock_]
 getValidatorData -> [computeValidator_]
+getReservasiOptions -> [getReservasiList_]
 getRecentReceipts -> [computeRecentReceipts_]
 ```
 
 ## 7. Fungsi "Akar" vs "Daun"
 
 - **Akar panggilan (dipanggil client, tidak dipanggil fungsi server lain)**: semua fungsi
-  di `Code.js` (`doGet`, `login`, `submitScan`, `getMesinList`, `getTspStock`,
-  `getMesinStock`, `getValidatorData`, `getRecentReceipts`).
+  di `Code.js` (`doGet`, `login`, `submitScan`, `getMesinList`, `getReservasiOptions`,
+  `getTspStock`, `getMesinStock`, `getValidatorData`, `getRecentReceipts`).
 - **Daun (tidak memanggil fungsi lain, hanya operasi dasar)**: `getSpreadsheet_`,
   `toDateOrNull_`, `padSeq_`, `formatDateLabel_`, `getLoginAttemptCount_`,
   `clearLoginAttempts_`, `roleFromJabatan_`, `bucketAdd_`, `parseMb51Timestamp_`.

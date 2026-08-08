@@ -40,6 +40,39 @@
 | 28 | `Unnamed: 27` | `object` | - |
 
 ---
+## Sheet: `MIN MAX STOCK`
+- **Jumlah Baris**: 9
+- **Jumlah Kolom**: 7
+
+### Daftar Kolom & Data Type
+| No | Nama Kolom | Type Data | Sample Nilai |
+|---|---|---|---|
+| 1 | `MID` | `int64` | 20000046 |
+| 2 | `MATERIAL DESCRIPTION` | `str` | PULP LIGHTHOUSE X 48,2CMX120CM |
+| 3 | `LOKASI` | `str` | TSP |
+| 4 | `MIN_STOCK` | `int64` | 800 |
+| 5 | `MAX_STOCK` | `int64` | 1600 |
+| 6 | `UPDATED_AT` | `datetime64[us]` | 2026-08-05 05:35:13 |
+| 7 | `UPDATED_BY` | `int64` | 128000012 |
+
+---
+## Sheet: `Log Aktivitas Barcode`
+- **Jumlah Baris**: 24
+- **Jumlah Kolom**: 8
+
+### Daftar Kolom & Data Type
+| No | Nama Kolom | Type Data | Sample Nilai |
+|---|---|---|---|
+| 1 | `Timestamp` | `datetime64[us]` | 2026-08-03 21:18:55.935000 |
+| 2 | `Barcode` | `str` | DUMMY-1 |
+| 3 | `Event` | `str` | terima_wrm |
+| 4 | `Actor` | `str` | 328000067 - Alip Rangga Alpajrin |
+| 5 | `Role` | `str` | tsp |
+| 6 | `Mesin` | `str` | - |
+| 7 | `Hasil` | `str` | SUKSES |
+| 8 | `Pesan` | `str` | Berhasil Menerima Material dari WRM: ... |
+
+---
 ## Sheet: `MB51 `
 - **Jumlah Baris**: 41
 - **Jumlah Kolom**: 14
@@ -63,89 +96,129 @@
 | 14 | `Kategori R1/R2` | `str` | R2 |
 
 ---
-## Sheet: `BARCODE INCOMING WRM`
-- **Jumlah Baris**: 2830
-- **Jumlah Kolom**: 23
+## Sheet: `BARCODE OUTBOUND WRM`
+- **Jumlah Baris**: 3692
+- **Jumlah Kolom**: 24
 
 ### Daftar Kolom & Data Type
 | No | Nama Kolom | Type Data | Sample Nilai |
 |---|---|---|---|
-| 1 | `Tanggal Kirim` | `datetime64[us]` | 2026-03-11 00:00:00 |
-| 2 | `No. SJ / No. Kontainer` | `object` | TLLU5298300 |
-| 3 | `Nomor PO` | `object` | 6530000635 |
-| 4 | `No SPB` | `object` | 1800110492 |
-| 5 | `No Mobil` | `object` | B 9295 UWX |
-| 6 | `Supplier` | `str` | DOMTAR |
-| 7 | `Mid` | `int64` | 20000046 |
-| 8 | `Description` | `str` | PULP LIGHTHOUSE X 48,2CMX120CM |
-| 9 | `Qty Kirim` | `float64` | 19116.0 |
-| 10 | `Qty /Palet` | `int64` | 995 |
-| 11 | `Uom` | `str` | KG |
-| 12 | `Palet` | `int64` | 1 |
-| 13 | `Kode Unik` | `object` | DTA15M2708199 |
-| 14 | `Line` | `str` | LINE C-10 |
-| 15 | `Lot No` | `object` | - |
-| 16 | `Keterangan` | `str` | PUTAWAY COMPLETED |
-| 17 | `DOI` | `int64` | 141 |
-| 18 | `ZONA` | `str` | ZRM |
-| 19 | `AKSI` | `str` | VERIFIED |
-| 20 | `PALLET` | `float64` | 4.0 |
-| 21 | `Reason hold` | `str` | - |
-| 22 | `Status Claim` | `str` | - |
-| 23 | `tanggal` | `float64` | - |
+| 1 | `Tanggal Outbound` | `datetime64[us]` | 2026-03-25 00:00:00 |
+| 2 | `Shift` | `str` | Shift 2 |
+| 3 | `MID` | `int64` | 20000387 |
+| 4 | `DESC` | `str` | ELASTIC WHITE 940DTEX  |
+| 5 | `UOM` | `str` | ROL |
+| 6 | `QTY` | `int64` | 128 |
+| 7 | `TANGGAL DATANG` | `object` | 2026-03-01 00:00:00 |
+| 8 | `Supplier` | `str` | HYOSUNG |
+| 9 | `Nomor PO` | `object` | 6530000664 |
+| 10 | `NO SPB` | `object` | 1800110872 |
+| 11 | `Kode Unik` | `str` | 1800110872-20000387-P5 |
+| 12 | `Lot No` | `object` | - |
+| 13 | `TANGGAL AWAL DATANG DIKURANGI AWAL OUTBOUND` | `object` | 24 |
+| 14 | `KONFIRMASI TSP` | `str` | - |
+| 15 | `REQUEST` | `str` | PRODUKSI |
+| 16 | `LINE` | `str` | ST-F7-6 |
+| 17 | `Unnamed: 16` | `object` | - |
+| 18 | `MATDOC RESERVASI` | `float64` | - |
+| 19 | `KONFIRMASI WRM` | `str` | - |
+| 20 | `KETERANGAN TIDAK SESUAI` | `float64` | - |
+| 21 | `WAKTU KONFIRMASI` | `datetime64[us]` | - |
+| 22 | `KONFIRMASI ADMIN TEAM SUPPLY` | `str` | - |
+| 23 | `KETERANGAN TIDAK SESUAI.1` | `str` | - |
+| 24 | `WAKTU KONFIRMASI.1` | `datetime64[us]` | - |
 
 ---
 ## Sheet: `BARCODE MATERIAL PRODUKSI`
-- **Jumlah Baris**: 0
+- **Jumlah Baris**: 9
 - **Jumlah Kolom**: 13
 
 ### Daftar Kolom & Data Type
 | No | Nama Kolom | Type Data | Sample Nilai |
 |---|---|---|---|
-| 1 | `TANGGAL` | `object` | - |
-| 2 | `SHIFT` | `object` | - |
-| 3 | `BARCODE` | `object` | - |
-| 4 | `NO RESERVASI` | `object` | - |
-| 5 | `MID` | `object` | - |
-| 6 | `MATERIAL DESCRIPTION` | `object` | - |
-| 7 | `JUMLAH` | `object` | - |
-| 8 | `DITERIMA OLEH TSP DARI WRM` | `object` | - |
-| 9 | `DIKIRIM OLEH TSP KE MESIN` | `object` | - |
-| 10 | `RETUR DITARIK OLEH TSP DARI MESIN` | `object` | - |
-| 11 | `DITERIMA OLEH OPERATOR DARI TSP` | `object` | - |
-| 12 | `DICONSUME OLEH OPERATOR` | `object` | - |
-| 13 | `RETUR DIKIRIM KEMBALI OLEH TSP KE WRM` | `object` | - |
+| 1 | `TANGGAL` | `datetime64[us]` | 2026-04-08 11:37:00 |
+| 2 | `SHIFT` | `int64` | 1 |
+| 3 | `BARCODE` | `str` | DUMMY-1 |
+| 4 | `NO RESERVASI` | `object` | 4787879 |
+| 5 | `MID` | `int64` | 20000387 |
+| 6 | `MATERIAL DESCRIPTION` | `str` | ELASTIC WHITE 940 DTEX |
+| 7 | `JUMLAH` | `int64` | 32 |
+| 8 | `DITERIMA OLEH TSP DARI WRM` | `datetime64[us]` | 2026-04-08 11:37:00 |
+| 9 | `DIKIRIM OLEH TSP KE MESIN` | `datetime64[us]` | - |
+| 10 | `RETUR DITARIK OLEH TSP DARI MESIN` | `float64` | - |
+| 11 | `DITERIMA OLEH OPERATOR DARI TSP` | `float64` | - |
+| 12 | `DICONSUME OLEH OPERATOR` | `float64` | - |
+| 13 | `RETUR DIKIRIM KEMBALI OLEH TSP KE WRM` | `float64` | - |
 
 ---
 ## Sheet: `REPRINT BARCODE`
-- **Jumlah Baris**: 0
+- **Jumlah Baris**: 6
 - **Jumlah Kolom**: 7
 
 ### Daftar Kolom & Data Type
 | No | Nama Kolom | Type Data | Sample Nilai |
 |---|---|---|---|
-| 1 | `TANGGAL` | `object` | - |
-| 2 | `SHIFT` | `object` | - |
-| 3 | `BARCODE` | `object` | - |
-| 4 | `MID` | `object` | - |
-| 5 | `MATERIAL DESCRIPTION` | `object` | - |
-| 6 | `BARCODE REPRINT` | `object` | - |
-| 7 | `JUMLAH` | `object` | - |
+| 1 | `TANGGAL` | `datetime64[us]` | 2026-04-08 11:22:00 |
+| 2 | `SHIFT` | `int64` | 1 |
+| 3 | `BARCODE` | `str` | DUMMY-1 |
+| 4 | `MID` | `int64` | 20000387 |
+| 5 | `MATERIAL DESCRIPTION` | `str` | ELASTIC WHITE 940 DTEX |
+| 6 | `BARCODE REPRINT` | `str` | DUMMY-1-01 |
+| 7 | `JUMLAH` | `int64` | 16 |
+
+---
+## Sheet: `STOCK TSP`
+- **Jumlah Baris**: 462
+- **Jumlah Kolom**: 30
+
+### Daftar Kolom & Data Type
+| No | Nama Kolom | Type Data | Sample Nilai |
+|---|---|---|---|
+| 1 | `No.` | `int64` | 1 |
+| 2 | `Tanggal` | `datetime64[us]` | 2026-08-03 00:00:00 |
+| 3 | `Shift` | `int64` | 2 |
+| 4 | `NIK TSP` | `int64` | 328000067 |
+| 5 | `Nama TSP` | `str` | Alip Rangga Alpajrin |
+| 6 | `MID` | `int64` | 20000000 |
+| 7 | `Deskripsi` | `str` | KRAFT BLEACHED WOODPULP FR 411-48X120 |
+| 8 | `UOM` | `str` | KG |
+| 9 | `Stok Awal` | `float64` | 0.0 |
+| 10 | `Barang Masuk` | `int64` | 6479 |
+| 11 | `Kirim BHP 1` | `float64` | - |
+| 12 | `Kirim BHP 2` | `float64` | - |
+| 13 | `Kirim BHP 3` | `float64` | 2788.0 |
+| 14 | `Kirim AHP 1` | `float64` | - |
+| 15 | `Kirim BHP 4` | `float64` | 3691.0 |
+| 16 | `Kirim BHP 5` | `float64` | - |
+| 17 | `Return BHP 1` | `float64` | - |
+| 18 | `Return BHP 2` | `float64` | - |
+| 19 | `Return BHP 3` | `float64` | - |
+| 20 | `Return AHP 1` | `float64` | - |
+| 21 | `Return BHP 4` | `float64` | - |
+| 22 | `Return BHP 5` | `float64` | - |
+| 23 | `MATCLAIM WRM` | `float64` | - |
+| 24 | `Stock Akhir (RUMUS)` | `float64` | 0.0 |
+| 25 | `Stock Akhir (HITUNG AKTUAL)` | `float64` | 0.0 |
+| 26 | `Check` | `object` | True |
+| 27 | `Unnamed: 26` | `float64` | - |
+| 28 | `Unnamed: 27` | `float64` | - |
+| 29 | `Unnamed: 28` | `float64` | - |
+| 30 | `Unnamed: 29` | `float64` | - |
 
 ---
 ## Sheet: `STOCK MESIN`
-- **Jumlah Baris**: 139
+- **Jumlah Baris**: 277
 - **Jumlah Kolom**: 39
 
 ### Daftar Kolom & Data Type
 | No | Nama Kolom | Type Data | Sample Nilai |
 |---|---|---|---|
 | 1 | `No.` | `int64` | 1 |
-| 2 | `Tanggal` | `float64` | - |
-| 3 | `Shift` | `float64` | - |
-| 4 | `Mesin` | `float64` | - |
-| 5 | `NIK OP` | `float64` | - |
-| 6 | `NAMA OP` | `float64` | - |
+| 2 | `Tanggal` | `datetime64[us]` | 2026-08-03 00:00:00 |
+| 3 | `Shift` | `int64` | 2 |
+| 4 | `Mesin` | `str` | BHP 1 |
+| 5 | `NIK OP` | `float64` | 328000023.0 |
+| 6 | `NAMA OP` | `str` | Kepin Nugraha |
 | 7 | `MID` | `int64` | 20000000 |
 | 8 | `Deskripsi` | `str` | KRAFT BLEACHED WOODPULP FR 411-48X120 |
 | 9 | `UOM` | `str` | KG |
@@ -169,7 +242,7 @@
 | 27 | `Consume BHP 5` | `float64` | - |
 | 28 | `Return BHP 1` | `float64` | - |
 | 29 | `Return BHP 2` | `float64` | - |
-| 30 | `Return BHP 3` | `str` | - |
+| 30 | `Return BHP 3` | `object` | - |
 | 31 | `Return AHP 1` | `float64` | - |
 | 32 | `Return BHP 4` | `float64` | - |
 | 33 | `Return BHP 5` | `float64` | - |
@@ -179,45 +252,6 @@
 | 37 | `Stock Akhir AHP 1` | `float64` | 0.0 |
 | 38 | `Stock Akhir BHP 4` | `int64` | 3691 |
 | 39 | `Stock Akhir BHP 5` | `int64` | 0 |
-
----
-## Sheet: `STOCK TSP`
-- **Jumlah Baris**: 139
-- **Jumlah Kolom**: 30
-
-### Daftar Kolom & Data Type
-| No | Nama Kolom | Type Data | Sample Nilai |
-|---|---|---|---|
-| 1 | `No.` | `int64` | 1 |
-| 2 | `Tanggal` | `float64` | - |
-| 3 | `Shift` | `float64` | - |
-| 4 | `NIK TSP` | `float64` | - |
-| 5 | `Nama TSP` | `float64` | - |
-| 6 | `MID` | `int64` | 20000000 |
-| 7 | `Deskripsi` | `str` | KRAFT BLEACHED WOODPULP FR 411-48X120 |
-| 8 | `UOM` | `str` | KG |
-| 9 | `Stok Awal` | `float64` | 0.0 |
-| 10 | `Barang Masuk` | `int64` | 6479 |
-| 11 | `Kirim BHP 1` | `float64` | - |
-| 12 | `Kirim BHP 2` | `float64` | - |
-| 13 | `Kirim BHP 3` | `float64` | 2788.0 |
-| 14 | `Kirim AHP 1` | `float64` | - |
-| 15 | `Kirim BHP 4` | `float64` | 3691.0 |
-| 16 | `Kirim BHP 5` | `float64` | - |
-| 17 | `Return BHP 1` | `float64` | - |
-| 18 | `Return BHP 2` | `float64` | - |
-| 19 | `Return BHP 3` | `str` | - |
-| 20 | `Return AHP 1` | `float64` | - |
-| 21 | `Return BHP 4` | `float64` | - |
-| 22 | `Return BHP 5` | `float64` | - |
-| 23 | `MATCLAIM WRM` | `float64` | - |
-| 24 | `Stock Akhir (RUMUS)` | `object` | 0 |
-| 25 | `Stock Akhir (HITUNG AKTUAL)` | `float64` | 0.0 |
-| 26 | `Check` | `object` | True |
-| 27 | `Unnamed: 26` | `float64` | - |
-| 28 | `Unnamed: 27` | `float64` | - |
-| 29 | `Unnamed: 28` | `float64` | - |
-| 30 | `Unnamed: 29` | `float64` | - |
 
 ---
 ## Sheet: `Daily TSP`

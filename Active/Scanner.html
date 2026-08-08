@@ -1,54 +1,64 @@
-<div id="action-view">
-  <div class="btn-grid" id="action-list"></div>
-</div>
+<div class="scan-layout-container">
+  <div class="scan-action-pane" id="action-view">
+    <div class="btn-grid" id="action-list"></div>
+  </div>
 
-<div id="extra-view">
-  <div id="reservasi-field" style="display:none;">
-    <p style="margin-bottom:4px; font-weight:600; font-size:13px; color:var(--text-sub);">Filter Tanggal Reservasi (SAP):</p>
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      <input type="date" id="reservasi-date-input" style="flex:1; padding:8px; font-size:14px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc;">
-      <button type="button" id="clear-date-btn" class="secondary-btn" style="padding:8px 12px; font-size:12px; width:auto; margin:0;">Semua Tgl</button>
+  <div class="scan-content-pane">
+    <div id="scan-placeholder" style="padding: 40px 20px; text-align: center; color: var(--text-sub); font-weight: 600;">
+      <i class="bi bi-upc-scan" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+      Pilih opsi pemindaian pada menu di samping/atas untuk memulai.
     </div>
 
-    <p style="margin-bottom:4px; font-weight:600; font-size:13px; color:var(--text-sub);">Filter Movement Type (SAP):</p>
-    <select id="reservasi-mvt-filter" style="margin-bottom:12px; font-size:13px; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; width:100%;"></select>
+    <div id="extra-view" class="panel" style="max-width: 560px; display:none;">
+      <div id="reservasi-field" style="display:none; margin-bottom: 18px;">
+        <p style="margin-bottom:8px; font-weight:700; font-size:12px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.05em;">Filter Tanggal Reservasi (SAP):</p>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <input type="date" id="reservasi-date-input" style="flex:1; margin-top:0;">
+          <button type="button" id="clear-date-btn" class="secondary-btn" style="padding:12px 16px; font-size:13px; width:auto; margin:0; font-weight:700;">Semua Tgl</button>
+        </div>
 
-    <p style="margin-bottom:4px; font-weight:600;">Pilih Nomor Reservasi:</p>
-    <select id="reservasi-select"></select>
-    <div id="reservasi-manual-wrap" style="display:none; margin-top:10px;">
-      <p style="margin-bottom:4px; font-size:12px; color:var(--text-sub);">Atau ketik Nomor Reservasi manual:</p>
-      <input type="text" id="reservasi-input" placeholder="Contoh: 20748003">
+        <p style="margin-bottom:6px; font-weight:700; color:var(--text-main); font-size:14px;">Pilih Nomor Reservasi:</p>
+        <select id="reservasi-select" style="margin-top:0;"></select>
+        <div id="reservasi-manual-wrap" style="display:none; margin-top:12px;">
+          <p style="margin-bottom:6px; font-size:13px; color:var(--text-sub); font-weight:600;">Atau ketik Nomor Reservasi manual:</p>
+          <input type="text" id="reservasi-input" placeholder="Contoh: 20748003" style="margin-top:0;">
+        </div>
+        <div id="reservasi-mid-info" style="display:none; margin-top:16px; padding:16px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; font-size:13.5px; color:#065f46; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.08);">
+          <p style="margin:0 0 10px 0; font-weight:800; display:flex; align-items:center; gap:8px; font-size:14px; border-bottom:1px solid #bbf7d0; padding-bottom:8px;">
+            <span>✅</span> Daftar Material (MID) yang Diizinkan:
+          </p>
+          <ul id="reservasi-mid-list" style="margin:0; padding-left:22px; line-height:1.6; font-weight:600;"></ul>
+        </div>
+      </div>
+      <div id="mesin-field" style="display:none; margin-bottom: 18px;">
+        <p style="margin-bottom:6px; font-weight:700; color:var(--text-main); font-size:14px;">Pilih mesin tujuan:</p>
+        <select id="mesin-select" style="margin-top:0;"></select>
+      </div>
+      <div id="jumlah-field" style="display:none; margin-bottom: 18px;">
+        <p style="margin-bottom:6px; font-weight:700; color:var(--text-main); font-size:14px;">Jumlah yang dikirim:</p>
+        <input type="number" id="jumlah-input" min="0" step="any" placeholder="Contoh: 200" style="margin-top:0;">
+      </div>
+      <button class="action-btn" id="extra-continue" style="margin-top:8px;">Lanjut Scan Barcode</button>
+      <button class="secondary-btn" id="extra-cancel">Batal</button>
+    </div>
+
+    <div id="scanner-view" style="display:none;">
+      <p>Ambil foto barcode/QR yang jelas &amp; fokus.</p>
+      <button class="action-btn" id="capture-btn">📷 Ambil Foto Barcode</button>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
+      <div class="result-box" id="scan-status" style="display:none; background:#e0e7ff; color:#3730a3;"></div>
+      <div id="reader" style="display:none;"></div>
+      <button class="secondary-btn" id="scan-cancel">Batal</button>
+    </div>
+
+    <div id="result-view" style="display:none;">
+      <div class="result-box" id="result-box" style="white-space: pre-line; line-height: 1.6;"></div>
+      <div class="result-box" id="child-barcode-box" style="display:none; background:#e0e7ff; color:#3730a3; font-size:18px; font-weight:bold; text-align:center; margin-top:10px;"></div>
+      <button class="action-btn" id="scan-again" style="margin-top:10px;">Scan Lagi</button>
+      <button class="secondary-btn" id="back-to-menu">Kembali ke Menu</button>
     </div>
   </div>
-  <div id="mesin-field" style="display:none;">
-    <p>Pilih mesin tujuan:</p>
-    <select id="mesin-select"></select>
-  </div>
-  <div id="jumlah-field" style="display:none;">
-    <p>Jumlah yang dikirim:</p>
-    <input type="number" id="jumlah-input" min="0" step="any" placeholder="Contoh: 200">
-  </div>
-  <button class="action-btn" id="extra-continue" style="margin-top:10px;">Lanjut Scan</button>
-  <button class="secondary-btn" id="extra-cancel">Batal</button>
 </div>
-
-<div id="scanner-view">
-  <p>Ambil foto barcode/QR yang jelas &amp; fokus.</p>
-  <button class="action-btn" id="capture-btn">📷 Ambil Foto Barcode</button>
-  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
-  <div class="result-box" id="scan-status" style="display:none; background:#e0e7ff; color:#3730a3;"></div>
-  <div id="reader" style="display:none;"></div>
-  <button class="secondary-btn" id="scan-cancel">Batal</button>
-</div>
-
-<div id="result-view">
-  <div class="result-box" id="result-box" style="white-space: pre-line; line-height: 1.6;"></div>
-  <div class="result-box" id="child-barcode-box" style="display:none; background:#e0e7ff; color:#3730a3; font-size:18px; font-weight:bold; text-align:center; margin-top:10px;"></div>
-  <button class="action-btn" id="scan-again" style="margin-top:10px;">Scan Lagi</button>
-  <button class="secondary-btn" id="back-to-menu">Kembali ke Menu</button>
-</div>
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   var html5QrCode = null;
   var currentEvent = null;
@@ -58,9 +68,18 @@
   var rawReservasiData = [];
 
   function showView(id) {
-    ['action-view', 'extra-view', 'scanner-view', 'result-view'].forEach(function (v) {
+    ['extra-view', 'scanner-view', 'result-view'].forEach(function (v) {
       document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
     });
+    var ph = document.getElementById('scan-placeholder');
+    if (ph) {
+      ph.style.display = (!id || id === 'action-view') ? 'block' : 'none';
+    }
+  }
+
+  function resetScanMenu() {
+    showView('');
+    document.querySelectorAll('.scan-menu-btn').forEach(function (b) { b.classList.remove('active'); });
   }
 
   function renderActions() {
@@ -68,15 +87,34 @@
     list.innerHTML = '';
     PAGE_EVENTS.forEach(function (ev) {
       var btn = document.createElement('button');
-      btn.className = 'action-btn';
-      btn.textContent = ev.label;
-      btn.onclick = function () { selectEvent(ev); };
+      btn.className = 'action-card-btn scan-menu-btn';
+      if (ev.bg) {
+        btn.style.background = ev.bg;
+        btn.style.boxShadow = '0 6px 18px ' + (ev.shadow || 'rgba(37, 99, 235, 0.25)');
+      }
+
+      var iconClass = ev.icon || 'bi-qr-code-scan';
+      var descText = ev.desc || '';
+
+      btn.innerHTML = '<div class="action-card-icon-wrap"><i class="bi ' + iconClass + '"></i></div>' +
+                      '<div class="action-card-text-wrap">' +
+                        '<div class="action-card-title">' + (ev.label || '') + '</div>' +
+                        (descText ? '<div class="action-card-desc">' + descText + '</div>' : '') +
+                      '</div>' +
+                      '<i class="bi bi-chevron-right action-card-arrow"></i>';
+
+      btn.onclick = function () { 
+        document.querySelectorAll('.scan-menu-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        selectEvent(ev); 
+      };
       list.appendChild(btn);
     });
   }
 
-  function selectEvent(ev) {
+  function selectEvent(ev, isRestoring) {
     currentEvent = ev;
+    window.currentEvent = ev;
     currentMesin = null;
     currentJumlah = null;
     currentReservasi = null;
@@ -91,8 +129,8 @@
       }
       if (ev.requiresMesin) {
         var select = document.getElementById('mesin-select');
-        select.innerHTML = '';
         google.script.run.withSuccessHandler(function (list) {
+          select.innerHTML = '';
           list.forEach(function (m) {
             var opt = document.createElement('option');
             opt.value = m;
@@ -108,6 +146,10 @@
     } else {
       startScanner();
     }
+
+    if (!isRestoring && typeof pushDeeplinkState === 'function') {
+      pushDeeplinkState({ event: ev.code });
+    }
   }
 
   function getTodayIsoString() {
@@ -121,48 +163,22 @@
 
   function setupReservasiPicker() {
     var dateInput = document.getElementById('reservasi-date-input');
-    var mvtFilter = document.getElementById('reservasi-mvt-filter');
     var select = document.getElementById('reservasi-select');
     var manualWrap = document.getElementById('reservasi-manual-wrap');
     document.getElementById('reservasi-input').value = '';
 
     dateInput.value = getTodayIsoString();
-    mvtFilter.innerHTML = '<option value="__all__">Memuat movement type...</option>';
     select.innerHTML = '<option value="">Memuat daftar reservasi...</option>';
     manualWrap.style.display = 'none';
+    var midInfo = document.getElementById('reservasi-mid-info');
+    if (midInfo) midInfo.style.display = 'none';
 
     google.script.run.withSuccessHandler(function (res) {
       if (res.success && res.data && res.data.length > 0) {
         rawReservasiData = res.data;
-
-        // Extract unique movement types
-        var mvtMap = {};
-        var uniqueMvts = [];
-        rawReservasiData.forEach(function (r) {
-          if (r.movementType && !mvtMap[r.movementType]) {
-            mvtMap[r.movementType] = true;
-            uniqueMvts.push(r.movementType);
-          }
-        });
-        uniqueMvts.sort();
-
-        mvtFilter.innerHTML = '';
-        var optMvtAll = document.createElement('option');
-        optMvtAll.value = '__all__';
-        optMvtAll.textContent = '-- Semua Movement Type --';
-        mvtFilter.appendChild(optMvtAll);
-
-        uniqueMvts.forEach(function (mvt) {
-          var opt = document.createElement('option');
-          opt.value = mvt;
-          opt.textContent = 'Movement Type ' + mvt;
-          mvtFilter.appendChild(opt);
-        });
-
         renderReservasiOptions();
       } else {
         rawReservasiData = [];
-        mvtFilter.innerHTML = '<option value="__all__">-- Semua Movement Type --</option>';
         select.innerHTML = '<option value="__manual__">-- Tidak ada reservasi (Input Manual) --</option>';
         manualWrap.style.display = 'block';
       }
@@ -184,9 +200,10 @@
 
   function renderReservasiOptions() {
     var selectedDateIso = document.getElementById('reservasi-date-input').value;
-    var selectedMvt = document.getElementById('reservasi-mvt-filter').value;
     var select = document.getElementById('reservasi-select');
     var manualWrap = document.getElementById('reservasi-manual-wrap');
+    var midInfo = document.getElementById('reservasi-mid-info');
+    if (midInfo) midInfo.style.display = 'none';
 
     select.innerHTML = '';
     var filtered = rawReservasiData;
@@ -195,13 +212,6 @@
     if (selectedDateIso) {
       filtered = filtered.filter(function (r) {
         return isDateMatch(r, selectedDateIso);
-      });
-    }
-
-    // Filter per Movement Type
-    if (selectedMvt && selectedMvt !== '__all__') {
-      filtered = filtered.filter(function (r) {
-        return String(r.movementType).trim() === String(selectedMvt).trim();
       });
     }
 
@@ -216,7 +226,6 @@
         opt.value = r.noReservasi;
         var label = r.noReservasi;
         if (r.itemCount && r.itemCount > 1) label += ' (' + r.itemCount + ' item material)';
-        if (r.movementType) label += ' [Mvt: ' + r.movementType + ']';
         if (!selectedDateIso && r.tanggal) label += ' [Tgl: ' + r.tanggal + ']';
         opt.textContent = label;
         select.appendChild(opt);
@@ -230,7 +239,7 @@
     } else {
       var opt = document.createElement('option');
       opt.value = '__manual__';
-      opt.textContent = (selectedDateIso || (selectedMvt && selectedMvt !== '__all__'))
+      opt.textContent = selectedDateIso
         ? '-- Tidak ada reservasi yang sesuai filter (Input Manual) --'
         : '-- Tidak ada reservasi (Input Manual) --';
       select.appendChild(opt);
@@ -242,10 +251,6 @@
     renderReservasiOptions();
   });
 
-  document.getElementById('reservasi-mvt-filter').addEventListener('change', function () {
-    renderReservasiOptions();
-  });
-
   document.getElementById('clear-date-btn').addEventListener('click', function () {
     document.getElementById('reservasi-date-input').value = '';
     renderReservasiOptions();
@@ -254,7 +259,26 @@
   document.getElementById('reservasi-select').addEventListener('change', function () {
     var val = this.value;
     var manualWrap = document.getElementById('reservasi-manual-wrap');
+    var midInfo = document.getElementById('reservasi-mid-info');
+    var midList = document.getElementById('reservasi-mid-list');
     manualWrap.style.display = (val === '__manual__') ? 'block' : 'none';
+    
+    if (midInfo && midList) {
+      midInfo.style.display = 'none';
+      midList.innerHTML = '';
+      if (val && val !== '__manual__' && rawReservasiData) {
+        var found = rawReservasiData.find(function (r) { return r.noReservasi === val; });
+        if (found && found.items && found.items.length > 0) {
+          found.items.forEach(function (item) {
+            var li = document.createElement('li');
+            li.style.marginBottom = '4px';
+            li.innerHTML = '<strong>' + (item.mid || '-') + '</strong> &mdash; ' + (item.desc || '-') + ' (' + item.qty + ' ' + item.uom + ')';
+            midList.appendChild(li);
+          });
+          midInfo.style.display = 'block';
+        }
+      }
+    }
   });
 
   function startScanner() {
@@ -284,14 +308,15 @@
 
   function onScanSuccess(decodedText) {
     google.script.run
-      .withSuccessHandler(function (res) { showResult(res.success, res.message, res.childBarcode); })
-      .withFailureHandler(function (err) { showResult(false, err.message || String(err), null); })
+      .withSuccessHandler(function (res) { showResult(res.success, res.message, res.childBarcode, res.warning); })
+      .withFailureHandler(function (err) { showResult(false, err.message || String(err), null, false); })
       .submitScan(decodedText, currentEvent.code, currentMesin, currentJumlah, currentReservasi, CURRENT_NIK);
   }
 
-  function showResult(success, message, childBarcode) {
+  function showResult(success, message, childBarcode, warning) {
     var box = document.getElementById('result-box');
-    box.className = 'result-box ' + (success ? 'result-success' : 'result-error');
+    var cls = !success ? 'result-error' : (warning ? 'result-warning' : 'result-success');
+    box.className = 'result-box ' + cls;
     box.textContent = message;
 
     var childBox = document.getElementById('child-barcode-box');
@@ -326,7 +351,7 @@
         }
 
         if (!currentReservasi) {
-          alert('Pilih atau isi Nomor Reservasi terlebih dahulu.');
+          showPopupModal('Input Tidak Lengkap', 'Pilih atau isi Nomor Reservasi terlebih dahulu sebelum melanjutkan scan.', 'warning', 'Mengerti');
           return;
         }
       }
@@ -336,23 +361,23 @@
       if (currentEvent.requiresJumlah) {
         currentJumlah = document.getElementById('jumlah-input').value;
         if (!currentJumlah || Number(currentJumlah) <= 0) {
-          alert('Isi jumlah yang valid dulu.');
+          showPopupModal('Jumlah Tidak Valid', 'Silakan isi jumlah (Qty) material yang sah dan lebih dari 0 sebelum memulai pemindaian barcode.', 'warning', 'Mengerti');
           return;
         }
       }
       startScanner();
     };
     document.getElementById('extra-cancel').onclick = function () {
-      showView('action-view');
+      resetScanMenu();
     };
     document.getElementById('scan-cancel').onclick = function () {
-      showView('action-view');
+      resetScanMenu();
     };
     document.getElementById('scan-again').onclick = function () {
       startScanner();
     };
     document.getElementById('back-to-menu').onclick = function () {
-      showView('action-view');
+      resetScanMenu();
     };
   });
 </script>

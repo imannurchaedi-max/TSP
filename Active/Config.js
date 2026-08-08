@@ -14,7 +14,12 @@ var KARYAWAN_SHEET_NAME = 'KARYAWAN';
 var JABATAN_ROLE_MAP = {
   'Admin TSP': 'tsp',
   'TSP': 'tsp',
-  'Operator Production': 'operator'
+  'Operator Production': 'operator',
+  'Operator Produksi': 'operator',
+  'Operator Reachtruck': 'operator',
+  'Line Leader': 'operator',
+  'Shift Leader': 'operator',
+  'Production Chief SPV 1': 'spv'
 };
 
 var SHEET_NAMES = {
@@ -22,11 +27,12 @@ var SHEET_NAMES = {
   MATERIAL_MASTER: 'MID EXISTING',
   LOG: 'Log Aktivitas Barcode',
   MB51: 'MB51 ', // perhatikan ada spasi di akhir nama sheet aslinya
-  WRM_INCOMING: 'BARCODE INCOMING WRM', // registry pallet dari WRM, sumber lookup MID/Qty/status saat Terima dari WRM
+  WRM_INCOMING: 'BARCODE OUTBOUND WRM', // registry pallet dari WRM, sumber lookup MID/QTY saat Terima dari WRM
   REPRINT: 'REPRINT BARCODE', // registry log barcode anak/reprint yang dibuat TSP
-  RESERVASI: 'RESERVASI', // tab reservasi berdasarkan tanggal & shift
+  RESERVASI: 'BARCODE OUTBOUND WRM', // data reservasi terintegrasi di BARCODE OUTBOUND WRM (kolom MATDOC RESERVASI)
   STOCK_TSP: 'STOCK TSP',
-  STOCK_MESIN: 'STOCK MESIN'
+  STOCK_MESIN: 'STOCK MESIN',
+  MIN_MAX: 'MIN MAX STOCK'
 };
 
 // Header resmi sheet "BARCODE MATERIAL PRODUKSI" (selaras dengan Excel REF)
@@ -73,9 +79,9 @@ var MESIN_LIST = ['BHP 1', 'BHP 2', 'BHP 3', 'AHP 1', 'BHP 4', 'BHP 5'];
 // Window shift: jam mulai (inclusive) per shift, dipakai untuk menentukan
 // kolom "Shift" saat scan: Shift 1 (06:00-14:00), Shift 2 (14:00-22:00), Shift 3 (22:00-06:00)
 var SHIFT_WINDOWS = [
-  { shift: 'Shift 1', startHour: 6 },
-  { shift: 'Shift 2', startHour: 14 },
-  { shift: 'Shift 3', startHour: 22 }
+  { shift: '1', startHour: 6 },
+  { shift: '2', startHour: 14 },
+  { shift: '3', startHour: 22 }
 ];
 
 /**
@@ -98,7 +104,7 @@ var EVENTS = {
     column: 'DITERIMA OLEH TSP DARI WRM',
     role: 'tsp',
     requiresMesin: false,
-    requiresJumlah: false, // Jumlah otomatis dari lookup "BARCODE INCOMING WRM" (Qty /Palet)
+    requiresJumlah: false, // Jumlah otomatis dari lookup "BARCODE OUTBOUND WRM" (QTY)
     requiresReservasi: true, // Input/Pilih No. Reservasi dari tab RESERVASI
     label: 'Terima dari WRM'
   },

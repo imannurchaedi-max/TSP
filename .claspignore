@@ -1,0 +1,14 @@
+# Ignore non-GAS folders and file types
+node_modules/**
+REF/**
+dokumentasi/**
+tools/**
+.claude/**
+.gitnexus/**
+scratch/**
+*.py
+*.md
+*.toml
+*.json
+!appsscript.json
+!Active/appsscript.json

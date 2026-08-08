@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relationships, 18 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **TSP** (326 symbols, 726 relationships, 26 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -25,10 +25,10 @@ This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relati
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/0. TSP MODUL/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/0. TSP MODUL/clusters` | All functional areas |
-| `gitnexus://repo/0. TSP MODUL/processes` | All execution flows |
-| `gitnexus://repo/0. TSP MODUL/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/TSP/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/TSP/clusters` | All functional areas |
+| `gitnexus://repo/TSP/processes` | All execution flows |
+| `gitnexus://repo/TSP/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
@@ -42,3 +42,12 @@ This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relati
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+# Mandatory End-of-Task Workflow (PUSH + DEPLOY + COMMIT, EVERY TIME)
+At the end of **every** coding fix or update — no exceptions unless the user explicitly says to hold off — run all three of the following, in this order:
+
+1. **Deploy**: `npm run deploy`. NEVER use only `clasp push` — it only updates `@HEAD` (`/dev`) and leaves the production URL (`/exec`) unchanged. `npm run deploy` builds docs, force-pushes code, and promotes the production Web App deployment in one pass.
+2. **Commit**: commit to the git repo (`origin` → github.com/imannurchaedi-max/TSP.git, branch `master`) with a clear message describing what changed and why. Don't batch unrelated changes into one commit.
+3. Confirm both succeeded before reporting the task done.
+
+This applies automatically after finishing implementation work — don't wait to be asked separately for deploy vs. commit each time. If a change is exploratory/WIP and not meant to ship yet, say so instead of silently skipping this workflow.

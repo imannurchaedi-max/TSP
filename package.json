@@ -5,9 +5,15 @@
   "main": "index.js",
   "scripts": {
     "gitnexus:analyze": "gitnexus analyze .",
-    "mermaid:generate": "python tools/mermaid_generator.py"
+    "docs:build": "python tools/mermaid_generator.py && python tools/parse_excel_ref.py && python tools/graphify_codebase.py",
+    "clasp:status": "cd Active && clasp status",
+    "clasp:push": "cd Active && clasp push -f",
+    "clasp:pull": "cd Active && clasp pull",
+    "clasp:open": "cd Active && clasp open",
+    "deploy": "npm run docs:build && cd Active && clasp push -f && clasp deploy -i AKfycby138TTFstXSl6X2B46nmFgT9o-Eia4bTiS8UNK1kE4IPXEcWVEvik1hkYBUjteT4ZVlQ -d \"Production automated release\""
   },
   "devDependencies": {
+    "@google/clasp": "^3.3.0",
     "@mermaid-js/mermaid-cli": "^11.0.0"
   }
 }

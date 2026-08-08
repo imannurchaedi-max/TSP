@@ -95,6 +95,15 @@ function getTspStock() {
   }
 }
 
+/** Data monitoring stok 6 Mesin (BHP 1..5, AHP 1) & notifikasi stok rendah untuk dashboard TSP. */
+function getTspMesinMonitoring() {
+  try {
+    return { success: true, data: computeTspMesinMonitoring_(new Date()) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
 /** Stock yang sedang ada di 1 mesin (dipilih Operator lewat dropdown). */
 function getMesinStock(mesinCode) {
   try {
@@ -134,7 +143,140 @@ function getShiftDispatches() {
   }
 }
 
-/** Legacy entry point. */
-function getRecentReceipts() {
-  return getShiftReceipts();
+/** Panel "Terima dari TSP" di tab Stock (role Operator). */
+function getOperatorReceipts(mesin) {
+  try {
+    return { success: true, data: computeOperatorReceipts_(new Date(), mesin) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+/** Panel "Konsumsi Material" di tab Stock (role Operator). */
+function getOperatorConsumption(mesin) {
+  try {
+    return { success: true, data: computeOperatorConsumption_(new Date(), mesin) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+
+/** Aksi resmi Admin TSP untuk menarik stok akhir dari shift sebelumnya ke shift aktif. */
+function tarikStokAwalShift(nik) {
+  try {
+    var actor = { nik: '-', nama: 'Admin TSP' };
+    try { actor = resolveRole_(nik); } catch(e) {}
+    var res = tarikStokAwalShift_(actor.nik, actor.nama);
+    return res;
+  } catch (err) {
+    return { success: false, message: 'Gagal menarik stok awal: ' + err.message };
+  }
+}
+
+/** Aksi resmi Admin TSP untuk mengunci neraca stok sesudah verifikasi fisik keliling. */
+function konfirmasiNeracaStokShift(nik, aktualData) {
+  try {
+    var actor = { nik: '-', nama: 'Admin TSP' };
+    try { actor = resolveRole_(nik); } catch(e) {}
+    var res = konfirmasiStokShift_(actor.nik, actor.nama, aktualData);
+    return res;
+  } catch (err) {
+    return { success: false, message: 'Gagal konfirmasi stok: ' + err.message };
+  }
+}
+
+/** Aksi resmi Admin TSP untuk konfirmasi atau revisi aktual per item material saat keliling lapangan. */
+function konfirmasiItemStokShift(nik, mid, aktualValue, statusType) {
+  try {
+    var actor = { nik: '-', nama: 'Admin TSP' };
+    try { actor = resolveRole_(nik); } catch(e) {}
+    var res = konfirmasiItemStokShift_(actor.nik, actor.nama, mid, aktualValue, statusType);
+    return res;
+  } catch (err) {
+    return { success: false, message: 'Gagal konfirmasi item: ' + err.message };
+  }
+}
+
+/** Endpoint API Riwayat Stok untuk TSP Admin */
+function getHistoricalTspStock(dateStr, shiftNum) {
+  try {
+    return { success: true, data: computeHistoricalTspStock_(dateStr, shiftNum) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+/** Endpoint API Riwayat Stok untuk Operator Mesin */
+function getHistoricalMesinStock(mesinCode, dateStr, shiftNum) {
+  try {
+    return { success: true, data: computeHistoricalMesinStock_(mesinCode, dateStr, shiftNum) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+/** Endpoint API Riwayat Format Portal per Jam untuk Operator Mesin */
+function getPortalHistory(mesinCode, dateStr, shiftNum) {
+  try {
+    return { success: true, data: computePortalHistory_(mesinCode, dateStr, shiftNum) };
+  } catch (err) {
+    return { success: false, message: err.message, data: null };
+  }
+}
+
+/**
+ * Endpoint Reprint Barcode — cari kode anak di tab REPRINT BARCODE.
+ * query: Kode Induk atau Kode Anak (substring, case-insensitive)
+ */
+function getReprintData(query) {
+  try {
+    if (!query || String(query).trim() === '') {
+      return { success: false, message: 'Query tidak boleh kosong.', data: [] };
+    }
+    var rows = getReprintData_(String(query).trim());
+    return { success: true, data: rows };
+  } catch (err) {
+    return { success: false, message: err.message, data: [] };
+  }
+}
+
+/**
+ * REPRINT MODULE: Menyimpan sejumlah label reprint ke REPRINT BARCODE
+ * dan mendaftarkannya ke BARCODE MATERIAL PRODUKSI.
+ */
+function saveBatchReprint(labels) {
+  try {
+    var res = saveBatchReprint_(labels);
+    return res;
+  } catch (err) {
+    return { success: false, message: 'Gagal merekam reprint: ' + err.message };
+  }
+}
+
+/** Endpoint API Pengaturan Min/Max Stock (SPV) */
+function getMinMaxSettingsApi() {
+  try {
+    return getMinMaxSettings();
+  } catch (err) {
+    return { success: false, message: err.message, data: [] };
+  }
+}
+
+/** Endpoint API Simpan Min/Max Stock (SPV) */
+function saveMinMaxSettingApi(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier) {
+  try {
+    return saveMinMaxSetting(nik, mid, deskripsi, lokasi, minStock, maxStock, uom, supplier);
+  } catch (err) {
+    return { success: false, message: 'Gagal menyimpan min/max: ' + err.message };
+  }
+}
+
+/** Endpoint API Simpan Batch CSV Min/Max Stock (SPV) */
+function saveMinMaxBatchApi(nik, items) {
+  try {
+    return saveMinMaxBatch_(nik, items);
+  } catch (err) {
+    return { success: false, message: 'Gagal mengimpor batch min/max: ' + err.message };
+  }
 }

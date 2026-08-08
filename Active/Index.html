@@ -9,7 +9,7 @@
   <div id="login-view">
     <div class="login-container">
       <div class="logo-container">
-        <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/DAM.png" alt="DAM Logo">
+        <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/LOGO%20DAM%201.jpg" alt="DAM Logo">
       </div>
       <h4>PT. DAYA ANUGRAH MULYA</h4>
       <p class="login-subtitle">TSP MODUL</p>
@@ -36,7 +36,9 @@
 
     <aside class="app-sidebar">
       <div class="sidebar-header">
-        <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/DAM.png" alt="DAM Logo">
+        <div class="sidebar-logo-wrap">
+          <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/LOGO%20DAM%201.jpg" alt="DAM Logo">
+        </div>
         <div class="sidebar-title">TSP MODUL</div>
         <span class="role-badge" id="sidebar-role-badge"></span>
       </div>
@@ -45,9 +47,12 @@
         <div id="sidebar-user-role"></div>
       </div>
       <nav class="main-nav">
-        <a class="nav-link" id="tab-btn-stock"><i class="bi bi-boxes"></i><span>Stock</span></a>
-        <a class="nav-link" id="tab-btn-scan"><i class="bi bi-upc-scan"></i><span>Scan</span></a>
-        <a class="nav-link" id="tab-btn-validasi" style="display:none;"><i class="bi bi-clipboard-check"></i><span>Validasi</span></a>
+        <a class="nav-link" id="tab-btn-stock" href="<?= appUrl ?>?tab=stock"><i class="bi bi-boxes"></i><span>Stock</span></a>
+        <a class="nav-link" id="tab-btn-scan" href="<?= appUrl ?>?tab=scan"><i class="bi bi-upc-scan"></i><span>Scan</span></a>
+        <a class="nav-link" id="tab-btn-validasi" href="<?= appUrl ?>?tab=validasi" style="display:none;"><i class="bi bi-clipboard-check"></i><span>Validasi</span></a>
+        <a class="nav-link" id="tab-btn-history" href="<?= appUrl ?>?tab=history"><i class="bi bi-clock-history"></i><span>Riwayat</span></a>
+        <a class="nav-link" id="tab-btn-reprint" href="<?= appUrl ?>?tab=reprint" style="display:none;"><i class="bi bi-printer-fill"></i><span>Reprint</span></a>
+        <a class="nav-link" id="tab-btn-minmax" href="<?= appUrl ?>?tab=minmax" style="display:none;"><i class="bi bi-sliders"></i><span>Min/Max Stock</span></a>
       </nav>
       <div class="sidebar-footer">
         <button class="secondary-btn logout-btn" id="logout-btn">Logout</button>
@@ -56,8 +61,22 @@
 
     <div class="app-main">
       <header class="app-topbar">
-        <button id="menu-toggle" aria-label="Menu">&#9776;</button>
-        <h2 id="app-title">TSP Modul</h2>
+        <div class="topbar-left">
+          <button id="menu-toggle" aria-label="Menu">&#9776;</button>
+          <div class="header-title-box">
+            <h2 id="app-title">Stock TSP</h2>
+            <span class="header-subtitle">Raw & Packaging Material Portal — PT Daya Anugrah Mulya (PANTS)</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="system-status-badge">
+            <span class="status-indicator"></span>
+            <span class="status-text">Live Production</span>
+          </div>
+          <div class="header-logo-wings">
+            <img src="https://raw.githubusercontent.com/imannurchaedi-max/damlogo/main/WINGS.jpg" alt="Wings Group" title="Wings Group">
+          </div>
+        </div>
       </header>
 
       <div class="app-content">
@@ -66,20 +85,85 @@
             <p>Pilih Mesin:</p>
             <select id="mesin-picker"></select>
           </div>
-          <p class="stock-shift-label" id="stock-shift-label"></p>
-          <div class="stock-layout">
-            <div class="stock-main"><div id="stock-table-wrap"></div></div>
-            <div class="stock-side-container" id="recent-receipts-panel" style="display:none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <!-- SUBSECTION MODULATION FOR TSP ROLE -->
+            <div id="tsp-stock-subnavigation" class="subnav-container" style="display:none;">
+              <a class="subnav-btn active" id="subnav-tsp" href="<?= appUrl ?>?tab=stock&subnav=tsp">
+                <i class="bi bi-display"></i>
+                <span>STOCK TSP (PC Verifikasi)</span>
+              </a>
+              <a class="subnav-btn" id="subnav-mesin" href="<?= appUrl ?>?tab=stock&subnav=mesin">
+                <i class="bi bi-tv"></i>
+                <span>STOCK MESIN (TV Wall Monitor)</span>
+                <span class="subnav-badge" id="subnav-mesin-badge" style="display:none;">0</span>
+              </a>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+              <p class="stock-shift-label" id="stock-shift-label" style="margin-bottom: 0;"></p>
+              <button class="primary-btn" id="btn-tarik-stok-header" onclick="tarikStokAwalHandler('aktif')" style="padding: 8px 14px; font-size: 0.88rem; background: linear-gradient(135deg, #16a34a, #15803d); border-radius: 6px; display: flex; align-items: center; gap: 6px; cursor: pointer; border: none; color: #fff; font-weight: 500; box-shadow: 0 2px 5px rgba(22,163,74,0.3);">
+                <i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SUB-SECTION 1: STOCK GUDANG TSP (PC WORKSTATION / VERIFY) -->
+          <div id="subview-stock-tsp" style="display:block;">
+            <div id="neraca-status-container"></div>
+            <div class="stock-shift-panels" id="recent-receipts-panel" style="display:none;">
               <div class="panel">
-                <h3>Penerimaan Shift Ini</h3>
+                <h3 id="recent-receipts-title">Penerimaan Shift Ini</h3>
                 <div id="recent-receipts-wrap"></div>
               </div>
-              <div class="panel" style="margin-top: 16px;">
-                <h3>Pengiriman Shift Ini</h3>
+              <div class="panel">
+                <h3 id="shift-dispatches-title">Pengiriman Shift Ini</h3>
                 <div id="shift-dispatches-wrap"></div>
               </div>
             </div>
+            <div class="stock-table-frame"><div id="stock-table-wrap"></div></div>
           </div>
+
+          <!-- SUB-SECTION 2: MONITORING MESIN (TV WALL MONITOR DASHBOARD) -->
+          <div id="subview-stock-mesin" class="tsp-mesin-monitor-container" style="display:none;">
+            <!-- TV Wall Dashboard Header & Fullscreen Controls -->
+            <div class="tv-dashboard-toolbar">
+              <div class="tv-status-live">
+                <span class="pulse-indicator"></span>
+                <span>LIVE PRODUCTION MONITORING — 6 MESIN PANTS</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="tv-timer-badge" id="tv-auto-refresh-badge"><i class="bi bi-clock-history"></i> Auto-refresh: 60s</span>
+                <button class="btn-tv-fullscreen" id="btn-tv-fullscreen" onclick="toggleTvFullscreen()">
+                  <i class="bi bi-arrows-fullscreen"></i> Mode TV (Layar Penuh)
+                </button>
+              </div>
+            </div>
+
+            <!-- Alert Banner Kebutuhan Suplai Mesin (Scrollable & Clean) -->
+            <div id="supply-alert-banner" class="supply-alert-banner">
+              <div class="supply-alert-header">
+                <div class="supply-alert-title">
+                  <i class="bi bi-exclamation-triangle-fill" style="color: #ff8080; font-size: 1.4rem;"></i>
+                  <span>PERINGATAN SUPLAI MESIN (REAL-TIME ALERT)</span>
+                </div>
+                <span class="supply-alert-badge" id="supply-alert-count">0 Material Butuh Suplai</span>
+              </div>
+              <p style="font-size: 13.5px; color: #fca5a5; margin-bottom: 12px;">Berikut material produksi yang saldonya menipis atau kritis (Diurutkan berdasarkan tingkat urgensi untuk suplai gudang):</p>
+              <div class="supply-alert-box-scroll">
+                <div class="supply-alert-grid" id="supply-alert-grid"></div>
+              </div>
+            </div>
+
+            <!-- Grid 6 Mesin Monitoring -->
+            <div class="mesin-monitor-header">
+              <h3><i class="bi bi-cpu-fill" style="color: #0d6efd;"></i> Status Stok 6 Mesin (BHP 1–5 & AHP 1)</h3>
+              <span style="font-size: 13.5px; color: #64748b; font-weight: 700;" id="mesin-monitor-time-badge">Update Shift Aktif</span>
+            </div>
+            <div class="mesin-monitor-grid" id="mesin-monitor-grid">
+              <p style="color: #64748b; font-size: 14px;">Memuat data monitoring 6 mesin...</p>
+            </div>
+          </div>
+          <!-- END SUB-SECTION 2 -->
         </div>
 
         <div id="tab-scan" class="tab-panel" style="display:none;">
@@ -90,36 +174,374 @@
           <p class="stock-shift-label" id="validator-shift-label"></p>
           <div id="validator-table-wrap"></div>
         </div>
+
+        <div id="tab-history" class="tab-panel" style="display:none;">
+          <div style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap;">
+            <div class="filter-group">
+              <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Tanggal</label>
+              <input type="date" id="history-date" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 140px; font-family: inherit;">
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Shift</label>
+              <select id="history-shift" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;">
+                <option value="1">Shift 1 (06:00 - 13:59)</option>
+                <option value="2">Shift 2 (14:00 - 21:59)</option>
+                <option value="3">Shift 3 (22:00 - 05:59)</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Tipe Stok</label>
+              <select id="history-type" onchange="onHistoryTypeChange()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;">
+                <option value="tsp">Stok TSP</option>
+                <option value="mesin">Stok Mesin</option>
+              </select>
+            </div>
+            <div class="filter-group" id="history-mesin-wrap" style="display:none;">
+              <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Mesin</label>
+              <select id="history-mesin" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;"></select>
+            </div>
+            <button class="primary-btn" onclick="loadHistoryData()" style="padding: 7px 16px; border-radius: 6px; border:none; background:#0d6efd; color:#fff; font-weight:500; cursor:pointer;">
+              <i class="bi bi-search"></i> Tampilkan
+            </button>
+          </div>
+          <div id="history-status-container" style="margin-bottom:16px;"></div>
+          <div id="history-table-wrap">
+            <div style="text-align:center; padding: 40px; border: 1px dashed #cbd5e1; border-radius: 8px;">
+              <i class="bi bi-calendar-check" style="font-size: 2rem; color: #94a3b8; display: block; margin-bottom: 8px;"></i>
+              <p style="color:#64748b;">Pilih tanggal, shift, dan tipe stok untuk melihat riwayat stok masa lampau.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TAB REPRINT BARCODE ===== -->
+        <div id="tab-reprint" class="tab-panel" style="display:none;">
+
+          <!-- Step 1: Scan / Input Kode Induk -->
+          <div id="reprint-step-search">
+            <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
+              <div class="filter-group" style="flex:1; min-width:220px;">
+                <label style="font-size:13px; font-weight:600; color:#475569; display:block; margin-bottom:4px;">Kode Induk (Mother Barcode)</label>
+                <input type="text" id="reprint-search-input" placeholder="Scan atau ketik kode induk..." autocomplete="off"
+                  style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px;"
+                  onkeydown="if(event.key==='Enter') searchReprintData();">
+              </div>
+              <button onclick="triggerReprintCamera()" title="Scan kamera" style="padding:8px 14px; border-radius:6px; border:none; background:linear-gradient(135deg,#0891b2,#0e7490); color:#fff; font-weight:600; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-camera-fill"></i> Scan
+              </button>
+              <button onclick="searchReprintData()" style="padding:8px 16px; border-radius:6px; border:none; background:linear-gradient(135deg,#0d6efd,#0b5ed7); color:#fff; font-weight:600; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-search"></i> Cari
+              </button>
+            </div>
+            <!-- Hidden camera input -->
+            <input type="file" id="reprint-camera-input" accept="image/*" capture="environment" style="display:none;">
+            <div id="reprint-camera-status" style="display:none; padding:8px 14px; border-radius:6px; background:#e0f2fe; color:#0369a1; font-size:13px; margin-bottom:12px;">
+              <i class="bi bi-hourglass-split"></i> Membaca barcode dari foto...
+            </div>
+
+            <!-- Result area -->
+            <div id="reprint-result-wrap">
+              <div style="text-align:center; padding:40px; border:1px dashed #cbd5e1; border-radius:8px;">
+                <i class="bi bi-printer" style="font-size:2rem; color:#94a3b8; display:block; margin-bottom:8px;"></i>
+                <p style="color:#64748b;">Scan atau ketik Kode Induk untuk memulai.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Konfigurasi Print (muncul setelah Kode Induk ditemukan) -->
+          <div id="reprint-step-config" style="display:none;">
+            <!-- Info Kode Induk -->
+            <div id="reprint-induk-info" style="padding:16px 20px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; margin-bottom:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <p style="margin:0 0 4px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#0369a1; font-weight:700;">Kode Induk</p>
+                  <p style="margin:0; font-size:1.1rem; font-weight:800; color:#0f172a;" id="reprint-info-induk"></p>
+                  <p style="margin:4px 0 0; font-size:13px; color:#475569;" id="reprint-info-material"></p>
+                </div>
+                <button onclick="resetReprintSearch()" style="padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#64748b; cursor:pointer; font-size:12px;"><i class="bi bi-arrow-left"></i> Ganti</button>
+              </div>
+            </div>
+
+            <!-- Riwayat sequence sebelumnya -->
+            <div style="margin-bottom:18px;">
+              <p style="font-size:13px; font-weight:700; color:#475569; margin-bottom:8px;"><i class="bi bi-clock-history"></i> Riwayat Reprint Sebelumnya</p>
+              <div id="reprint-history-list" style="font-size:13px; color:#64748b;">-</div>
+            </div>
+
+            <!-- Config: Jumlah Label + Qty per Label -->
+            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; padding:18px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+              <div style="flex:1; min-width:140px;">
+                <label style="font-size:13px; font-weight:700; color:#475569; display:block; margin-bottom:6px;"><i class="bi bi-tag"></i> Jumlah Label</label>
+                <input type="number" id="reprint-jumlah-label" min="1" max="20" value="1" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:15px; font-weight:700;">
+                <p style="font-size:11px; color:#94a3b8; margin-top:4px;">Berapa barcode anak yang dibuat</p>
+              </div>
+              <div style="flex:1; min-width:140px;">
+                <label style="font-size:13px; font-weight:700; color:#475569; display:block; margin-bottom:6px;"><i class="bi bi-boxes"></i> Qty per Label</label>
+                <input type="number" id="reprint-qty-per-label" min="1" value="" placeholder="Contoh: 200" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:15px; font-weight:700;">
+                <p style="font-size:11px; color:#94a3b8; margin-top:4px;">Qty material per barcode</p>
+              </div>
+              <div style="display:flex; align-items:flex-end; padding-bottom:22px;">
+                <button onclick="generateReprintLabels()" style="padding:10px 22px; border-radius:8px; border:none; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; font-weight:700; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:8px;">
+                  <i class="bi bi-printer-fill"></i> Generate & Print
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- END TAB REPRINT -->
+
+        <!-- ===== TAB MIN / MAX STOCK ===== -->
+        <div id="tab-minmax" class="tab-panel" style="display:none;">
+          <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <div class="filter-group">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Filter Lokasi</label>
+                <select id="minmax-filter-loc" onchange="filterMinMaxTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;">
+                  <option value="ALL">Semua Lokasi</option>
+                  <option value="TSP">Area TSP</option>
+                  <option value="BHP 1">Mesin BHP 1</option>
+                  <option value="BHP 2">Mesin BHP 2</option>
+                  <option value="BHP 3">Mesin BHP 3</option>
+                  <option value="AHP 1">Mesin AHP 1</option>
+                  <option value="BHP 4">Mesin BHP 4</option>
+                  <option value="BHP 5">Mesin BHP 5</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Cari MID / Deskripsi</label>
+                <input type="text" id="minmax-search" onkeyup="filterMinMaxTable()" placeholder="Ketik MID atau deskripsi..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 220px; font-family: inherit;">
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button onclick="downloadCsvTemplate()" style="padding: 8px 14px; border-radius: 8px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-download"></i> Template CSV
+              </button>
+              <button onclick="triggerCsvUpload()" style="padding: 8px 16px; border-radius: 8px; border:none; background:linear-gradient(135deg,#059669,#047857); color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-file-earmark-arrow-up-fill"></i> Upload CSV
+              </button>
+              <button class="primary-btn" onclick="openAddMinMaxModal()" style="padding: 8px 18px; border-radius: 8px; border:none; background:#0d6efd; color:#fff; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-plus-lg"></i> Set Threshold
+              </button>
+              <input type="file" id="minmax-csv-file" accept=".csv" onchange="handleCsvFileSelected(event)" style="display:none;">
+            </div>
+          </div>
+          <div id="minmax-table-wrap"></div>
+        </div>
+        <!-- END TAB MIN / MAX STOCK -->
+
       </div>
     </div>
   </div>
 
+  <!-- CUSTOM POPUP MODAL OVERLAY -->
+  <div id="custom-popup-overlay" class="custom-popup-overlay">
+    <div class="custom-popup-modal">
+      <div class="popup-header-box" id="popup-header">
+        <button class="popup-close-icon" onclick="closePopupModal()">&times;</button>
+        <div class="popup-icon-container" id="popup-icon"></div>
+        <h3 class="popup-title-text" id="popup-title">Notifikasi Sistem</h3>
+      </div>
+      <div class="popup-body-content" id="popup-message"></div>
+      <div id="popup-input-wrap" style="display: none; padding: 0 28px 18px;">
+        <input type="number" id="popup-input-field" class="popup-custom-input" placeholder="Masukkan angka...">
+      </div>
+      <div class="popup-footer-box">
+        <button class="popup-cancel-btn" id="popup-cancel-btn" onclick="closePopupModal()" style="display:none;">Batal</button>
+        <button class="popup-confirm-btn" id="popup-confirm-btn" onclick="closePopupModal()">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT MIN MAX STOCK -->
+  <div id="modal-minmax-edit" class="custom-popup-overlay" style="display:none;">
+    <div class="custom-popup-modal" style="max-width: 480px; text-align: left;">
+      <div class="popup-header-box" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 20px 24px;">
+        <button class="popup-close-icon" onclick="closeMinMaxModal()" style="color:#fff;">&times;</button>
+        <h3 style="margin:0; font-size:17px; color:#fff; display:flex; align-items:center; gap:8px;">
+          <i class="bi bi-sliders" style="color:#60a5fa;"></i> Pengaturan Min/Max Stock
+        </h3>
+      </div>
+      <div style="padding: 24px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">MID Material *</label>
+          <input type="text" id="minmax-input-mid" placeholder="Masukkan MID (mis. 20000237)" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
+        </div>
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Deskripsi Material (Opsional)</label>
+          <input type="text" id="minmax-input-desc" placeholder="Ketik deskripsi..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">UOM (Opsional)</label>
+            <input type="text" id="minmax-input-uom" placeholder="mis. KG, ROLL" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+          </div>
+          <div style="flex:2;">
+            <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Supplier (Opsional)</label>
+            <input type="text" id="minmax-input-supplier" placeholder="Ketik nama supplier..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
+          </div>
+        </div>
+        <p style="font-size:11.5px; color:#94a3b8; margin:0;">Kalau MID belum pernah ada transaksi WRM, Supplier di sini jadi default sampai ada transaksi WRM pertama (yang lalu jadi prioritas).</p>
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Lokasi *</label>
+          <select id="minmax-input-loc" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600;">
+            <option value="TSP">Area TSP</option>
+            <option value="BHP 1">Mesin BHP 1</option>
+            <option value="BHP 2">Mesin BHP 2</option>
+            <option value="BHP 3">Mesin BHP 3</option>
+            <option value="AHP 1">Mesin AHP 1</option>
+            <option value="BHP 4">Mesin BHP 4</option>
+            <option value="BHP 5">Mesin BHP 5</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:12.5px; font-weight:700; color:#dc2626; display:block; margin-bottom:4px;">Minimum Stock</label>
+            <input type="number" id="minmax-input-min" min="0" value="0" style="width:100%; padding:8px 12px; border:1px solid #fca5a5; border-radius:6px; font-family:inherit; font-size:15px; font-weight:700; color:#dc2626;">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:12.5px; font-weight:700; color:#2563eb; display:block; margin-bottom:4px;">Maximum Stock</label>
+            <input type="number" id="minmax-input-max" min="0" value="0" style="width:100%; padding:8px 12px; border:1px solid #93c5fd; border-radius:6px; font-family:inherit; font-size:15px; font-weight:700; color:#2563eb;">
+          </div>
+        </div>
+      </div>
+      <div class="popup-footer-box" style="padding: 14px 24px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; justify-content:flex-end;">
+        <button class="popup-cancel-btn" onclick="closeMinMaxModal()" style="display:inline-block;">Batal</button>
+        <button class="popup-confirm-btn" onclick="saveMinMaxFromForm()" style="background:#0d6efd;">Simpan Threshold</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING LOADING OVERLAY -->
+  <div id="floating-loading-overlay" class="floating-loading-overlay">
+    <div class="floating-loading-card">
+      <div class="floating-spinner"></div>
+      <div class="floating-loading-title" id="floating-loading-title">Memproses Data...</div>
+      <div class="floating-loading-desc" id="floating-loading-desc">Mohon tunggu sebentar selagi sistem menyinkronkan stok...</div>
+    </div>
+  </div>
+
   <script>
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatNumberDisplay(val) {
+      if (val === null || val === undefined || val === '') return '0';
+      var num = Number(val);
+      if (isNaN(num)) return String(val);
+      return Number(Math.round(num + 'e4') + 'e-4').toLocaleString('id-ID', { maximumFractionDigits: 4 });
+    }
+
+    function getSavedUser() {
+      return { nik: CURRENT_NIK || 'SPV', role: PAGE_ROLE || 'spv' };
+    }
+
     var PAGE_ROLE = null;
     var PAGE_EVENTS = [];
     var CURRENT_NIK = null;
 
     var TSP_EVENTS = [
-      { code: 'terima_wrm', label: 'Terima dari WRM', requiresMesin: false, requiresJumlah: false, requiresReservasi: true },
-      { code: 'kirim_mesin', label: 'Kirim ke Mesin', requiresMesin: true, requiresJumlah: true, requiresReservasi: false },
-      { code: 'retur_dari_mesin', label: 'Retur dari Mesin', requiresMesin: false, requiresJumlah: false, requiresReservasi: false },
-      { code: 'retur_ke_wrm', label: 'Retur ke WRM (MatClaim)', requiresMesin: false, requiresJumlah: false, requiresReservasi: false }
+      { 
+        code: 'terima_wrm', 
+        label: 'Terima dari WRM', 
+        desc: 'Scan Pallet Inbound dari Warehouse WRM',
+        icon: 'bi-box-arrow-in-down',
+        bg: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        shadow: 'rgba(5, 150, 105, 0.3)',
+        requiresMesin: false, 
+        requiresJumlah: false, 
+        requiresReservasi: true 
+      },
+      { 
+        code: 'kirim_mesin', 
+        label: 'Kirim ke Mesin', 
+        desc: 'Supply & Reprint Barcode Mesin Produksi',
+        icon: 'bi-box-arrow-up-right',
+        bg: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+        shadow: 'rgba(37, 99, 235, 0.3)',
+        requiresMesin: true, 
+        requiresJumlah: true, 
+        requiresReservasi: false 
+      },
+      { 
+        code: 'retur_dari_mesin', 
+        label: 'Retur dari Mesin', 
+        desc: 'Penarikan Stok Sisa dari Mesin ke TSP',
+        icon: 'bi-arrow-return-left',
+        bg: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+        shadow: 'rgba(217, 119, 6, 0.3)',
+        requiresMesin: false, 
+        requiresJumlah: false, 
+        requiresReservasi: false 
+      },
+      { 
+        code: 'retur_ke_wrm', 
+        label: 'Retur ke WRM (MatClaim)', 
+        desc: 'Pengembalian Material Claim / Damaged ke WRM',
+        icon: 'bi-exclamation-triangle-fill',
+        bg: 'linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)',
+        shadow: 'rgba(147, 51, 234, 0.3)',
+        requiresMesin: false, 
+        requiresJumlah: false, 
+        requiresReservasi: false 
+      }
     ];
     var OPERATOR_EVENTS = [
-      { code: 'terima_operator', label: 'Terima dari TSP', requiresMesin: false, requiresJumlah: false, requiresReservasi: false },
-      { code: 'consume_operator', label: 'Consume', requiresMesin: false, requiresJumlah: false, requiresReservasi: false }
+      { 
+        code: 'terima_operator', 
+        label: 'Terima dari TSP', 
+        desc: 'Konfirmasi Penerimaan Material di Area Mesin',
+        icon: 'bi-box-seam-fill',
+        bg: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
+        shadow: 'rgba(8, 145, 178, 0.3)',
+        requiresMesin: false, 
+        requiresJumlah: false, 
+        requiresReservasi: false 
+      },
+      { 
+        code: 'consume_operator', 
+        label: 'Consume', 
+        desc: 'Pemakaian Material pada Mesin Produksi',
+        icon: 'bi-fire',
+        bg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+        shadow: 'rgba(225, 29, 72, 0.3)',
+        requiresMesin: false, 
+        requiresJumlah: false, 
+        requiresReservasi: false 
+      }
     ];
 
+    // Urutan & label mesin harus sinkron dengan MESIN_LIST di Config.js (server-side).
+    var MESIN_LIST_UI = ['BHP 1', 'BHP 2', 'BHP 3', 'AHP 1', 'BHP 4', 'BHP 5'];
+    function buildMesinColumns_(prefix, label) {
+      return MESIN_LIST_UI.map(function (m) {
+        return { key: prefix + m.replace(/\s+/g, ''), label: label + ' ' + m, numeric: true };
+      });
+    }
+
     var STOCK_COLUMNS = [
-      { key: 'deskripsi', label: 'Material' },
-      { key: 'stockAwal', label: 'Awal', numeric: true },
-      { key: 'masuk', label: 'Masuk', numeric: true },
-      { key: 'keluar', label: 'Keluar', numeric: true },
-      { key: 'returIn', label: 'Retur+', numeric: true },
+      { key: 'mid', label: 'MID', sticky: true, width: 90 },
+      { key: 'supplier', label: 'Supplier', sticky: true, width: 110 },
+      { key: 'deskripsi', label: 'Material', sticky: true, width: 220 },
+      { key: 'stockAwal', label: 'Awal', numeric: true, sticky: true, width: 80 },
+      { key: 'masuk', label: 'Masuk', numeric: true }
+    ].concat(
+      buildMesinColumns_('keluar', 'Keluar'),
+      buildMesinColumns_('retur', 'Retur+')
+    ).concat([
       { key: 'returOut', label: 'Retur-', numeric: true },
-      { key: 'stockAkhir', label: 'Akhir', numeric: true }
-    ];
+      { key: 'stockAkhir', label: 'Akhir', numeric: true },
+      { key: 'verifAction', label: 'Verifikasi Fisik (Keliling)' }
+    ]);
     var MESIN_STOCK_COLUMNS = [
+      { key: 'mid', label: 'MID' },
+      { key: 'supplier', label: 'Supplier' },
       { key: 'deskripsi', label: 'Material' },
       { key: 'stockAwal', label: 'Awal', numeric: true },
       { key: 'masuk', label: 'Masuk', numeric: true },
@@ -127,15 +549,23 @@
       { key: 'stockAkhir', label: 'Akhir', numeric: true }
     ];
     var VALIDATOR_COLUMNS = [
-      { key: 'deskripsi', label: 'Material' },
+      { key: 'mid', label: 'MID', sticky: true, width: 90 },
+      { key: 'supplier', label: 'Supplier', sticky: true, width: 110 },
+      { key: 'deskripsi', label: 'Material', sticky: true, width: 220 },
       { key: 'masukScan', label: 'Masuk (Scan)', numeric: true },
       { key: 'masukMb51', label: 'Masuk (MB51)', numeric: true },
-      { key: 'selisih', label: 'Selisih', numeric: true },
+      { key: 'selisih', label: 'Selisih', numeric: true }
+    ].concat(
+      buildMesinColumns_('keluar', 'Keluar'),
+      buildMesinColumns_('retur', 'Retur+')
+    ).concat([
       { key: 'status', label: 'Status' }
-    ];
+    ]);
     var RECEIPT_COLUMNS = [
       { key: 'waktu', label: 'Waktu' },
       { key: 'barcode', label: 'Barcode' },
+      { key: 'mid', label: 'MID' },
+      { key: 'supplier', label: 'Supplier' },
       { key: 'deskripsi', label: 'Material' },
       { key: 'jumlah', label: 'Jumlah', numeric: true }
     ];
@@ -143,6 +573,8 @@
       { key: 'waktu', label: 'Waktu' },
       { key: 'barcode', label: 'Barcode' },
       { key: 'mesin', label: 'Mesin' },
+      { key: 'mid', label: 'MID' },
+      { key: 'supplier', label: 'Supplier' },
       { key: 'deskripsi', label: 'Material' },
       { key: 'jumlah', label: 'Jumlah', numeric: true }
     ];
@@ -162,23 +594,26 @@
       document.getElementById('sidebar-user-role').textContent = user.jabatan;
 
       var badge = document.getElementById('sidebar-role-badge');
-      badge.textContent = user.role === 'tsp' ? 'TSP PORTAL' : 'OPERATOR PORTAL';
-      badge.className = 'role-badge ' + (user.role === 'tsp' ? 'role-badge-tsp' : 'role-badge-operator');
+      badge.textContent = user.role === 'tsp' ? 'TSP PORTAL' : (user.role === 'spv' ? 'SPV PORTAL' : 'OPERATOR PORTAL');
+      badge.className = 'role-badge ' + (user.role === 'tsp' ? 'role-badge-tsp' : (user.role === 'spv' ? 'role-badge-spv' : 'role-badge-operator'));
 
       PAGE_ROLE = user.role;
-      PAGE_EVENTS = user.role === 'tsp' ? TSP_EVENTS : OPERATOR_EVENTS;
+      PAGE_EVENTS = user.role === 'tsp' ? TSP_EVENTS : (user.role === 'spv' ? TSP_EVENTS.concat(OPERATOR_EVENTS) : OPERATOR_EVENTS);
       CURRENT_NIK = user.nik;
 
-      document.getElementById('tab-btn-validasi').style.display = user.role === 'tsp' ? 'inline-block' : 'none';
+      document.getElementById('tab-btn-validasi').style.display = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
+      document.getElementById('tab-btn-reprint').style.display  = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
+      document.getElementById('tab-btn-minmax').style.display   = (user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('mesin-picker-wrap').style.display = user.role === 'operator' ? 'block' : 'none';
-      document.getElementById('recent-receipts-panel').style.display = user.role === 'tsp' ? 'block' : 'none';
+      document.getElementById('recent-receipts-panel').style.display = (user.role === 'tsp' || user.role === 'spv' || user.role === 'operator' || user.role === 'leader_mesin') ? 'block' : 'none';
 
       renderActions();
 
       if (user.role === 'operator') {
         setupMesinPicker();
       } else {
-        switchTab('stock');
+        switchTab('stock', true);
+        initDeeplinkUrlListener();
       }
     }
 
@@ -194,22 +629,223 @@
         });
         var remembered = sessionStorage.getItem('tspModulMesin');
         if (remembered && list.indexOf(remembered) !== -1) select.value = remembered;
-        switchTab('stock');
+        switchTab('stock', true);
+        initDeeplinkUrlListener();
       }).getMesinList();
     }
 
-    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi' };
+    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi', history: 'Riwayat Stok', reprint: 'Reprint Barcode', minmax: 'Min/Max Stock' };
+    var CURRENT_TAB = 'stock';
 
-    function switchTab(tab) {
-      ['stock', 'scan', 'validasi'].forEach(function (t) {
-        document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
-        document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
+    // ===== DEEPLINK & URL SESSION HISTORY MANAGEMENT =====
+
+    // Buat URL deeplink yang sudah menyertakan session token user agar tab baru tidak perlu login
+    function buildDeeplinkUrl(params) {
+      try {
+        var appUrl = '<?= appUrl ?>';
+        var parts = [];
+        Object.keys(params).forEach(function(k) {
+          if (params[k] !== null && params[k] !== undefined && params[k] !== '') {
+            parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+          }
+        });
+        // Sematkan session token user ke URL agar bisa dipakai di tab baru
+        var stored = localStorage.getItem('tspModulUser') || sessionStorage.getItem('tspModulUser');
+        if (stored) {
+          try {
+            parts.push('_u=' + encodeURIComponent(btoa(stored)));
+          } catch(e) {}
+        }
+        return appUrl + (parts.length ? '?' + parts.join('&') : '');
+      } catch(e) {
+        return '<?= appUrl ?>';
+      }
+    }
+
+    function pushDeeplinkState(extraParams) {
+      try {
+        var params = { tab: CURRENT_TAB };
+        if (extraParams && typeof extraParams === 'object') {
+          Object.keys(extraParams).forEach(function(k) {
+            if (extraParams[k] !== null && extraParams[k] !== undefined && extraParams[k] !== '') {
+              params[k] = String(extraParams[k]);
+            }
+          });
+        }
+
+        if (CURRENT_TAB === 'minmax') {
+          var locElem = document.getElementById('minmax-filter-loc');
+          if (locElem && locElem.value && locElem.value !== 'ALL') params.lokasi = locElem.value;
+          var searchElem = document.getElementById('minmax-search');
+          if (searchElem && searchElem.value.trim()) params.search = searchElem.value.trim();
+        } else if (CURRENT_TAB === 'history') {
+          var typeElem = document.getElementById('history-type');
+          if (typeElem) params.type = typeElem.value;
+          var mElem = document.getElementById('history-mesin');
+          if (mElem && mElem.value) params.mesin = mElem.value;
+        } else if (CURRENT_TAB === 'scan' && window.currentEvent) {
+          params.event = window.currentEvent.code;
+          var mSelect = document.getElementById('mesin-select');
+          if (mSelect && mSelect.value) params.mesin = mSelect.value;
+        }
+
+        if (typeof google !== 'undefined' && google.script && google.script.history) {
+          google.script.history.push({}, params, '');
+          // Perbarui juga href nav links agar Ctrl+Click / Klik Kanan buka tab baru langsung masuk
+          _updateNavHrefs(params);
+        } else {
+          var hashParts = [];
+          Object.keys(params).forEach(function(k) {
+            hashParts.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+          });
+          window.location.hash = hashParts.join('&');
+        }
+      } catch (err) {
+        console.warn('Deeplink push state:', err);
+      }
+    }
+
+    // Update href semua nav links untuk menyematkan session token (untuk Ctrl+Click / Klik Kanan → Open New Tab)
+    function _updateNavHrefs(currentParams) {
+      try {
+        var tabs = ['stock', 'scan', 'validasi', 'history', 'reprint', 'minmax'];
+        tabs.forEach(function(t) {
+          var navLink = document.getElementById('tab-btn-' + t);
+          if (navLink) {
+            navLink.href = buildDeeplinkUrl({ tab: t });
+          }
+        });
+        // Update juga subnav links
+        var subTsp = document.getElementById('subnav-tsp');
+        if (subTsp) subTsp.href = buildDeeplinkUrl({ tab: 'stock', subnav: 'tsp' });
+        var subMesin = document.getElementById('subnav-mesin');
+        if (subMesin) subMesin.href = buildDeeplinkUrl({ tab: 'stock', subnav: 'mesin' });
+      } catch(e) {}
+    }
+
+    function initDeeplinkUrlListener() {
+      if (typeof google !== 'undefined' && google.script && google.script.history) {
+        google.script.history.setChangeHandler(function(e) {
+          restoreStateFromLocation(e.location);
+        });
+        google.script.url.getLocation(function(loc) {
+          restoreStateFromLocation(loc);
+          // Setelah lokasi diperoleh, update semua nav href supaya menyertakan session token
+          _updateNavHrefs({});
+        });
+      } else {
+        restoreStateFromLocation(parseHashLocation());
+      }
+    }
+
+    function parseHashLocation() {
+      var hash = window.location.hash ? window.location.hash.substring(1) : '';
+      var parameter = {};
+      if (hash) {
+        var pairs = hash.split('&');
+        pairs.forEach(function(pair) {
+          var parts = pair.split('=');
+          if (parts[0]) {
+            parameter[decodeURIComponent(parts[0])] = parts[1] ? decodeURIComponent(parts[1]) : '';
+          }
+        });
+      }
+      return { parameter: parameter, hash: hash };
+    }
+
+    function restoreStateFromLocation(location) {
+      if (!location || !location.parameter) return;
+      var params = location.parameter;
+      var targetTab = params.tab || 'stock';
+
+      if (targetTab === 'validasi' && PAGE_ROLE !== 'tsp' && PAGE_ROLE !== 'spv') targetTab = 'stock';
+      if (targetTab === 'reprint' && PAGE_ROLE !== 'tsp' && PAGE_ROLE !== 'spv') targetTab = 'stock';
+      if (targetTab === 'minmax' && PAGE_ROLE !== 'spv') targetTab = 'stock';
+
+      switchTab(targetTab, true);
+
+      if (targetTab === 'minmax' && params.lokasi) {
+        var locElem = document.getElementById('minmax-filter-loc');
+        if (locElem) { locElem.value = params.lokasi; filterMinMaxTable(); }
+      } else if (targetTab === 'history' && params.type) {
+        var typeElem = document.getElementById('history-type');
+        if (typeElem) { typeElem.value = params.type; onHistoryTypeChange(); }
+        if (params.mesin) {
+          var mElem = document.getElementById('history-mesin');
+          if (mElem) mElem.value = params.mesin;
+        }
+      } else if (targetTab === 'scan' && params.event) {
+        var foundEv = PAGE_EVENTS.find(function(e) { return e.code === params.event; });
+        if (foundEv && typeof selectEvent === 'function') {
+          selectEvent(foundEv, true);
+          if (params.mesin) {
+            var mSelect = document.getElementById('mesin-select');
+            if (mSelect) mSelect.value = params.mesin;
+          }
+        }
+      }
+    }
+
+    function switchTab(tab, isRestoring) {
+      CURRENT_TAB = tab;
+      ['stock', 'scan', 'validasi', 'history', 'reprint', 'minmax'].forEach(function (t) {
+        var pnl = document.getElementById('tab-' + t);
+        if(pnl) pnl.style.display = (t === tab) ? 'block' : 'none';
+        var btn = document.getElementById('tab-btn-' + t);
+        if(btn) btn.classList.toggle('active', t === tab);
       });
       document.getElementById('app-title').textContent =
-        TAB_LABELS[tab].toUpperCase() + ' ' + (PAGE_ROLE === 'tsp' ? 'TSP' : 'OPERATOR');
+        (TAB_LABELS[tab] || tab).toUpperCase() + ' ' + (PAGE_ROLE === 'tsp' ? 'TSP' : (PAGE_ROLE === 'spv' ? 'SPV' : 'OPERATOR'));
       if (tab === 'stock') loadStockTab();
       if (tab === 'validasi') loadValidatorTab();
+      if (tab === 'history') initHistoryTab();
+      if (tab === 'minmax') loadMinMaxTab();
       closeSidebar();
+
+      if (!isRestoring) {
+        pushDeeplinkState();
+      }
+    }
+
+    function formatCellVal(val, isNumeric) {
+      if (val === undefined || val === null || val === '') return '';
+      if (typeof val === 'number') {
+        if (isNaN(val)) return '';
+        return Math.round(val * 10000) / 10000;
+      }
+      if (typeof val === 'string') {
+        var trimmed = val.trim();
+        if (isNumeric || (trimmed.indexOf('.') !== -1 && !isNaN(Number(trimmed)) && /^-?\d+\.\d+$/.test(trimmed))) {
+          var num = Number(trimmed);
+          if (!isNaN(num)) {
+            return Math.round(num * 10000) / 10000;
+          }
+        }
+      }
+      return val;
+    }
+
+    // Kolom dengan `sticky:true` dibekukan (frozen) di sisi kiri saat tabel di-scroll ke samping;
+    // offset kumulatif dihitung dari `width` tiap kolom sticky, jadi urutan kolom sticky harus berurutan di awal array.
+    function buildStickyOffsets_(columns) {
+      var left = 0;
+      var lastStickyIdx = -1;
+      var offsets = columns.map(function (c, i) {
+        if (!c.sticky) return null;
+        var o = left;
+        left += c.width || 100;
+        lastStickyIdx = i;
+        return o;
+      });
+      return { offsets: offsets, lastStickyIdx: lastStickyIdx };
+    }
+    function stickyAttrs_(columns, sticky, idx) {
+      var c = columns[idx];
+      if (!c.sticky) return { cls: '', style: '' };
+      var cls = ' sticky-col' + (idx === sticky.lastStickyIdx ? ' sticky-col-edge' : '');
+      var w = c.width || 100;
+      var style = ' style="left:' + sticky.offsets[idx] + 'px;width:' + w + 'px;min-width:' + w + 'px;max-width:' + w + 'px;"';
+      return { cls: cls, style: style };
     }
 
     function renderTable(containerId, rows, columns) {
@@ -218,13 +854,38 @@
         container.innerHTML = '<p>Tidak ada data.</p>';
         return;
       }
+      var sticky = buildStickyOffsets_(columns);
       var html = '<div class="table-scroll"><table class="data-table"><thead><tr>';
-      columns.forEach(function (c) { html += '<th class="' + (c.numeric ? 'num-cell' : '') + '">' + c.label + '</th>'; });
+      columns.forEach(function (c, i) {
+        var sa = stickyAttrs_(columns, sticky, i);
+        html += '<th class="' + (c.numeric ? 'num-cell' : '') + sa.cls + '"' + sa.style + '>' + c.label + '</th>';
+      });
       html += '</tr></thead><tbody>';
       rows.forEach(function (r) {
         html += '<tr>';
-        columns.forEach(function (c) {
-          html += '<td class="' + (c.numeric ? 'num-cell' : '') + '">' + r[c.key] + '</td>';
+        columns.forEach(function (c, i) {
+          var sa = stickyAttrs_(columns, sticky, i);
+          var cellValue = '';
+          if (c.key === 'verifAction') {
+            var st = String(r.statusItem || '').toUpperCase();
+            var escDesk = String(r.deskripsi || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            var rumusVal = formatCellVal(r.rumus || 0, true);
+            if (st.indexOf('ITEM OK') !== -1 || (st.indexOf('VALID') !== -1 && st.indexOf('OK') !== -1)) {
+              cellValue = '<div class="btn-group-verif"><span class="badge-item-ok"><i class="bi bi-check-circle-fill"></i> Sesuai</span><button class="btn-item-ubah" onclick="konfirmasiItemRevisi(\'' + r.mid + '\', \'' + escDesk + '\', ' + rumusVal + ')" title="Ubah ke Revisi">✏️ Ubah</button></div>';
+            } else if (st.indexOf('ITEM REVISI') !== -1 || (st.indexOf('VALID') !== -1 && st.indexOf('SELISIH') !== -1)) {
+              var aktVal = (r.aktual !== '' && r.aktual !== undefined && r.aktual !== null) ? formatCellVal(r.aktual, true) : formatCellVal(r.stockAkhir || 0, true);
+              cellValue = '<div class="btn-group-verif"><span class="badge-item-rev"><i class="bi bi-exclamation-triangle-fill"></i> Revisi: ' + aktVal + '</span><button class="btn-item-ubah" onclick="konfirmasiItemBenar(\'' + r.mid + '\', \'' + escDesk + '\', ' + rumusVal + ')" title="Setujui sesuai rumus">✅ Sesuai</button></div>';
+            } else {
+              cellValue = '<div class="btn-group-verif">' +
+                '<button class="btn-verif-benar" onclick="konfirmasiItemBenar(\'' + r.mid + '\', \'' + escDesk + '\', ' + rumusVal + ')"><i class="bi bi-check2"></i> Sesuai / Benar</button>' +
+                '<button class="btn-verif-revisi" onclick="konfirmasiItemRevisi(\'' + r.mid + '\', \'' + escDesk + '\', ' + rumusVal + ')"><i class="bi bi-pencil-square"></i> Revisi</button>' +
+              '</div>';
+            }
+          } else {
+            cellValue = formatCellVal(r[c.key], c.numeric);
+          }
+          var titleAttr = (c.sticky && !c.numeric) ? ' title="' + String(cellValue).replace(/"/g, '&quot;') + '"' : '';
+          html += '<td class="' + (c.numeric ? 'num-cell' : '') + sa.cls + '"' + sa.style + titleAttr + '>' + cellValue + '</td>';
         });
         html += '</tr>';
       });
@@ -232,19 +893,1049 @@
       container.innerHTML = html;
     }
 
+    function renderPortalTable(containerId, d, mCode) {
+      var container = document.getElementById(containerId);
+      var rows = d.data || [];
+      if (rows.length === 0) {
+        container.innerHTML = '<p>Tidak ada data.</p>';
+        return;
+      }
+      
+      var html = '<div style="margin-bottom: 12px; text-align: right;">' + 
+                 '<button class="btn btn-primary" onclick="downloadPortalCsv()" style="font-weight:600;"><i class="bi bi-download"></i> Download Format Portal (CSV)</button>' +
+                 '</div>';
+      html += '<div class="table-scroll"><table class="data-table portal-table"><thead><tr>';
+      
+      // Headers
+      var headers = ['MATERIAL NAME', 'SUPPLIER', 'STK AWAL', 'MASUK', 'RETUR', 'REJECT'];
+      d.hoursHeader.forEach(function(h) {
+        var hs = String(h).padStart(2, '0');
+        headers.push(hs);
+      });
+      headers = headers.concat(['TOT. PROD', 'GRAND TOTAL', 'SISA']);
+      
+      headers.forEach(function(hStr, idx) {
+        var isNum = (idx >= 2);
+        html += '<th class="' + (isNum ? 'num-cell' : '') + '">' + hStr + '</th>';
+      });
+      html += '</tr></thead><tbody>';
+      
+      rows.forEach(function(r) {
+        html += '<tr>';
+        html += '<td>' + String(r.materialName || '') + '</td>';
+        html += '<td>' + String(r.supplier || '-') + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.stkAwal, true) + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.masuk, true) + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.retur, true) + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.reject, true) + '</td>';
+        
+        d.hoursHeader.forEach(function(h) {
+           var hKey = String(h);
+           html += '<td class="num-cell">' + formatCellVal(r.hourly[hKey], true) + '</td>';
+        });
+        
+        html += '<td class="num-cell">' + formatCellVal(r.totProd, true) + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.grandTotal, true) + '</td>';
+        html += '<td class="num-cell">' + formatCellVal(r.sisa, true) + '</td>';
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+      
+      // Store in window for CSV download
+      window._currentPortalData = d;
+      window._currentPortalMesin = mCode;
+    }
+
+    function downloadPortalCsv() {
+      var d = window._currentPortalData;
+      var mCode = window._currentPortalMesin;
+      if (!d || !d.data || d.data.length === 0) return;
+      
+      var rows = d.data;
+      var headers = ['MATERIAL NAME', 'SUPPLIER', 'STK AWAL', 'MASUK', 'RETUR', 'REJECT'];
+      d.hoursHeader.forEach(function(h) {
+        headers.push(String(h).padStart(2, '0'));
+      });
+      headers = headers.concat(['TOT. PROD', 'GRAND TOTAL', 'SISA']);
+      
+      var csvContent = headers.join(',') + '\n';
+      
+      rows.forEach(function(r) {
+        var rowArr = [
+          '"' + String(r.materialName || '').replace(/"/g, '""') + '"',
+          '"' + String(r.supplier || '-').replace(/"/g, '""') + '"',
+          r.stkAwal || 0,
+          r.masuk || 0,
+          r.retur || 0,
+          r.reject || 0
+        ];
+        
+        d.hoursHeader.forEach(function(h) {
+          var hKey = String(h);
+          rowArr.push(r.hourly[hKey] || 0);
+        });
+        
+        rowArr.push(r.totProd || 0);
+        rowArr.push(r.grandTotal || 0);
+        rowArr.push(r.sisa || 0);
+        
+        csvContent += rowArr.join(',') + '\n';
+      });
+      
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      var safeDate = String(d.date).replace(/\//g, '');
+      var fileName = "Laporan_Material_" + safeDate + "_Shift" + d.shift + "_" + mCode + ".csv";
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Custom Pop-Up Modal Helper (Alert / Notifikasi)
+    function showPopupModal(title, message, type, buttonText, onConfirmCallback) {
+      var overlay = document.getElementById('custom-popup-overlay');
+      if (!overlay) return;
+      var modal = overlay.querySelector('.custom-popup-modal');
+      var header = document.getElementById('popup-header');
+      var titleEl = document.getElementById('popup-title');
+      var msgEl = document.getElementById('popup-message');
+      var iconEl = document.getElementById('popup-icon');
+      var btnConfirm = document.getElementById('popup-confirm-btn');
+      var btnCancel = document.getElementById('popup-cancel-btn');
+      var inputWrap = document.getElementById('popup-input-wrap');
+
+      titleEl.textContent = title || 'Notifikasi';
+      msgEl.innerHTML = String(message || '').replace(/\n/g, '<br>');
+      btnConfirm.textContent = buttonText || 'OK, Mengerti';
+      if (btnCancel) btnCancel.style.display = 'none';
+      if (inputWrap) inputWrap.style.display = 'none';
+
+      var tClass = (type || 'success');
+      header.className = 'popup-header-box popup-' + tClass;
+      modal.className = 'custom-popup-modal popup-' + tClass;
+
+      if (type === 'error') {
+        iconEl.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+      } else if (type === 'warning') {
+        iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
+      } else if (type === 'info') {
+        iconEl.innerHTML = '<i class="bi bi-info-circle-fill"></i>';
+      } else {
+        iconEl.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+      }
+
+      btnConfirm.onclick = function() {
+        closePopupModal();
+        if (typeof onConfirmCallback === 'function') onConfirmCallback();
+      };
+
+      openOverlayAnimation(overlay, modal);
+    }
+
+    // Custom Confirm Modal Helper (Duo Tombol: Ya vs Batal)
+    function showConfirmModal(title, message, type, confirmText, cancelText, onConfirmCallback, onCancelCallback) {
+      var overlay = document.getElementById('custom-popup-overlay');
+      if (!overlay) return;
+      var modal = overlay.querySelector('.custom-popup-modal');
+      var header = document.getElementById('popup-header');
+      var titleEl = document.getElementById('popup-title');
+      var msgEl = document.getElementById('popup-message');
+      var iconEl = document.getElementById('popup-icon');
+      var btnConfirm = document.getElementById('popup-confirm-btn');
+      var btnCancel = document.getElementById('popup-cancel-btn');
+      var inputWrap = document.getElementById('popup-input-wrap');
+
+      titleEl.textContent = title || 'Konfirmasi';
+      msgEl.innerHTML = String(message || '').replace(/\n/g, '<br>');
+      btnConfirm.textContent = confirmText || 'Ya, Lanjutkan';
+      if (btnCancel) {
+        btnCancel.textContent = cancelText || 'Batal';
+        btnCancel.style.display = 'inline-block';
+      }
+      if (inputWrap) inputWrap.style.display = 'none';
+
+      var tClass = (type || 'info');
+      header.className = 'popup-header-box popup-' + tClass;
+      modal.className = 'custom-popup-modal popup-' + tClass;
+
+      if (type === 'warning') {
+        iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
+      } else if (type === 'error') {
+        iconEl.innerHTML = '<i class="bi bi-question-circle-fill"></i>';
+      } else if (type === 'success') {
+        iconEl.innerHTML = '<i class="bi bi-check2-circle"></i>';
+      } else {
+        iconEl.innerHTML = '<i class="bi bi-question-circle-fill"></i>';
+      }
+
+      btnConfirm.onclick = function() {
+        closePopupModal();
+        if (typeof onConfirmCallback === 'function') onConfirmCallback();
+      };
+      if (btnCancel) {
+        btnCancel.onclick = function() {
+          closePopupModal();
+          if (typeof onCancelCallback === 'function') onCancelCallback();
+        };
+      }
+
+      openOverlayAnimation(overlay, modal);
+    }
+
+    // Custom Prompt Modal Helper (Input Angka Aktual)
+    function showPromptModal(title, message, defaultValue, confirmText, cancelText, onConfirmCallback) {
+      var overlay = document.getElementById('custom-popup-overlay');
+      if (!overlay) return;
+      var modal = overlay.querySelector('.custom-popup-modal');
+      var header = document.getElementById('popup-header');
+      var titleEl = document.getElementById('popup-title');
+      var msgEl = document.getElementById('popup-message');
+      var iconEl = document.getElementById('popup-icon');
+      var btnConfirm = document.getElementById('popup-confirm-btn');
+      var btnCancel = document.getElementById('popup-cancel-btn');
+      var inputWrap = document.getElementById('popup-input-wrap');
+      var inputField = document.getElementById('popup-input-field');
+
+      titleEl.textContent = title || 'Input Data';
+      msgEl.innerHTML = String(message || '').replace(/\n/g, '<br>');
+      btnConfirm.textContent = confirmText || 'Simpan';
+      if (btnCancel) {
+        btnCancel.textContent = cancelText || 'Batal';
+        btnCancel.style.display = 'inline-block';
+      }
+      if (inputWrap && inputField) {
+        inputWrap.style.display = 'block';
+        inputField.value = defaultValue !== undefined ? defaultValue : '';
+      }
+
+      header.className = 'popup-header-box popup-info';
+      modal.className = 'custom-popup-modal popup-info';
+      iconEl.innerHTML = '<i class="bi bi-pencil-square"></i>';
+
+      btnConfirm.onclick = function() {
+        var val = inputField ? inputField.value : '';
+        closePopupModal();
+        if (typeof onConfirmCallback === 'function') onConfirmCallback(val);
+      };
+      if (btnCancel) {
+        btnCancel.onclick = function() {
+          closePopupModal();
+        };
+      }
+
+      openOverlayAnimation(overlay, modal);
+      setTimeout(function() { if (inputField) inputField.focus(); }, 300);
+    }
+
+    function openOverlayAnimation(overlay, modal) {
+      overlay.style.display = 'flex';
+      modal.style.animation = 'none';
+      modal.offsetHeight; // force reflow
+      modal.style.animation = 'popupScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    }
+
+    function closePopupModal() {
+      var overlay = document.getElementById('custom-popup-overlay');
+      if (!overlay) return;
+      var modal = overlay.querySelector('.custom-popup-modal');
+      modal.style.animation = 'popupScaleOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+      setTimeout(function() { overlay.style.display = 'none'; }, 180);
+    }
+
+    function showFloatingLoading(title, desc) {
+      var ov = document.getElementById('floating-loading-overlay');
+      if (!ov) return;
+      var tEl = document.getElementById('floating-loading-title');
+      var dEl = document.getElementById('floating-loading-desc');
+      if (tEl && title) tEl.textContent = title;
+      if (dEl && desc) dEl.textContent = desc;
+      ov.style.display = 'flex';
+    }
+
+    function hideFloatingLoading() {
+      var ov = document.getElementById('floating-loading-overlay');
+      if (ov) ov.style.display = 'none';
+    }
+
+    // Override browser default alert
+    window.alert = function(msg) {
+      showPopupModal('Informasi Sistem', msg, 'success', 'OK, Mengerti');
+    };
+
+    var CURRENT_STOCK_SUBNAV = 'tsp';
+    var TV_REFRESH_TIMER = null;
+    var IS_TV_FULLSCREEN = false;
+
+    function switchStockSubnav(target) {
+      CURRENT_STOCK_SUBNAV = target;
+      var btnTsp = document.getElementById('subnav-tsp');
+      var btnMesin = document.getElementById('subnav-mesin');
+      var viewTsp = document.getElementById('subview-stock-tsp');
+      var viewMesin = document.getElementById('subview-stock-mesin');
+
+      if (target === 'tsp') {
+        if (btnTsp) btnTsp.className = 'subnav-btn active';
+        if (btnMesin) btnMesin.className = 'subnav-btn';
+        if (viewTsp) viewTsp.style.display = 'block';
+        if (viewMesin) viewMesin.style.display = 'none';
+        stopTvAutoRefresh();
+      } else {
+        if (btnTsp) btnTsp.className = 'subnav-btn';
+        if (btnMesin) btnMesin.className = 'subnav-btn active';
+        if (viewTsp) viewTsp.style.display = 'none';
+        if (viewMesin) viewMesin.style.display = 'block';
+        loadTspMesinMonitoring(false);
+        startTvAutoRefresh();
+      }
+    }
+
+    function startTvAutoRefresh() {
+      stopTvAutoRefresh();
+      var badge = document.getElementById('tv-auto-refresh-badge');
+      var secondsLeft = 60;
+      if (badge) badge.innerHTML = '<i class="bi bi-clock-history"></i> Auto-refresh: ' + secondsLeft + 's';
+      
+      TV_REFRESH_TIMER = setInterval(function() {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          secondsLeft = 60;
+          if (CURRENT_STOCK_SUBNAV === 'mesin') {
+            loadTspMesinMonitoring(true);
+          }
+        }
+        if (badge) badge.innerHTML = '<i class="bi bi-clock-history"></i> Auto-refresh: ' + secondsLeft + 's';
+      }, 1000);
+    }
+
+    function stopTvAutoRefresh() {
+      if (TV_REFRESH_TIMER) {
+        clearInterval(TV_REFRESH_TIMER);
+        TV_REFRESH_TIMER = null;
+      }
+    }
+
+    function toggleTvFullscreen() {
+      var body = document.body;
+      var btn = document.getElementById('btn-tv-fullscreen');
+      // Gunakan class selector yang sesuai dengan HTML aktual
+      var appSidebar = document.querySelector('.app-sidebar');
+      var appTopbar  = document.querySelector('.app-topbar');
+      var subnav = document.getElementById('tsp-stock-subnavigation');
+      var shiftLabel = document.getElementById('stock-shift-label');
+      var btnTarikHeader = document.getElementById('btn-tarik-stok-header');
+
+      if (!IS_TV_FULLSCREEN) {
+        IS_TV_FULLSCREEN = true;
+        body.classList.add('tv-fullscreen-active');
+        if (appSidebar) appSidebar.style.display = 'none';
+        if (appTopbar)  appTopbar.style.display  = 'none';
+        if (subnav) subnav.style.display = 'none';
+        if (shiftLabel) shiftLabel.style.display = 'none';
+        if (btnTarikHeader) btnTarikHeader.parentElement.style.display = 'none';
+        if (btn) btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Keluar Mode TV';
+
+        // Scroll ke atas supaya tidak blank hitam di atas
+        window.scrollTo(0, 0);
+        var appMain = document.querySelector('.app-main');
+        if (appMain) appMain.scrollTop = 0;
+        var appContent = document.querySelector('.app-content');
+        if (appContent) appContent.scrollTop = 0;
+
+        // Request fullscreen
+        var el = document.documentElement;
+        var fsPromise = null;
+        if (el.requestFullscreen) fsPromise = el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) el.msRequestFullscreen();
+
+        // Force repaint setelah fullscreen aktif supaya tidak blank hitam
+        setTimeout(function() {
+          body.style.display = 'none';
+          body.offsetHeight; // force reflow
+          body.style.display = '';
+          window.scrollTo(0, 0);
+          var monitorContainer = document.getElementById('subview-stock-mesin');
+          if (monitorContainer) monitorContainer.scrollTop = 0;
+        }, 200);
+
+      } else {
+        IS_TV_FULLSCREEN = false;
+        body.classList.remove('tv-fullscreen-active');
+        if (appSidebar) appSidebar.style.display = '';
+        if (appTopbar)  appTopbar.style.display  = '';
+        if (subnav) subnav.style.display = 'flex';
+        if (shiftLabel) shiftLabel.style.display = '';
+        if (btnTarikHeader) btnTarikHeader.parentElement.style.display = '';
+        if (btn) btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Mode TV (Layar Penuh)';
+
+        if (document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(function(){});
+        }
+      }
+    }
+
+    function loadTspMesinMonitoring(isSilent) {
+      var grid = document.getElementById('mesin-monitor-grid');
+      var alertBanner = document.getElementById('supply-alert-banner');
+      var alertGrid = document.getElementById('supply-alert-grid');
+      var alertCount = document.getElementById('supply-alert-count');
+      var timeBadge = document.getElementById('mesin-monitor-time-badge');
+      var subnavBadge = document.getElementById('subnav-mesin-badge');
+
+      if (!isSilent && grid && grid.innerHTML.indexOf('mesin-card') === -1) {
+        grid.innerHTML = '<p style="color: #64748b; font-size: 14px; grid-column: 1 / -1; text-align: center; padding: 30px;">Memuat status 6 mesin produksi secara real-time...</p>';
+      }
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res.success || !res.data) {
+          if (!isSilent && grid) grid.innerHTML = '<p style="color: #ef4444; grid-column: 1 / -1;">Gagal memuat data monitoring mesin: ' + (res ? res.message : 'Error') + '</p>';
+          return;
+        }
+
+        if (timeBadge) timeBadge.textContent = 'Update: ' + res.data.date + ' (' + res.data.shift + ')';
+
+        var alerts = res.data.alerts || [];
+        if (subnavBadge) {
+          if (alerts.length > 0) {
+            subnavBadge.textContent = alerts.length + ' Alert';
+            subnavBadge.style.display = 'inline-block';
+          } else {
+            subnavBadge.style.display = 'none';
+          }
+        }
+
+        if (alertBanner && alertCount && alertGrid) {
+          if (alerts.length > 0) {
+            alertBanner.style.display = 'block';
+            alertCount.textContent = alerts.length + ' Material Butuh Suplai';
+            var alertHtml = '';
+            for (var i = 0; i < alerts.length; i++) {
+              var a = alerts[i];
+              var borderCol = a.status === 'CRITICAL' ? '#ef4444' : '#f59e0b';
+              var tagText = a.status === 'CRITICAL' ? '⚠️ KRITIS (≤30)' : '🔔 RENDAH (≤100)';
+              var tagCol = a.status === 'CRITICAL' ? '#ff8080' : '#fde68a';
+              alertHtml += '<div class="supply-alert-card" style="border-left: 4px solid ' + borderCol + ';">' +
+                '<div class="supply-alert-item-info">' +
+                  '<h5>[Mesin ' + a.mesin + '] ' + a.deskripsi + '</h5>' +
+                  '<span style="color:' + tagCol + '; font-weight: 600; font-size: 11px;">' + tagText + '</span>' +
+                '</div>' +
+                '<div class="supply-alert-qty">' +
+                  '<strong>' + a.stockAkhir + '</strong>' +
+                  '<small>' + a.uom + '</small>' +
+                '</div>' +
+              '</div>';
+            }
+            alertGrid.innerHTML = alertHtml;
+          } else {
+            alertBanner.style.display = 'none';
+          }
+        }
+
+        var machines = res.data.machines || [];
+        var gridHtml = '';
+        for (var m = 0; m < machines.length; m++) {
+          var mach = machines[m];
+          var statusBadge = '';
+          if (mach.criticalCount > 0) {
+            statusBadge = '<span class="status-tag critical"><i class="bi bi-exclamation-triangle-fill"></i> ' + mach.criticalCount + ' Kritis</span>';
+          } else if (mach.lowCount > 0) {
+            statusBadge = '<span class="status-tag low"><i class="bi bi-bell-fill"></i> ' + mach.lowCount + ' Butuh Suplai</span>';
+          } else {
+            statusBadge = '<span class="status-tag normal"><i class="bi bi-check-circle-fill"></i> Aman</span>';
+          }
+
+          gridHtml += '<div class="mesin-card">' +
+            '<div class="mesin-card-header">' +
+              '<h4><i class="bi bi-cpu" style="color: #0d6efd;"></i> Mesin ' + mach.name + '</h4>' +
+              '<div>' + statusBadge + '</div>' +
+            '</div>' +
+            '<div class="mesin-card-body">';
+          
+          if (!mach.items || mach.items.length === 0) {
+            gridHtml += '<p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 16px 0;">Belum ada material aktif shift ini.</p>';
+          } else {
+            for (var j = 0; j < mach.items.length; j++) {
+              var it = mach.items[j];
+              var tagCls = it.status === 'CRITICAL' ? 'critical' : (it.status === 'LOW' ? 'low' : 'normal');
+              var tagLabel = it.status === 'CRITICAL' ? 'Kritis' : (it.status === 'LOW' ? 'Rendah' : 'Aman');
+              gridHtml += '<div class="mesin-item-row">' +
+                '<div class="mesin-item-name" title="' + it.deskripsi + '">' + it.deskripsi + '</div>' +
+                '<div class="mesin-item-status">' +
+                  '<span style="color:#1e293b; font-weight:700; font-size:14px;">' + it.stockAkhir + ' <small style="color:#64748b; font-weight:500; font-size:11px;">' + it.uom + '</small></span>' +
+                  '<span class="status-tag ' + tagCls + '">' + tagLabel + '</span>' +
+                '</div>' +
+              '</div>';
+            }
+          }
+
+          gridHtml += '</div></div>';
+        }
+        if (grid) grid.innerHTML = gridHtml;
+
+      }).getTspMesinMonitoring();
+    }
+
+    function renderNeracaBanner(status, validatorNama, shiftNum) {
+      var container = document.getElementById('neraca-status-container');
+      if (!container) return;
+
+      if (status === 'BELUM_DITARIK') {
+        container.innerHTML = '<div class="neraca-banner belum-ditarik">' +
+          '<div class="neraca-banner-info">' +
+            '<div class="neraca-banner-title"><i class="bi bi-inbox-fill"></i> Stok Awal Shift ' + shiftNum + ' Belum Ditarik</div>' +
+            '<div class="neraca-banner-desc">Silakan tarik stok awal terlebih dahulu dari neraca akhir shift sebelumnya untuk memulai pencatatan dan pengecekan fisik pada shift ini.</div>' +
+          '</div>' +
+          '<button class="btn-neraca-action primary" id="btn-tarik-stok" onclick="tarikStokAwalHandler(\'' + shiftNum + '\')">' +
+            '<i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift ' + shiftNum + '</span>' +
+          '</button>' +
+        '</div>';
+      } else if (status === 'BELUM_DIKONFIRMASI') {
+        container.innerHTML = '<div class="neraca-banner belum-difit">' +
+          '<div class="neraca-banner-info">' +
+          '<div class="neraca-banner-title"><i class="bi bi-exclamation-triangle-fill"></i> Neraca Stok Belum Dikonfirmasi (Pengecekan Fisik Berjalan)</div>' +
+          '<div class="neraca-banner-desc">Stok awal shift ' + shiftNum + ' telah ditarik. Admin TSP harap berkeliling memeriksa kesesuaian stok fisik sebelum mengunci neraca stok. Bila ingin me-reset saldo dari shift sebelumnya, tekan Tarik Ulang.</div>' +
+          '</div>' +
+          '<div style="display:flex; gap:8px; align-items:center;">' +
+          '<button class="btn-neraca-action warning" id="btn-konfirm-stok" onclick="konfirmasiStokHandler(\'' + shiftNum + '\')">' +
+            '<i class="bi bi-check2-all"></i> <span>✅ Konfirmasi & Validasi Neraca Stok</span>' +
+          '</button>' +
+          '<button class="btn-neraca-action primary" id="btn-tarik-stok" onclick="tarikStokAwalHandler(\'' + shiftNum + '\')" style="background:#16a34a; color:#fff;">' +
+            '<i class="bi bi-arrow-repeat"></i> <span>📥 Tarik Ulang Stok Awal</span>' +
+          '</button>' +
+          '</div>' +
+          '</div>';
+      } else {
+        var valText = validatorNama || 'Admin TSP';
+        container.innerHTML = '<div class="neraca-banner valid">' +
+          '<div class="neraca-banner-info">' +
+          '<div class="neraca-banner-title"><i class="bi bi-shield-fill-check"></i> Neraca Stok Shift ' + shiftNum + ' Telah Divalidasi & Dikonfirmasi</div>' +
+          '<div class="neraca-banner-desc">Pencatatan dan pengecekan aktual fisik pada shift aktif ini telah diperiksa dan dikunci secara resmi pada buku besar neraca stok.</div>' +
+          '</div>' +
+          '<div style="display:flex; gap:12px; align-items:center;">' +
+          '<div class="neraca-badge-valid"><i class="bi bi-patch-check-fill" style="color:#a7f3d0;"></i> <span>' + valText + '</span></div>' +
+          '<button class="btn-neraca-action primary" id="btn-tarik-stok" onclick="tarikStokAwalHandler(\'' + shiftNum + '\')" style="background:#475569; color:#fff; padding:6px 12px; font-size:0.8rem;">' +
+            '<i class="bi bi-arrow-repeat"></i> <span>📥 Reset / Tarik Ulang</span>' +
+          '</button>' +
+          '</div>' +
+          '</div>';
+      }
+    }
+
+    function tarikStokAwalHandler(shiftNum) {
+      showConfirmModal(
+        'Konfirmasi Tarik Stok Awal',
+        'Apakah Anda ingin memeriksa dan memuat Stok Awal untuk shift ini?<br><br><b>Catatan:</b> Jika data untuk shift ini belum ada, sistem otomatis akan menarik data dari neraca akhir shift sebelumnya. Jika sudah ada, sistem hanya akan memuat (load) data yang ada tanpa menghapusnya.',
+        'info',
+        '📥 Ya, Lanjutkan',
+        'Batal',
+        function() {
+          var btn1 = document.getElementById('btn-tarik-stok');
+          var btn2 = document.getElementById('btn-tarik-stok-header');
+          if (btn1) { btn1.disabled = true; btn1.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Menarik...</span>'; }
+          if (btn2) { btn2.disabled = true; btn2.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Menarik...</span>'; }
+          showFloatingLoading('Mengalirkan Stok Awal...', 'Mengkoneksikan data neraca dari STOCK TSP terlebih dahulu, kemudian melangsungkan transfer ke STOCK MESIN...');
+          google.script.run.withSuccessHandler(function(res) {
+            hideFloatingLoading();
+            if (res.success) {
+              showPopupModal('Stok Awal Berhasil Ditarik', res.message || 'Data neraca stok shift sebelumnya berhasil ditarik bersih ke shift aktif dengan status BELUM DIKONFIRMASI.<br><br>Silakan lakukan keliling pengecekan fisik, kemudian tekan tombol Konfirmasi.', 'success', 'Lanjutkan Pengecekan', function() {
+                loadStockTab();
+              });
+            } else {
+              showPopupModal('Peringatan Tarik Stok', res.message || 'Gagal menarik stok awal.', 'warning', 'Tutup');
+              if (btn1) { btn1.disabled = false; btn1.innerHTML = '<i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>'; }
+              if (btn2) { btn2.disabled = false; btn2.innerHTML = '<i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>'; }
+            }
+          }).withFailureHandler(function(err) {
+            hideFloatingLoading();
+            showPopupModal('Gagal Tarik Stok', 'Terjadi kesalahan sistem:<br><b>' + (err.message || String(err)) + '</b>', 'error', 'Tutup');
+            if (btn1) { btn1.disabled = false; btn1.innerHTML = '<i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>'; }
+            if (btn2) { btn2.disabled = false; btn2.innerHTML = '<i class="bi bi-cloud-arrow-down-fill"></i> <span>📥 Tarik Stok Awal Shift</span>'; }
+          }).tarikStokAwalShift(CURRENT_NIK, null);
+        }
+      );
+    }
+
+    function konfirmasiStokHandler(shiftNum) {
+      showConfirmModal(
+        'Validasi Neraca Stok',
+        'Apakah Anda yakin sudah selesai melakukan keliling pemeriksaan fisik dan validasi aktual stok untuk <b>Shift ' + shiftNum + '</b> ini?<br><br>Setelah dikonfirmasi, neraca stok akan resmi dicatat di buku besar.',
+        'info',
+        '✅ Ya, Konfirmasi Resmi',
+        'Batal',
+        function() {
+          var btn = document.getElementById('btn-konfirm-stok');
+          if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Mengunci Neraca...</span>';
+          }
+          showFloatingLoading('Mengonfirmasi Neraca Stok...', 'Menyimpan validasi aktual dan mengunci status pada tabel Google Sheets...');
+          google.script.run.withSuccessHandler(function(res) {
+            hideFloatingLoading();
+            if (res.success) {
+              showPopupModal('Neraca Stok Resmi Tervalidasi', res.message || 'Neraca stok untuk shift ini telah dikonfirmasi dan dikunci dengan sukses.', 'success', 'Selesai & Refresh', function() {
+                loadStockTab();
+              });
+            } else {
+              showPopupModal('Peringatan Konfirmasi', res.message || 'Gagal mengkonfirmasi neraca stok.', 'warning', 'Tutup');
+              if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-all"></i> <span>✅ Konfirmasi & Validasi Neraca Stok</span>';
+              }
+            }
+          }).withFailureHandler(function(err) {
+            hideFloatingLoading();
+            showPopupModal('Gagal Konfirmasi', 'Terjadi kesalahan komunikasi:<br><b>' + (err.message || String(err)) + '</b>', 'error', 'Tutup');
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="bi bi-check2-all"></i> <span>✅ Konfirmasi & Validasi Neraca Stok</span>';
+            }
+          }).konfirmasiNeracaStokShift(CURRENT_NIK, null);
+        }
+      );
+    }
+
+    function konfirmasiItemBenar(mid, deskripsi, rumus) {
+      showConfirmModal(
+        'Verifikasi Stok Sesuai',
+        'Apakah hasil pengecekan fisik untuk material ini sudah <b>Sesuai / Benar</b> dengan hitungan sistem?<br><br><b>Material:</b> ' + deskripsi + '<br><b>Stok Sistem:</b> ' + rumus,
+        'success',
+        '✅ Ya, Sesuai / Benar',
+        'Batal',
+        function() {
+          google.script.run.withSuccessHandler(function(res) {
+            if (res.success) {
+              loadStockTab();
+            } else {
+              showPopupModal('Peringatan Verifikasi Item', res.message || 'Gagal menyimpan status item.', 'warning', 'Tutup');
+            }
+          }).withFailureHandler(function(err) {
+            showPopupModal('Gagal Komunikasi', 'Error: ' + (err.message || String(err)), 'error', 'Tutup');
+          }).konfirmasiItemStokShift(CURRENT_NIK, mid, rumus, 'BENAR');
+        }
+      );
+    }
+
+    function konfirmasiItemRevisi(mid, deskripsi, rumus) {
+      showPromptModal(
+        'Revisi Stok Aktual',
+        'Masukkan <b>JUMLAH STOK AKTUAL</b> hasil pengecekan fisik keliling untuk material:<br><br><b>' + deskripsi + '</b><br><span style="color:#64748b; font-size:13.5px;">(Stok Rumus Sistem Saat Ini: <b>' + rumus + '</b>)</span>',
+        rumus,
+        '💾 Simpan Revisi',
+        'Batal',
+        function(val) {
+          if (val === null || val === undefined || val.trim() === '') return;
+          var num = Number(val.trim());
+          if (isNaN(num)) {
+            showPopupModal('Input Tidak Valid', 'Angka stok aktual hasil keliling harus berupa angka numerik yang valid.', 'warning', 'Tutup');
+            return;
+          }
+          google.script.run.withSuccessHandler(function(res) {
+            if (res.success) {
+              loadStockTab();
+            } else {
+              showPopupModal('Peringatan Revisi Item', res.message || 'Gagal menyimpan revisi item.', 'warning', 'Tutup');
+            }
+          }).withFailureHandler(function(err) {
+            showPopupModal('Gagal Komunikasi', 'Error: ' + (err.message || String(err)), 'error', 'Tutup');
+          }).konfirmasiItemStokShift(CURRENT_NIK, mid, num, 'REVISI');
+        }
+      );
+    }
+
+    function initHistoryTab() {
+      if (!document.getElementById('history-date').value) {
+        var today = new Date();
+        var y = today.getFullYear(), m = ('0'+(today.getMonth()+1)).slice(-2), d = ('0'+today.getDate()).slice(-2);
+        document.getElementById('history-date').value = y + '-' + m + '-' + d;
+      }
+      var historyMesinSel = document.getElementById('history-mesin');
+      if (historyMesinSel.options.length === 0) {
+        var defaultMachines = ['BHP 1', 'BHP 2', 'BHP 3', 'AHP 1', 'BHP 4', 'BHP 5'];
+        historyMesinSel.innerHTML = '';
+        defaultMachines.forEach(function (m) {
+          var opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          historyMesinSel.appendChild(opt);
+        });
+      }
+      if (PAGE_ROLE === 'operator') {
+        document.getElementById('history-type').value = 'mesin';
+        document.getElementById('history-mesin-wrap').style.display = 'block';
+      } else {
+        onHistoryTypeChange();
+      }
+    }
+
+    function onHistoryTypeChange() {
+      var hType = document.getElementById('history-type').value;
+      var mWrap = document.getElementById('history-mesin-wrap');
+      if (hType === 'mesin') {
+        mWrap.style.display = 'block';
+      } else {
+        mWrap.style.display = 'none';
+      }
+    }
+
+    function loadHistoryData() {
+      var dateVal = document.getElementById('history-date').value;
+      var shiftVal = document.getElementById('history-shift').value;
+      var hType = document.getElementById('history-type').value;
+      if (!dateVal || !shiftVal) return;
+      var dateStr = dateVal;
+
+      var wrap = document.getElementById('history-table-wrap');
+      var statusContainer = document.getElementById('history-status-container');
+      wrap.innerHTML = '<p style="text-align:center; color:#64748b; padding:40px;"><i class="bi bi-hourglass-split"></i> Memuat riwayat stok...</p>';
+      statusContainer.innerHTML = '';
+
+      if (hType === 'mesin') {
+        var mCode = document.getElementById('history-mesin').value;
+        if (!mCode) { wrap.innerHTML = '<p style="text-align:center; padding:40px;">Silakan pilih mesin terlebih dahulu.</p>'; return; }
+        
+        showFloatingLoading('Memuat Riwayat Stok Mesin ' + mCode + '...');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideFloatingLoading();
+            if (!res || !res.success) { wrap.innerHTML = '<p style="color:#ef4444; text-align:center; padding:40px;">' + (res ? res.message : 'Gagal memuat data') + '</p>'; return; }
+            var d = res.data;
+            var statusHtml = '<div style="display:inline-block; padding:8px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13.5px;">' +
+              '<strong>Pemeriksaan Mesin:</strong> ' + mCode + ' &nbsp;|&nbsp; <strong>Shift:</strong> ' + shiftVal + '</div>';
+            statusContainer.innerHTML = statusHtml;
+            
+            if (!d.data || d.data.length === 0) {
+              wrap.innerHTML = '<p style="text-align:center; padding:40px; color:#64748b;">Tidak ada data riwayat stok untuk mesin, tanggal, dan shift ini.</p>';
+            } else {
+              renderPortalTable('history-table-wrap', d, mCode);
+            }
+          })
+          .withFailureHandler(function(err) {
+            hideFloatingLoading();
+            wrap.innerHTML = '<p style="color:#ef4444; text-align:center; padding:40px;">Error: ' + err.message + '</p>';
+          })
+          .getPortalHistory(mCode, dateStr, shiftVal);
+      } else {
+        showFloatingLoading('Memuat Riwayat Stok TSP...');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideFloatingLoading();
+            if (!res || !res.success) { wrap.innerHTML = '<p style="color:#ef4444; text-align:center; padding:40px;">' + (res ? res.message : 'Gagal memuat data') + '</p>'; return; }
+            var d = res.data;
+            var statusHtml = '<div style="display:inline-block; padding:8px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13.5px;">' +
+              '<strong>Status Neraca:</strong> ' + (d.statusNeraca === 'VALID' ? '<span style="color:#16a34a; font-weight:700;"><i class="bi bi-check-circle-fill"></i> Valid</span>' : (d.statusNeraca === 'BELUM_DITARIK' ? '<span style="color:#ef4444; font-weight:700;">Belum Ditarik</span>' : '<span style="color:#f59e0b; font-weight:700;">Menunggu Validasi</span>')) +
+              ' &nbsp;|&nbsp; <strong>Validator:</strong> ' + (d.validatorNama || '-') + '</div>';
+            statusContainer.innerHTML = statusHtml;
+            
+            if (!d.rows || d.rows.length === 0) {
+              wrap.innerHTML = '<p style="text-align:center; padding:40px; color:#64748b;">Tidak ada data riwayat stok untuk tanggal dan shift ini.</p>';
+            } else {
+              renderTable('history-table-wrap', d.rows, STOCK_COLUMNS);
+            }
+          })
+          .withFailureHandler(function(err) {
+            hideFloatingLoading();
+            wrap.innerHTML = '<p style="color:#ef4444; text-align:center; padding:40px;">Error: ' + err.message + '</p>';
+          })
+          .getHistoricalTspStock(dateStr, shiftVal);
+      }
+    }
+
+    // ==========================================
+    // MIN / MAX STOCK MANAGEMENT FUNCTIONS (SPV)
+    // ==========================================
+    var minMaxDataCache = [];
+
+    function loadMinMaxTab() {
+      var wrap = document.getElementById('minmax-table-wrap');
+      wrap.innerHTML = '<p style="text-align:center; color:#64748b; padding:40px;"><i class="bi bi-hourglass-split"></i> Memuat data Min/Max Stock...</p>';
+      showFloatingLoading('Memuat Pengaturan Threshold Stock...');
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            minMaxDataCache = resp.data || [];
+            filterMinMaxTable();
+          } else {
+            wrap.innerHTML = '<p style="text-align:center; color:#ef4444; padding:40px;">Gagal memuat data: ' + (resp ? resp.message : 'Error') + '</p>';
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          wrap.innerHTML = '<p style="text-align:center; color:#ef4444; padding:40px;">Error: ' + err.message + '</p>';
+        })
+        .getMinMaxSettingsApi();
+    }
+
+    function filterMinMaxTable() {
+      var locFilter = document.getElementById('minmax-filter-loc').value;
+      var searchVal = (document.getElementById('minmax-search').value || '').toLowerCase().trim();
+
+      var filtered = minMaxDataCache.filter(function(item) {
+        var matchLoc = (locFilter === 'ALL') || (item.lokasi === locFilter);
+        var matchSearch = !searchVal || item.mid.toLowerCase().includes(searchVal) || item.deskripsi.toLowerCase().includes(searchVal);
+        return matchLoc && matchSearch;
+      });
+
+      renderMinMaxTable(filtered);
+    }
+
+    function renderMinMaxTable(items) {
+      var wrap = document.getElementById('minmax-table-wrap');
+      if (!items || items.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center; padding: 40px; border: 1px dashed #cbd5e1; border-radius: 8px;"><i class="bi bi-sliders" style="font-size: 2rem; color: #94a3b8; display: block; margin-bottom: 8px;"></i><p style="color:#64748b;">Belum ada data pengaturan Min/Max Stock.</p></div>';
+        return;
+      }
+
+      var html = '<div class="table-responsive" style="overflow-x:auto;"><table class="stock-table" style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+      html += '<thead><tr style="background:#f8fafc; text-align:left; font-size:12px; color:#475569; border-bottom:2px solid #e2e8f0;">' +
+              '<th style="padding:12px 14px;">MID</th>' +
+              '<th style="padding:12px 14px;">LOKASI</th>' +
+              '<th style="padding:12px 14px;">SUPPLIER</th>' +
+              '<th style="padding:12px 14px;">MATERIAL DESCRIPTION</th>' +
+              '<th style="padding:12px 14px; text-align:right;">MIN STOCK</th>' +
+              '<th style="padding:12px 14px; text-align:right;">MAX STOCK</th>' +
+              '<th style="padding:12px 14px;">STATUS</th>' +
+              '<th style="padding:12px 14px; text-align:center;">AKSI</th>' +
+              '</tr></thead><tbody>';
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var isTsp = item.lokasi === 'TSP';
+        var locBadge = '<span class="badge" style="background:' + (isTsp ? '#e0f2fe' : '#fef3c7') + '; color:' + (isTsp ? '#0369a1' : '#b45309') + '; padding:4px 8px; border-radius:4px; font-weight:700; font-size:11px;">' + escapeHtml(item.lokasi) + '</span>';
+        
+        var isConfigured = item.isConfigured !== false && item.updatedAt !== 'Belum Diatur';
+        var statusBadge = isConfigured 
+          ? '<span style="font-size:11.5px; color:#64748b;">' + escapeHtml(item.updatedAt) + '<br><small style="color:#94a3b8;">by ' + escapeHtml(item.updatedBy) + '</small></span>'
+          : '<span class="badge" style="background:#f1f5f9; color:#94a3b8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:11px;">Belum Diatur (0)</span>';
+
+        html += '<tr style="border-bottom:1px solid #f1f5f9; font-size:13px;">' +
+                '<td style="padding:12px 14px; font-weight:700; color:#1e293b;">' + escapeHtml(item.mid) + '</td>' +
+                '<td style="padding:12px 14px;">' + locBadge + '</td>' +
+                '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.supplier || '-') + '</td>' +
+                '<td style="padding:12px 14px; color:#334155; font-weight:500;">' + escapeHtml(item.deskripsi) + '</td>' +
+                '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.minStock > 0 ? '#dc2626' : '#94a3b8') + ';">' + formatNumberDisplay(item.minStock) + '</td>' +
+                '<td style="padding:12px 14px; text-align:right; font-weight:700; color:' + (item.maxStock > 0 ? '#2563eb' : '#94a3b8') + ';">' + formatNumberDisplay(item.maxStock) + '</td>' +
+                '<td style="padding:12px 14px;">' + statusBadge + '</td>' +
+                '<td style="padding:12px 14px; text-align:center;">' +
+                '<button onclick="editMinMaxItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi).replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.lokasi) + '\', ' + item.minStock + ', ' + item.maxStock + ', \'' + escapeHtml(item.uom || 'KG') + '\', \'' + escapeHtml(item.supplier === '-' ? '' : (item.supplier || '')).replace(/'/g, "\\'") + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                '</td></tr>';
+      }
+      html += '</tbody></table></div>';
+      wrap.innerHTML = html;
+    }
+
+    function openAddMinMaxModal() {
+      document.getElementById('minmax-input-mid').value = '';
+      document.getElementById('minmax-input-mid').readOnly = false;
+      document.getElementById('minmax-input-desc').value = '';
+      document.getElementById('minmax-input-uom').value = '';
+      document.getElementById('minmax-input-supplier').value = '';
+      document.getElementById('minmax-input-loc').value = 'TSP';
+      document.getElementById('minmax-input-min').value = '0';
+      document.getElementById('minmax-input-max').value = '0';
+      document.getElementById('modal-minmax-edit').style.display = 'flex';
+    }
+
+    function editMinMaxItem(mid, desc, loc, minVal, maxVal, uom, supplier) {
+      document.getElementById('minmax-input-mid').value = mid;
+      document.getElementById('minmax-input-mid').readOnly = true;
+      document.getElementById('minmax-input-desc').value = desc;
+      document.getElementById('minmax-input-uom').value = uom || '';
+      document.getElementById('minmax-input-supplier').value = supplier || '';
+      document.getElementById('minmax-input-loc').value = loc;
+      document.getElementById('minmax-input-min').value = minVal;
+      document.getElementById('minmax-input-max').value = maxVal;
+      document.getElementById('modal-minmax-edit').style.display = 'flex';
+    }
+
+    function closeMinMaxModal() {
+      document.getElementById('modal-minmax-edit').style.display = 'none';
+    }
+
+    function saveMinMaxFromForm() {
+      var user = getSavedUser();
+      var nik = user ? user.nik : 'SPV';
+      var mid = document.getElementById('minmax-input-mid').value.trim();
+      var desc = document.getElementById('minmax-input-desc').value.trim();
+      var uom = document.getElementById('minmax-input-uom').value.trim();
+      var supplier = document.getElementById('minmax-input-supplier').value.trim();
+      var loc = document.getElementById('minmax-input-loc').value;
+      var minVal = document.getElementById('minmax-input-min').value;
+      var maxVal = document.getElementById('minmax-input-max').value;
+
+      if (!mid) {
+        showPopupModal('Input Tidak Lengkap', 'MID Material wajib diisi.', 'warning');
+        return;
+      }
+
+      closeMinMaxModal();
+      showFloatingLoading('Menyimpan Threshold Stock...');
+
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            showPopupModal('Berhasil', resp.message, 'success');
+            loadMinMaxTab();
+          } else {
+            showPopupModal('Gagal', (resp ? resp.message : 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          showPopupModal('Error', err.message, 'error');
+        })
+        .saveMinMaxSettingApi(nik, mid, desc, loc, minVal, maxVal, uom, supplier);
+    }
+
+    // --- CSV Template & Upload Handlers ---
+    function downloadCsvTemplate() {
+      var csvContent = "MID,MATERIAL DESCRIPTION,LOKASI,MIN,MAX\n" +
+                       "20000186,SAP,TSP,0,1600\n" +
+                       "20000237,BOTTOM TISSUE 240MMX9000M 15GSM,BHP 1,100,500\n";
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_Min_Max_Stock.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function triggerCsvUpload() {
+      var fileInput = document.getElementById('minmax-csv-file');
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    function handleCsvFileSelected(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        processCsvContent(e.target.result);
+      };
+      reader.onerror = function() {
+        showPopupModal('Error File', 'Gagal membaca file CSV.', 'error');
+      };
+      reader.readAsText(file);
+    }
+
+    function processCsvContent(csvText) {
+      if (!csvText || csvText.trim() === '') {
+        showPopupModal('File Kosong', 'File CSV tidak berisi data.', 'warning');
+        return;
+      }
+
+      var lines = csvText.split(/\r\n|\n/);
+      if (lines.length <= 1) {
+        showPopupModal('File Kosong', 'File CSV hanya berisi baris header.', 'warning');
+        return;
+      }
+
+      var headerLine = lines[0].split(',');
+      var headers = headerLine.map(function(h) { return h.trim().toUpperCase().replace(/"/g, ''); });
+
+      var midIdx  = headers.findIndex(function(h) { return h.includes('MID'); });
+      var descIdx = headers.findIndex(function(h) { return h.includes('DES') || h.includes('MATERIAL'); });
+      var locIdx  = headers.findIndex(function(h) { return h.includes('LOKASI') || h.includes('LOCATION'); });
+      var minIdx  = headers.findIndex(function(h) { return h === 'MIN' || h.includes('MIN_') || h.includes('MINIMUM'); });
+      var maxIdx  = headers.findIndex(function(h) { return h === 'MAX' || h.includes('MAX_') || h.includes('MAXIMUM'); });
+
+      if (midIdx === -1) {
+        showPopupModal('Header CSV Tidak Valid', 'Kolom "MID" wajib ada di baris pertama CSV.', 'warning');
+        return;
+      }
+
+      var items = [];
+      for (var i = 1; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+
+        var cols = line.split(',');
+        var mid = cols[midIdx] ? cols[midIdx].replace(/"/g, '').trim() : '';
+        if (!mid) continue;
+
+        var desc = descIdx !== -1 && cols[descIdx] ? cols[descIdx].replace(/"/g, '').trim() : '';
+        var loc  = locIdx !== -1 && cols[locIdx] ? cols[locIdx].replace(/"/g, '').trim() : 'TSP';
+        var minVal = minIdx !== -1 && cols[minIdx] ? cols[minIdx].replace(/"/g, '').trim() : '0';
+        var maxVal = maxIdx !== -1 && cols[maxIdx] ? cols[maxIdx].replace(/"/g, '').trim() : '0';
+
+        items.push({
+          mid: mid,
+          deskripsi: desc,
+          lokasi: loc,
+          minStock: minVal,
+          maxStock: maxVal
+        });
+      }
+
+      if (items.length === 0) {
+        showPopupModal('Tidak Ada Data Valid', 'Tidak ditemukan baris data MID yang valid pada file CSV.', 'warning');
+        return;
+      }
+
+      var user = getSavedUser();
+      var nik = user ? user.nik : 'SPV';
+
+      showFloatingLoading('Mengimpor ' + items.length + ' item Min/Max Stock dari CSV...');
+
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          hideFloatingLoading();
+          if (resp && resp.success) {
+            showPopupModal('Import Berhasil', resp.message, 'success');
+            loadMinMaxTab();
+          } else {
+            showPopupModal('Import Gagal', (resp ? resp.message : 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideFloatingLoading();
+          showPopupModal('Error Server', err.message, 'error');
+        })
+        .saveMinMaxBatchApi(nik, items);
+    }
+
     function loadStockTab() {
       var wrap = document.getElementById('stock-table-wrap');
       wrap.innerHTML = '<p>Memuat stock...</p>';
 
-      if (PAGE_ROLE === 'tsp') {
+      if (PAGE_ROLE === 'tsp' || PAGE_ROLE === 'spv') {
+        var subnav = document.getElementById('tsp-stock-subnavigation');
+        if (subnav) subnav.style.display = 'flex';
+
         google.script.run.withSuccessHandler(function (res) {
           if (!res.success) { wrap.innerHTML = '<p>' + res.message + '</p>'; return; }
           document.getElementById('stock-shift-label').textContent =
             res.data.date + ' — Shift aktif: ' + res.data.shift;
+          renderNeracaBanner(res.data.statusNeraca, res.data.validatorNama, res.data.shift);
           renderTable('stock-table-wrap', res.data.rows, STOCK_COLUMNS);
         }).getTspStock();
         loadShiftPanels();
+
+        loadTspMesinMonitoring(true);
+        switchStockSubnav(CURRENT_STOCK_SUBNAV);
       } else {
+        var subnav = document.getElementById('tsp-stock-subnavigation');
+        if (subnav) subnav.style.display = 'none';
+        var viewTsp = document.getElementById('subview-stock-tsp');
+        if (viewTsp) viewTsp.style.display = 'block';
+        var viewMesin = document.getElementById('subview-stock-mesin');
+        if (viewMesin) viewMesin.style.display = 'none';
+        var neracaContainer = document.getElementById('neraca-status-container');
+        if (neracaContainer) neracaContainer.innerHTML = '';
+
+        stopTvAutoRefresh();
+
         var select = document.getElementById('mesin-picker');
         var selectedMesin = select.value;
         if (!selectedMesin) { wrap.innerHTML = '<p>Pilih mesin dulu.</p>'; return; }
@@ -255,6 +1946,8 @@
             res.data.date + ' — Shift aktif: ' + res.data.shift + ' — Mesin ' + selectedMesin;
           renderTable('stock-table-wrap', res.data.rows, MESIN_STOCK_COLUMNS);
         }).getMesinStock(selectedMesin);
+        
+        loadShiftPanels();
       }
     }
 
@@ -264,17 +1957,42 @@
       recWrap.innerHTML = '<p>Memuat penerimaan...</p>';
       dispWrap.innerHTML = '<p>Memuat pengiriman...</p>';
 
-      // Fetch Penerimaan Shift Ini
-      google.script.run.withSuccessHandler(function (res) {
-        if (!res.success) { recWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
-        renderTable('recent-receipts-wrap', res.data, RECEIPT_COLUMNS);
-      }).getShiftReceipts();
+      if (PAGE_ROLE === 'operator' || PAGE_ROLE === 'leader_mesin') {
+        var selectedMesin = document.getElementById('mesin-picker').value;
+        if (!selectedMesin) {
+          recWrap.innerHTML = '<p>Pilih mesin dulu.</p>';
+          dispWrap.innerHTML = '<p>Pilih mesin dulu.</p>';
+          return;
+        }
+        document.getElementById('recent-receipts-title').textContent = 'Terima dari TSP';
+        document.getElementById('shift-dispatches-title').textContent = 'Konsumsi Material';
 
-      // Fetch Pengiriman Shift Ini
-      google.script.run.withSuccessHandler(function (res) {
-        if (!res.success) { dispWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
-        renderTable('shift-dispatches-wrap', res.data, DISPATCH_COLUMNS);
-      }).getShiftDispatches();
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { recWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          renderTable('recent-receipts-wrap', res.data, RECEIPT_COLUMNS);
+        }).getOperatorReceipts(selectedMesin);
+
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { dispWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          renderTable('shift-dispatches-wrap', res.data, DISPATCH_COLUMNS);
+        }).getOperatorConsumption(selectedMesin);
+
+      } else {
+        document.getElementById('recent-receipts-title').textContent = 'Penerimaan Shift Ini';
+        document.getElementById('shift-dispatches-title').textContent = 'Pengiriman Shift Ini';
+
+        // Fetch Penerimaan Shift Ini
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { recWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          renderTable('recent-receipts-wrap', res.data, RECEIPT_COLUMNS);
+        }).getShiftReceipts();
+
+        // Fetch Pengiriman Shift Ini
+        google.script.run.withSuccessHandler(function (res) {
+          if (!res.success) { dispWrap.innerHTML = '<p>' + res.message + '</p>'; return; }
+          renderTable('shift-dispatches-wrap', res.data, DISPATCH_COLUMNS);
+        }).getShiftDispatches();
+      }
     }
 
     function loadValidatorTab() {
@@ -297,6 +2015,7 @@
       google.script.run
         .withSuccessHandler(function (res) {
           if (res.success) {
+            localStorage.setItem('tspModulUser', JSON.stringify(res.user));
             sessionStorage.setItem('tspModulUser', JSON.stringify(res.user));
             showApp(res.user);
           } else {
@@ -319,13 +2038,40 @@
     });
 
     document.getElementById('logout-btn').addEventListener('click', function () {
+      localStorage.removeItem('tspModulUser');
       sessionStorage.removeItem('tspModulUser');
       showLogin();
     });
 
-    document.getElementById('tab-btn-stock').onclick = function () { switchTab('stock'); };
-    document.getElementById('tab-btn-scan').onclick = function () { switchTab('scan'); };
-    document.getElementById('tab-btn-validasi').onclick = function () { switchTab('validasi'); };
+    function handleNavClick(e, tab) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
+        return true;
+      }
+      e.preventDefault();
+      switchTab(tab);
+      return false;
+    }
+
+    function handleSubnavClick(e, sub) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
+        return true;
+      }
+      e.preventDefault();
+      switchStockSubnav(sub);
+      return false;
+    }
+
+    ['stock', 'scan', 'validasi', 'history', 'reprint', 'minmax'].forEach(function(t) {
+      var btn = document.getElementById('tab-btn-' + t);
+      if (btn) {
+        btn.onclick = function(e) { return handleNavClick(e, t); };
+      }
+    });
+
+    var subTspElem = document.getElementById('subnav-tsp');
+    if (subTspElem) subTspElem.onclick = function(e) { return handleSubnavClick(e, 'tsp'); };
+    var subMesinElem = document.getElementById('subnav-mesin');
+    if (subMesinElem) subMesinElem.onclick = function(e) { return handleSubnavClick(e, 'mesin'); };
     document.getElementById('mesin-picker').addEventListener('change', function () {
       if (document.getElementById('tab-stock').style.display !== 'none') loadStockTab();
     });
@@ -333,15 +2079,412 @@
     document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
 
     (function tryRestoreSession() {
-      var stored = sessionStorage.getItem('tspModulUser');
+      // 1. Cek apakah ada session token di URL query parameter (?_u=...)
+      //    Ini digunakan saat deeplink dibuka di tab baru (lintas tab)
+      try {
+        var urlParams = {};
+        var search = window.location.search ? window.location.search.substring(1) : '';
+        if (search) {
+          search.split('&').forEach(function(pair) {
+            var kv = pair.split('=');
+            if (kv[0]) urlParams[decodeURIComponent(kv[0])] = kv[1] ? decodeURIComponent(kv[1]) : '';
+          });
+        }
+        if (urlParams._u) {
+          var decoded = JSON.parse(atob(urlParams._u));
+          if (decoded && decoded.nik && decoded.role) {
+            // Simpan ke localStorage supaya persistent untuk tab ini
+            localStorage.setItem('tspModulUser', JSON.stringify(decoded));
+            sessionStorage.setItem('tspModulUser', JSON.stringify(decoded));
+            showApp(decoded);
+            return;
+          }
+        }
+      } catch (e) { /* URL token rusak, lanjut ke fallback */ }
+
+      // 2. Fallback ke localStorage / sessionStorage (tab yang sama)
+      var stored = localStorage.getItem('tspModulUser') || sessionStorage.getItem('tspModulUser');
       if (stored) {
         try {
           showApp(JSON.parse(stored));
           return;
-        } catch (e) { /* sessionStorage rusak, jatuh ke login */ }
+        } catch (e) { /* storage rusak, jatuh ke login */ }
       }
       showLogin();
     })();
+
+    // ====== REPRINT BARCODE LOGIC ======
+
+    var _reprintQrDecoder = null;  // html5-qrcode instance reusable
+    var _reprintCurrentData = [];  // rows dari getReprintData (untuk Kode Induk aktif)
+    var _reprintPendingLabels = []; // array of label objects to be saved before printing
+
+    // --- Kamera ---
+    function triggerReprintCamera() {
+      document.getElementById('reprint-camera-input').value = '';
+      document.getElementById('reprint-camera-input').click();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var camInput = document.getElementById('reprint-camera-input');
+      if (camInput) {
+        camInput.addEventListener('change', function (evt) {
+          var file = evt.target.files[0];
+          if (!file) return;
+          var statusEl = document.getElementById('reprint-camera-status');
+          statusEl.style.display = 'block';
+          if (!_reprintQrDecoder) {
+            _reprintQrDecoder = new Html5Qrcode('reprint-qr-reader');
+          }
+          _reprintQrDecoder.scanFile(file, true)
+            .then(function (decoded) {
+              statusEl.style.display = 'none';
+              document.getElementById('reprint-search-input').value = decoded.trim();
+              searchReprintData();
+            })
+            .catch(function () {
+              statusEl.style.display = 'none';
+              showPopupModal('Scan Gagal', 'Barcode tidak terbaca dari foto. Pastikan barcode fokus dan tidak terpotong.', 'error');
+            });
+        });
+      }
+    });
+
+    // --- Cari Kode Induk ---
+    function searchReprintData() {
+      var q = (document.getElementById('reprint-search-input').value || '').trim();
+      if (!q) {
+        showPopupModal('Perhatian', 'Scan atau ketik Kode Induk terlebih dahulu.', 'warning');
+        return;
+      }
+      var wrap = document.getElementById('reprint-result-wrap');
+      wrap.innerHTML = '<p style="color:#64748b; padding:16px;"><i class="bi bi-hourglass-split"></i> Mencari data...</p>';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (!res.success) {
+            wrap.innerHTML = '<p style="color:#ef4444; padding:16px;"><i class="bi bi-exclamation-circle"></i> ' + (res.message || 'Gagal.') + '</p>';
+            return;
+          }
+          _reprintCurrentData = res.data || [];
+          if (_reprintCurrentData.length === 0) {
+            wrap.innerHTML = '<div style="text-align:center; padding:30px; border:1px dashed #cbd5e1; border-radius:8px;"><i class="bi bi-search" style="font-size:1.8rem; color:#94a3b8; display:block; margin-bottom:8px;"></i><p style="color:#64748b;">Tidak ada data reprint untuk kode tersebut.<br><small>Pastikan Kode Induk sudah pernah dikirim ke mesin.</small></p></div>';
+          } else {
+            showReprintConfig(_reprintCurrentData, q);
+          }
+        })
+        .withFailureHandler(function (err) {
+          wrap.innerHTML = '<p style="color:#ef4444; padding:16px;"><i class="bi bi-x-circle"></i> Error: ' + (err.message || err) + '</p>';
+        })
+        .getReprintData(q);
+    }
+
+    // --- Tampilkan Step 2: Config Print ---
+    function showReprintConfig(rows, query) {
+      // Ambil info dari baris pertama (induk dan material)
+      var first = rows[0];
+      document.getElementById('reprint-info-induk').textContent    = first.barcodeInduk;
+      document.getElementById('reprint-info-material').textContent = (first.mid ? first.mid + ' — ' : '') + (first.deskripsi || '');
+
+      // Riwayat kode anak yang sudah ada (urutkan berdasarkan barcodeAnak)
+      var anakList = rows.slice().sort(function (a, b) {
+        return String(a.barcodeAnak).localeCompare(String(b.barcodeAnak));
+      });
+      var lastAnak = anakList[anakList.length - 1];
+      var historyHtml = '<div class="table-scroll"><table class="data-table" style="font-size:12px;">';
+      historyHtml += '<thead><tr><th>Kode Anak</th><th class="num-cell">Qty</th><th>Tanggal</th><th>Shift</th></tr></thead><tbody>';
+      anakList.forEach(function (r) {
+        historyHtml += '<tr><td><strong>' + r.barcodeAnak + '</strong></td><td class="num-cell">' + r.jumlah + '</td><td>' + r.tanggal + '</td><td style="text-align:center;">Shift ' + r.shift + '</td></tr>';
+      });
+      historyHtml += '</tbody></table></div>';
+      historyHtml += '<p style="margin-top:8px; font-size:12px; color:#0369a1;"><i class="bi bi-info-circle"></i> Terakhir dicetak: <strong>' + lastAnak.barcodeAnak + '</strong> (Qty: ' + lastAnak.jumlah + ')</p>';
+      document.getElementById('reprint-history-list').innerHTML = historyHtml;
+
+      // Isi default qty dari yang terakhir
+      document.getElementById('reprint-qty-per-label').value = lastAnak.jumlah || '';
+
+      // Sembunyikan step 1 result, tampilkan step 2
+      document.getElementById('reprint-step-search').style.display = 'none';
+      document.getElementById('reprint-step-config').style.display = 'block';
+    }
+
+    function resetReprintSearch() {
+      _reprintCurrentData = [];
+      document.getElementById('reprint-step-config').style.display = 'none';
+      document.getElementById('reprint-step-search').style.display = 'block';
+      document.getElementById('reprint-search-input').value = '';
+      document.getElementById('reprint-result-wrap').innerHTML = '<div style="text-align:center; padding:40px; border:1px dashed #cbd5e1; border-radius:8px;"><i class="bi bi-printer" style="font-size:2rem; color:#94a3b8; display:block; margin-bottom:8px;"></i><p style="color:#64748b;">Scan atau ketik Kode Induk untuk memulai.</p></div>';
+    }
+
+    // --- Generate Batch Labels & Print ---
+    function generateReprintLabels() {
+      if (_reprintCurrentData.length === 0) return;
+      var jumlah = parseInt(document.getElementById('reprint-jumlah-label').value) || 1;
+      var qtyPer = parseInt(document.getElementById('reprint-qty-per-label').value);
+      if (!qtyPer || qtyPer <= 0) {
+        showPopupModal('Input Tidak Lengkap', 'Isi Qty per Label terlebih dahulu.', 'warning');
+        return;
+      }
+      if (jumlah < 1 || jumlah > 20) {
+        showPopupModal('Input Tidak Valid', 'Jumlah label harus antara 1 sampai 20.', 'warning');
+        return;
+      }
+
+      var first     = _reprintCurrentData[0];
+      var induk     = first.barcodeInduk;
+      var mid       = first.mid;
+      var deskripsi = first.deskripsi;
+
+      // Tentukan next sequence number dari Kode Anak terakhir
+      var anakList = _reprintCurrentData.slice().sort(function (a, b) {
+        return String(a.barcodeAnak).localeCompare(String(b.barcodeAnak));
+      });
+      var lastAnak = anakList[anakList.length - 1].barcodeAnak;
+      // Ambil nomor urut terakhir — format biasanya: INDUK-XX atau INDUK-XX-YYY
+      var nextSeq = _parseNextSequence(lastAnak, induk);
+
+      // Build label array
+      var labels = [];
+      for (var i = 0; i < jumlah; i++) {
+        var seq = _padSeq(nextSeq + i);
+        labels.push({
+          barcodeAnak:  induk + '-' + seq,
+          barcodeInduk: induk,
+          mid:          mid,
+          deskripsi:    deskripsi,
+          jumlah:       qtyPer
+        });
+      }
+
+      _openBatchPrintModal(labels);
+    }
+
+    function _parseNextSequence(lastAnak, induk) {
+      // Strip Kode Induk prefix, ambil bagian terakhir sebagai angka
+      var suffix = lastAnak.replace(induk, '').replace(/^[-_]/, '');
+      // Ambil segmen terakhir yang numeric
+      var parts = suffix.split(/[-_]/);
+      var lastNum = 0;
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var n = parseInt(parts[i]);
+        if (!isNaN(n)) { lastNum = n; break; }
+      }
+      return lastNum + 1;
+    }
+
+    function _padSeq(n) {
+      return n < 10 ? '0' + n : String(n);
+    }
+
+    // --- Batch Print Modal & Sizing ---
+    var REPRINT_PRESETS = {
+      kecil:   { barcodeHeight: 36, fontSize: 10.5, padding: '10px 14px', maxWidth: '280px', svgMargin: 2 },
+      standar: { barcodeHeight: 55, fontSize: 13,   padding: '18px 20px', maxWidth: '380px', svgMargin: 5 },
+      besar:   { barcodeHeight: 85, fontSize: 15.5, padding: '24px 28px', maxWidth: '480px', svgMargin: 8 }
+    };
+
+    function onReprintPresetChange() {
+      var presetKey = document.getElementById('reprint-size-preset').value;
+      var customCtrl = document.getElementById('reprint-custom-controls');
+      if (presetKey === 'custom') {
+        customCtrl.style.display = 'flex';
+      } else {
+        customCtrl.style.display = 'none';
+        var p = REPRINT_PRESETS[presetKey];
+        if (p) {
+          document.getElementById('reprint-custom-height').value = p.barcodeHeight;
+          document.getElementById('reprint-custom-font').value = p.fontSize;
+        }
+      }
+      try {
+        localStorage.setItem('tspReprintSizePreset', presetKey);
+      } catch (e) {}
+      renderReprintLabelsWithCurrentSize();
+    }
+
+    function getSelectedReprintSizeConfig() {
+      var presetKey = document.getElementById('reprint-size-preset').value;
+      if (presetKey !== 'custom' && REPRINT_PRESETS[presetKey]) {
+        return REPRINT_PRESETS[presetKey];
+      }
+      var h = parseInt(document.getElementById('reprint-custom-height').value) || 55;
+      var f = parseFloat(document.getElementById('reprint-custom-font').value) || 13;
+      var mw = Math.min(Math.max(Math.round(h * 6.5), 250), 550) + 'px';
+      return { barcodeHeight: h, fontSize: f, padding: '16px 18px', maxWidth: mw, svgMargin: 4 };
+    }
+
+    function _openBatchPrintModal(labels) {
+      _reprintPendingLabels = labels;
+      var overlay = document.getElementById('reprint-label-overlay');
+      document.getElementById('reprint-batch-count').textContent = labels.length + ' label siap cetak';
+
+      // Restore saved size preference if any
+      try {
+        var savedPreset = localStorage.getItem('tspReprintSizePreset');
+        if (savedPreset && ['standar', 'kecil', 'besar', 'custom'].indexOf(savedPreset) !== -1) {
+          document.getElementById('reprint-size-preset').value = savedPreset;
+        }
+      } catch (e) {}
+
+      var presetKey = document.getElementById('reprint-size-preset').value;
+      document.getElementById('reprint-custom-controls').style.display = (presetKey === 'custom') ? 'flex' : 'none';
+      if (presetKey !== 'custom' && REPRINT_PRESETS[presetKey]) {
+        document.getElementById('reprint-custom-height').value = REPRINT_PRESETS[presetKey].barcodeHeight;
+        document.getElementById('reprint-custom-font').value = REPRINT_PRESETS[presetKey].fontSize;
+      }
+
+      overlay.style.display = 'flex';
+      renderReprintLabelsWithCurrentSize();
+    }
+
+    function renderReprintLabelsWithCurrentSize() {
+      if (!_reprintPendingLabels || _reprintPendingLabels.length === 0) return;
+      var container = document.getElementById('reprint-label-pages');
+      container.innerHTML = '';
+
+      var cfg = getSelectedReprintSizeConfig();
+
+      _reprintPendingLabels.forEach(function (lbl, idx) {
+        var page = document.createElement('div');
+        page.className = 'print-label-page';
+        page.style.cssText = 'page-break-after:always; padding:' + cfg.padding + '; max-width:' + cfg.maxWidth + '; margin:0 auto; font-family:inherit; background:#fff; border:1px solid #e2e8f0; border-radius:8px;';
+        
+        var smallFont = Math.max(cfg.fontSize - 2, 9) + 'px';
+        var mainFont  = cfg.fontSize + 'px';
+
+        page.innerHTML =
+          '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto 10px; width:100%; max-width:100%;"></svg>' +
+          '<table style="width:100%; border-collapse:collapse; font-size:' + mainFont + ';">' +
+          '<tr><td style="color:#64748b; padding:3px 0; width:90px;">Kode Anak</td><td style="font-weight:800; color:#0f172a;">' + escapeHtml(lbl.barcodeAnak) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:3px 0;">MID</td><td style="color:#0f172a; font-weight:600;">' + escapeHtml(lbl.mid) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:3px 0;">Material</td><td style="color:#0f172a; font-weight:500;">' + escapeHtml(lbl.deskripsi) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:3px 0;">Qty</td><td style="font-weight:800; color:#16a34a;">' + escapeHtml(String(lbl.jumlah)) + '</td></tr>' +
+          '<tr><td style="color:#64748b; padding:3px 0;">Ref Induk</td><td style="color:#64748b; font-size:' + smallFont + ';">' + escapeHtml(lbl.barcodeInduk) + '</td></tr>' +
+          '</table>';
+        container.appendChild(page);
+
+        // Render barcode dengan ketinggian & font sesuai konfigurasi
+        setTimeout(function (svgId, code, bHeight, fSize, mMargin) {
+          try {
+            JsBarcode('#' + svgId, code, {
+              format: 'CODE128',
+              width: 2,
+              height: bHeight,
+              displayValue: true,
+              fontSize: Math.max(fSize - 1, 10),
+              margin: mMargin
+            });
+          } catch(e) {}
+        }.bind(null, 'lbl-svg-' + idx, lbl.barcodeAnak, cfg.barcodeHeight, cfg.fontSize, cfg.svgMargin), 30 * (idx + 1));
+      });
+    }
+
+    function closeReprintLabel() {
+      document.getElementById('reprint-label-overlay').style.display = 'none';
+    }
+
+    function printReprintLabel() {
+      if (!_reprintPendingLabels || _reprintPendingLabels.length === 0) return;
+      var btn = document.querySelector('#reprint-label-overlay button:last-child');
+      var originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
+      
+      google.script.run
+        .withSuccessHandler(function (res) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          if (res.success) {
+            window.print();
+            _reprintPendingLabels = []; // Clear after print
+            searchReprintData();
+            closeReprintLabel();
+          } else {
+            showPopupModal('Gagal Menyimpan', 'Tidak dapat merekam barcode reprint ke database:<br>' + res.message, 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          showPopupModal('Gagal Menyimpan', 'Error server: ' + (err.message || String(err)), 'error');
+        })
+        .saveBatchReprint(_reprintPendingLabels);
+    }
   </script>
+
+
+  <!-- html5-qrcode CDN (shared, juga dipakai Scanner.html) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- JsBarcode CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+  <!-- Hidden div untuk html5-qrcode decoder (reprint) -->
+  <div id="reprint-qr-reader" style="display:none;"></div>
+
+  <!-- BATCH LABEL PRINT MODAL -->
+  <div id="reprint-label-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; width:min(450px,95vw); max-height:88vh; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,0.25); font-family:inherit; overflow:hidden;">
+      <!-- Modal header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 22px; border-bottom:1px solid #e2e8f0; flex-shrink:0;">
+        <div>
+          <h3 style="margin:0; font-size:1rem; color:#1e293b;"><i class="bi bi-printer-fill" style="color:#0d6efd;"></i> Preview Label</h3>
+          <span id="reprint-batch-count" style="font-size:12px; color:#64748b;"></span>
+        </div>
+        <button onclick="closeReprintLabel()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#94a3b8; line-height:1;">&times;</button>
+      </div>
+
+      <!-- Sizing Control Toolbar -->
+      <div style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:10px 20px; display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px;">
+            <i class="bi bi-aspect-ratio"></i> Ukuran Label:
+          </label>
+          <select id="reprint-size-preset" onchange="onReprintPresetChange()" style="padding:4px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; font-weight:600; font-family:inherit; background:#fff; cursor:pointer;">
+            <option value="standar">Standar (Default)</option>
+            <option value="kecil">Kecil / Compact (50x30mm)</option>
+            <option value="besar">Besar / Large (100x75mm)</option>
+            <option value="custom">Custom (Atur Sendiri)</option>
+          </select>
+        </div>
+
+        <!-- Custom controls (visible if custom selected) -->
+        <div id="reprint-custom-controls" style="display:none; gap:12px; align-items:center; flex-wrap:wrap; padding-top:6px; border-top:1px dashed #cbd5e1; margin-top:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:11.5px; color:#64748b; font-weight:600;">Tinggi Barcode:</span>
+            <input type="number" id="reprint-custom-height" min="20" max="150" value="55" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
+            <span style="font-size:11px; color:#94a3b8;">px</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:11.5px; color:#64748b; font-weight:600;">Ukuran Font:</span>
+            <input type="number" id="reprint-custom-font" min="8" max="24" value="13" oninput="renderReprintLabelsWithCurrentSize()" style="width:55px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; text-align:center; font-weight:700;">
+            <span style="font-size:11px; color:#94a3b8;">pt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable label pages -->
+      <div id="reprint-label-pages" style="overflow-y:auto; flex:1; padding:16px 22px; display:flex; flex-direction:column; gap:16px; background:#f1f5f9;"></div>
+      <!-- Footer actions -->
+      <div style="display:flex; gap:10px; justify-content:flex-end; padding:14px 22px; border-top:1px solid #e2e8f0; flex-shrink:0; background:#fff;">
+        <button onclick="closeReprintLabel()" style="padding:8px 18px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#475569; cursor:pointer; font-weight:500;">Batal</button>
+        <button onclick="printReprintLabel()" style="padding:8px 20px; border-radius:6px; border:none; background:linear-gradient(135deg,#0d6efd,#0b5ed7); color:#fff; font-weight:600; cursor:pointer;"><i class="bi bi-printer"></i> Cetak Semua Label</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT CSS — saat window.print() hanya label pages yang tercetak -->
+  <style>
+    @media print {
+      body > *:not(#reprint-label-overlay) { display: none !important; }
+      #reprint-label-overlay { display: block !important; position: static !important; background: none !important; box-shadow: none !important; padding: 0 !important; }
+      #reprint-label-overlay > div { box-shadow: none !important; max-height: none !important; border-radius: 0 !important; width: 100% !important; border: none !important; }
+      #reprint-label-overlay > div > div:first-child,
+      #reprint-label-overlay > div > div:nth-child(2),
+      #reprint-label-overlay > div > div:last-child { display: none !important; }
+      .print-label-page { border: 1px solid #cbd5e1 !important; margin-bottom: 0 !important; box-shadow: none !important; }
+      .print-label-page button { display: none !important; }
+    }
+  </style>
+
 </body>
 </html>

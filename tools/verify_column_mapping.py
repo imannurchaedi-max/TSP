@@ -91,6 +91,21 @@ def verify_columns():
         if c in mid_excel_headers:
             print(f"  [OK] '{c}' found in MID EXISTING")
 
+    # 4. Verification of RESERVASI
+    reservasi_excel_headers = set(excel_map.get("RESERVASI", {}).get("columns", []))
+    print("\n--- 4. RESERVASI ---")
+    print(f"Excel Headers ({len(reservasi_excel_headers)}): {sorted(list(reservasi_excel_headers))}")
+    reservasi_required = ["TANGGAL RESERVASI", "MATDOC RESERVASI", "SHIFT", "MID", "DESC", "UOM", "QTY", "STATUS"]
+    res_ok = True
+    for c in reservasi_required:
+        if c in reservasi_excel_headers:
+            print(f"  [OK] '{c}' found in RESERVASI tab")
+        else:
+            print(f"  [FAIL] '{c}' missing in RESERVASI tab")
+            res_ok = False
+    if res_ok:
+        print("  >>> [100% PERFECT MATCH] All RESERVASI columns present and ready for MID matching! <<<")
+
 
 if __name__ == "__main__":
     verify_columns()

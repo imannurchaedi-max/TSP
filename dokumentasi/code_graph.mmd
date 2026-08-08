@@ -1,84 +1,142 @@
 graph TD
-  AuthService_js -->|defines| AuthService_js_resolveRole_
-  AuthService_js -->|defines| AuthService_js_login_
-  AuthService_js -->|defines| AuthService_js_getKaryawanRows_
-  AuthService_js -->|defines| AuthService_js_clearLoginAttempts_
-  AuthService_js -->|defines| AuthService_js_readKaryawanRowsFromCache_
-  AuthService_js -->|defines| AuthService_js_roleFromJabatan_
-  AuthService_js -->|defines| AuthService_js_registerLoginFailure_
   AuthService_js -->|defines| AuthService_js_getLoginAttemptCount_
+  AuthService_js -->|defines| AuthService_js_registerLoginFailure_
   AuthService_js -->|defines| AuthService_js_findKaryawanByNik_
+  AuthService_js -->|defines| AuthService_js_roleFromJabatan_
+  AuthService_js -->|defines| AuthService_js_clearLoginAttempts_
   AuthService_js -->|defines| AuthService_js_writeKaryawanRowsToCache_
-  BarcodeService_js -->|defines| BarcodeService_js_getNextChildSequence_
-  BarcodeService_js -->|defines| BarcodeService_js_processScan_
-  BarcodeService_js -->|defines| BarcodeService_js_formatTimestamp_
+  AuthService_js -->|defines| AuthService_js_login_
+  AuthService_js -->|defines| AuthService_js_resolveRole_
+  AuthService_js -->|defines| AuthService_js_readKaryawanRowsFromCache_
+  AuthService_js -->|defines| AuthService_js_getKaryawanRows_
+  BarcodeService_js -->|defines| BarcodeService_js_handleTerimaWrm_
+  BarcodeService_js -->|defines| BarcodeService_js_getCellValue_
   BarcodeService_js -->|defines| BarcodeService_js_padSeq_
   BarcodeService_js -->|defines| BarcodeService_js_getShift_
   BarcodeService_js -->|defines| BarcodeService_js_classifyBarcode_
-  BarcodeService_js -->|defines| BarcodeService_js_handleKirimMesin_
-  BarcodeService_js -->|defines| BarcodeService_js_getShiftBounds_
-  BarcodeService_js -->|defines| BarcodeService_js_handleTerimaWrm_
+  BarcodeService_js -->|defines| BarcodeService_js_formatTimestamp_
+  BarcodeService_js -->|defines| BarcodeService_js_saveBatchReprint_
   BarcodeService_js -->|defines| BarcodeService_js_handleChildCheckpoint_
-  BarcodeService_js -->|defines| BarcodeService_js_getCellValue_
+  BarcodeService_js -->|defines| BarcodeService_js_processScan_
+  BarcodeService_js -->|defines| BarcodeService_js_getReprintData_
+  BarcodeService_js -->|defines| BarcodeService_js_getShiftBounds_
+  BarcodeService_js -->|defines| BarcodeService_js_handleKirimMesin_
+  BarcodeService_js -->|defines| BarcodeService_js_getNextChildSequence_
   BarcodeService_js -.->|calls| SheetService_js_findBarcodeRow_
   BarcodeService_js -.->|calls| SheetService_js_getSheet_
   BarcodeService_js -.->|calls| SheetService_js_getHeaderMap_
   BarcodeService_js -.->|calls| SheetService_js_ensureSheetsReady_
   BarcodeService_js -.->|calls| SheetService_js_lookupWrmIncoming_
+  BarcodeService_js -.->|calls| SheetService_js_validateMidInReservasi_
   BarcodeService_js -.->|calls| SheetService_js_appendBarcodeRow_
+  BarcodeService_js -.->|calls| StockService_js_incrementStockCell_
   BarcodeService_js -.->|calls| SheetService_js_appendReprintRow_
   BarcodeService_js -.->|calls| SheetService_js_updateBarcodeCell_
-  Code_js -->|defines| Code_js_getShiftReceipts
-  Code_js -->|defines| Code_js_include
-  Code_js -->|defines| Code_js_getRecentReceipts
-  Code_js -->|defines| Code_js_getValidatorData
-  Code_js -->|defines| Code_js_getTspStock
-  Code_js -->|defines| Code_js_doGet
-  Code_js -->|defines| Code_js_getMesinList
-  Code_js -->|defines| Code_js_submitScan
+  Code_js -->|defines| Code_js_getOperatorConsumption
+  Code_js -->|defines| Code_js_saveBatchReprint
+  Code_js -->|defines| Code_js_getTspMesinMonitoring
+  Code_js -->|defines| Code_js_getHistoricalTspStock
+  Code_js -->|defines| Code_js_saveMinMaxBatchApi
+  Code_js -->|defines| Code_js_getPortalHistory
   Code_js -->|defines| Code_js_login
   Code_js -->|defines| Code_js_getShiftDispatches
+  Code_js -->|defines| Code_js_getReprintData
+  Code_js -->|defines| Code_js_konfirmasiItemStokShift
+  Code_js -->|defines| Code_js_getValidatorData
   Code_js -->|defines| Code_js_getMesinStock
+  Code_js -->|defines| Code_js_tarikStokAwalShift
+  Code_js -->|defines| Code_js_saveMinMaxSettingApi
+  Code_js -->|defines| Code_js_getShiftReceipts
+  Code_js -->|defines| Code_js_submitScan
+  Code_js -->|defines| Code_js_include
   Code_js -->|defines| Code_js_getReservasiOptions
+  Code_js -->|defines| Code_js_doGet
+  Code_js -->|defines| Code_js_getTspStock
+  Code_js -->|defines| Code_js_konfirmasiNeracaStokShift
+  Code_js -->|defines| Code_js_getMinMaxSettingsApi
+  Code_js -->|defines| Code_js_getOperatorReceipts
+  Code_js -->|defines| Code_js_getHistoricalMesinStock
+  Code_js -->|defines| Code_js_getMesinList
   Code_js -.->|calls| AuthService_js_login_
   Code_js -.->|calls| AuthService_js_resolveRole_
   Code_js -.->|calls| BarcodeService_js_processScan_
   Code_js -.->|calls| SheetService_js_appendLog_
-  Code_js -.->|calls| SheetService_js_getReservasiListForShift_
+  Code_js -.->|calls| SheetService_js_getReservasiList_
   Code_js -.->|calls| StockService_js_computeTspStock_
+  Code_js -.->|calls| StockService_js_computeTspMesinMonitoring_
+  Code_js -.->|calls| StockService_js_computeMesinStock_
   Code_js -.->|calls| StockService_js_computeValidator_
   Code_js -.->|calls| StockService_js_computeShiftReceipts_
   Code_js -.->|calls| StockService_js_computeShiftDispatches_
+  Code_js -.->|calls| StockService_js_computeOperatorReceipts_
+  Code_js -.->|calls| StockService_js_computeOperatorConsumption_
+  Code_js -.->|calls| StockService_js_tarikStokAwalShift_
+  Code_js -.->|calls| StockService_js_konfirmasiStokShift_
+  Code_js -.->|calls| StockService_js_konfirmasiItemStokShift_
+  Code_js -.->|calls| StockService_js_computeHistoricalTspStock_
+  Code_js -.->|calls| StockService_js_computeHistoricalMesinStock_
+  Code_js -.->|calls| StockService_js_computePortalHistory_
+  Code_js -.->|calls| BarcodeService_js_getReprintData_
+  Code_js -.->|calls| BarcodeService_js_saveBatchReprint_
+  Code_js -.->|calls| StockService_js_getMinMaxSettings
+  Code_js -.->|calls| StockService_js_saveMinMaxSetting
+  Code_js -.->|calls| StockService_js_saveMinMaxBatch_
+  MaterialService_js -->|defines| MaterialService_js_getSupplierMap_
+  MaterialService_js -->|defines| MaterialService_js_upsertMaterialMaster_
   MaterialService_js -->|defines| MaterialService_js_getMaterialMap_
-  MaterialService_js -->|defines| MaterialService_js_lookupMaterial_
+  MaterialService_js -->|defines| MaterialService_js_getMaterialList_
   MaterialService_js -.->|calls| SheetService_js_getSheet_
   MaterialService_js -.->|calls| SheetService_js_getHeaderMap_
-  SheetService_js -->|defines| SheetService_js_getSheet_
+  MaterialService_js -.->|calls| StockService_js_normalizeMid_
+  SheetService_js -->|defines| SheetService_js_findRowByColumnValue_
+  SheetService_js -->|defines| SheetService_js_queryReprintSheet_
   SheetService_js -->|defines| SheetService_js_findBarcodeRow_
-  SheetService_js -->|defines| SheetService_js_updateBarcodeCell_
+  SheetService_js -->|defines| SheetService_js_getSheet_
+  SheetService_js -->|defines| SheetService_js_validateMidInReservasi_
+  SheetService_js -->|defines| SheetService_js_getReservasiList_
+  SheetService_js -->|defines| SheetService_js_lookupWrmIncoming_
   SheetService_js -->|defines| SheetService_js_appendReprintRow_
+  SheetService_js -->|defines| SheetService_js_getSpreadsheet_
   SheetService_js -->|defines| SheetService_js_getHeaderMap_
   SheetService_js -->|defines| SheetService_js_ensureSheetsReady_
-  SheetService_js -->|defines| SheetService_js_getReservasiListForShift_
+  SheetService_js -->|defines| SheetService_js_updateBarcodeCell_
   SheetService_js -->|defines| SheetService_js_appendLog_
+  SheetService_js -->|defines| SheetService_js_parseSapDate_
   SheetService_js -->|defines| SheetService_js_appendBarcodeRow_
-  SheetService_js -->|defines| SheetService_js_getSpreadsheet_
-  SheetService_js -->|defines| SheetService_js_findRowByColumnValue_
-  SheetService_js -->|defines| SheetService_js_lookupWrmIncoming_
-  SheetService_js -.->|calls| BarcodeService_js_getShift_
-  StockService_js -->|defines| StockService_js_computeMesinStockBreakdown_
-  StockService_js -->|defines| StockService_js_computeTspStock_
-  StockService_js -->|defines| StockService_js_computeRecentReceipts_
+  SheetService_js -->|defines| SheetService_js_parseMonth_
+  StockService_js -->|defines| StockService_js_normalizeMid_
+  StockService_js -->|defines| StockService_js_getMinMaxSettings
+  StockService_js -->|defines| StockService_js_saveMinMaxSetting
+  StockService_js -->|defines| StockService_js_konfirmasiStokShift_
+  StockService_js -->|defines| StockService_js_readAllBarcodeRows_
+  StockService_js -->|defines| StockService_js_executeShiftRollover_
+  StockService_js -->|defines| StockService_js_computeTspMesinMonitoring_
+  StockService_js -->|defines| StockService_js_computeOperatorReceipts_
+  StockService_js -->|defines| StockService_js_computeMesinStock_
+  StockService_js -->|defines| StockService_js_getMinMaxMap_
+  StockService_js -->|defines| StockService_js_incrementStockCell_
+  StockService_js -->|defines| StockService_js_tarikStokAwalShift_
+  StockService_js -->|defines| StockService_js_computeShiftDispatches_
+  StockService_js -->|defines| StockService_js_formatDateLabel_
+  StockService_js -->|defines| StockService_js_konfirmasiItemStokShift_
+  StockService_js -->|defines| StockService_js_parseMb51Timestamp_
   StockService_js -->|defines| StockService_js_toDateOrNull_
   StockService_js -->|defines| StockService_js_computeShiftReceipts_
-  StockService_js -->|defines| StockService_js_formatDateLabel_
-  StockService_js -->|defines| StockService_js_computeShiftDispatches_
+  StockService_js -->|defines| StockService_js_computePortalHistory_
+  StockService_js -->|defines| StockService_js_getMinMaxSheet_
+  StockService_js -->|defines| StockService_js_getNormalizedDateStr_
+  StockService_js -->|defines| StockService_js_getRealLastRowAndTrim_
+  StockService_js -->|defines| StockService_js_computeOperatorConsumption_
+  StockService_js -->|defines| StockService_js_saveMinMaxBatch_
+  StockService_js -->|defines| StockService_js_getNormalizedShiftNum_
+  StockService_js -->|defines| StockService_js_computeHistoricalTspStock_
+  StockService_js -->|defines| StockService_js_computeHistoricalMesinStock_
   StockService_js -->|defines| StockService_js_computeValidator_
-  StockService_js -->|defines| StockService_js_parseMb51Timestamp_
-  StockService_js -->|defines| StockService_js_readAllBarcodeRows_
-  StockService_js -->|defines| StockService_js_bucketAdd_
-  StockService_js -->|defines| StockService_js_seedAccFromMaterialMap_
+  StockService_js -->|defines| StockService_js_computeTspStock_
   StockService_js -.->|calls| SheetService_js_getSheet_
   StockService_js -.->|calls| SheetService_js_getHeaderMap_
-  StockService_js -.->|calls| MaterialService_js_getMaterialMap_
   StockService_js -.->|calls| BarcodeService_js_getShiftBounds_
+  StockService_js -.->|calls| MaterialService_js_getSupplierMap_
+  StockService_js -.->|calls| MaterialService_js_getMaterialMap_
+  StockService_js -.->|calls| MaterialService_js_getMaterialList_
+  StockService_js -.->|calls| MaterialService_js_upsertMaterialMaster_

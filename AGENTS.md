@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relationships, 18 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **TSP** (326 symbols, 726 relationships, 26 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -25,10 +25,10 @@ This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relati
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/0. TSP MODUL/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/0. TSP MODUL/clusters` | All functional areas |
-| `gitnexus://repo/0. TSP MODUL/processes` | All execution flows |
-| `gitnexus://repo/0. TSP MODUL/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/TSP/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/TSP/clusters` | All functional areas |
+| `gitnexus://repo/TSP/processes` | All execution flows |
+| `gitnexus://repo/TSP/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
@@ -42,3 +42,7 @@ This project is indexed by GitNexus as **0. TSP MODUL** (253 symbols, 463 relati
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+# Mandatory Deployment Rules (SINGLE-COMMAND COMPLETE EXECUTION)
+- **NEVER use only `clasp push`** when deploying changes for the user. `clasp push` only updates `@HEAD` (development version `/dev`) and leaves the user's production URL (`/exec`) completely unchanged, wasting tokens and forcing repeated requests.
+- **ALWAYS run `npm run deploy`** to finalize code tasks in ONE single pass. This automated script executes documentation builders (`docs:build`), force pushes code (`clasp push`), and immediately promotes the production Web App (`/exec`) deployment to the newest version simultaneously.

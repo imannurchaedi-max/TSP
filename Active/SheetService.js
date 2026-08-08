@@ -24,7 +24,7 @@ function getSheet_(name) {
 }
 
 /**
- * Pastikan sheet BARCODE MATERIAL PRODUKSI, REPRINT BARCODE, RESERVASI, dan LOG siap pakai.
+ * Pastikan sheet BARCODE MATERIAL PRODUKSI, REPRINT BARCODE, dan LOG siap pakai.
  */
 function ensureSheetsReady_() {
   var barcodeSheet = getSheet_(SHEET_NAMES.BARCODE);
@@ -84,7 +84,8 @@ function getHeaderMap_(sheet) {
  */
 function findRowByColumnValue_(sheet, columnName, value) {
   var headerMap = getHeaderMap_(sheet);
-  var col = headerMap[columnName] || headerMap[String(columnName).toLowerCase()];
+  var cleanName = String(columnName).trim();
+  var col = headerMap[cleanName] || headerMap[cleanName.toLowerCase()];
   if (!col) throw new Error('Kolom "' + columnName + '" tidak ditemukan di sheet "' + sheet.getName() + '".');
 
   var lastRow = sheet.getLastRow();
@@ -127,7 +128,7 @@ function findBarcodeRow_(barcodeText) {
 }
 
 /**
- * Lookup data Pallet dari sheet BARCODE INCOMING WRM berdasarkan Kode Unik.
+ * Lookup data Pallet dari sheet BARCODE OUTBOUND WRM berdasarkan Kode Unik.
  */
 function lookupWrmIncoming_(kodeUnik) {
   var sheet = getSheet_(SHEET_NAMES.WRM_INCOMING);
@@ -135,41 +136,94 @@ function lookupWrmIncoming_(kodeUnik) {
 }
 
 /**
- * Helper parsing tanggal dari tab RESERVASI (Format SAP MM/DD/YYYY, M/D/YYYY, atau Date object).
+ * Helper parsing tanggal dari tab BARCODE OUTBOUND WRM (Format Excel serial, Date object, DD-MMM-YYYY, YYYY-MM-DD, atau DD/MM/YYYY).
  * Mengembalikan object: { key: 'YYYY-MM-DD', display: 'DD/MM/YYYY', rawDate: Date }
  */
 function parseSapDate_(val, tz) {
   if (!tz) tz = Session.getScriptTimeZone();
-  if (!val) return null;
+  if (val === null || val === undefined || val === '') return null;
 
   var y = 0, m = 0, d = 0, rawDate = null;
 
-  if (val instanceof Date) {
+  // Cek jika val adalah angka serial tanggal dari Google Sheets/Excel (misalnya 46204 untuk 1 Juli 2026)
+  if (typeof val === 'number' || (typeof val === 'string' && /^\d{5}$/.test(String(val).trim()))) {
+    var numVal = Number(val);
+    if (numVal > 30000 && numVal < 80000) {
+      // Konversi serial Excel (base 1899-12-30) ke JS Date di timezone UTC
+      rawDate = new Date(Math.round((numVal - 25569) * 86400 * 1000));
+      y = rawDate.getUTCFullYear();
+      m = rawDate.getUTCMonth() + 1;
+      d = rawDate.getUTCDate();
+    }
+  } else if (val instanceof Date) {
     rawDate = val;
-    y = val.getFullYear();
-    m = val.getMonth() + 1;
-    d = val.getDate();
+    // Gunakan Utilities.formatDate untuk menghindari pergeseran tanggal akibat zona waktu
+    var isoStr = Utilities.formatDate(val, tz, 'yyyy-MM-dd');
+    var dateParts = isoStr.split('-');
+    y = parseInt(dateParts[0], 10);
+    m = parseInt(dateParts[1], 10);
+    d = parseInt(dateParts[2], 10);
   } else {
     var sVal = String(val).trim();
     if (!sVal) return null;
 
-    // Cek format SAP MM/DD/YYYY atau M/D/YYYY (misal: "7/1/2026" -> Month 7, Day 1, Year 2026)
-    var parts = sVal.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-    if (parts) {
-      m = parseInt(parts[1], 10);
-      d = parseInt(parts[2], 10);
-      y = parseInt(parts[3], 10);
+    function parseMonth_(mStr) {
+      var num = parseInt(mStr, 10);
+      if (!isNaN(num) && String(num) === mStr && num >= 1 && num <= 12) return num;
+      var str = String(mStr).trim().toLowerCase().substring(0, 3);
+      var monthMap = {
+        'jan': 1, 'feb': 2, 'peb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'mei': 5,
+        'jun': 6, 'jul': 7, 'aug': 8, 'agu': 8, 'sep': 9, 'oct': 10, 'okt': 10, 'nov': 11, 'nop': 11, 'dec': 12, 'des': 12
+      };
+      return monthMap[str] || 0;
+    }
+
+    // Cek format YYYY-MM-DD atau YYYY-MMM-DD (misal: "2026-07-31" atau "2026-Jul-31")
+    var isoParts = sVal.match(/^(\d{4})[\s\/-]([a-zA-Z]+|\d{1,2})[\s\/-](\d{1,2})/);
+    if (isoParts) {
+      y = parseInt(isoParts[1], 10);
+      m = parseMonth_(isoParts[2]);
+      d = parseInt(isoParts[3], 10);
       rawDate = new Date(y, m - 1, d);
     } else {
-      // Cek format YYYY-MM-DD
-      var isoParts = sVal.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
-      if (isoParts) {
-        y = parseInt(isoParts[1], 10);
-        m = parseInt(isoParts[2], 10);
-        d = parseInt(isoParts[3], 10);
+      // Cek format DD-MMM-YYYY / DD/MM/YYYY / MM/DD/YYYY (misal: "31-Jul-2026", "01/07/2026", "7/1/2026")
+      var parts = sVal.match(/^([a-zA-Z]+|\d{1,2})[\s\/-]([a-zA-Z]+|\d{1,2})[\s\/,-]+(\d{4})/);
+      if (parts) {
+        var p1Str = parts[1];
+        var p2Str = parts[2];
+        y = parseInt(parts[3], 10);
+
+        if (/[a-zA-Z]/.test(p2Str)) {
+          d = parseInt(p1Str, 10);
+          m = parseMonth_(p2Str);
+        } else if (/[a-zA-Z]/.test(p1Str)) {
+          m = parseMonth_(p1Str);
+          d = parseInt(p2Str, 10);
+        } else {
+          var p1 = parseInt(p1Str, 10);
+          var p2 = parseInt(p2Str, 10);
+          // Jika p1 > 12 -> DD/MM/YYYY
+          // Jika p2 > 12 -> MM/DD/YYYY
+          // Secara default untuk Indonesia -> DD/MM/YYYY
+          if (p1 > 12 || p2 <= 12) {
+            d = p1;
+            m = p2;
+          } else {
+            m = p1;
+            d = p2;
+          }
+        }
         rawDate = new Date(y, m - 1, d);
       } else {
-        return { key: sVal, display: sVal, rawDate: null, y: 0, m: 0, d: 0 };
+        var fallbackDate = new Date(sVal);
+        if (!isNaN(fallbackDate.getTime())) {
+          y = fallbackDate.getFullYear();
+          m = fallbackDate.getMonth() + 1;
+          d = fallbackDate.getDate();
+          rawDate = fallbackDate;
+        } else {
+          return { key: sVal, display: sVal, rawDate: null, y: 0, m: 0, d: 0 };
+        }
       }
     }
   }
@@ -182,8 +236,8 @@ function parseSapDate_(val, tz) {
 }
 
 /**
- * Baca semua daftar Reservasi dari sheet RESERVASI.
- * Menguraikan tanggal SAP (MM/DD/YYYY) dan mengembalikan daftar reservasi lengkap.
+ * Baca semua daftar Reservasi dari sheet BARCODE OUTBOUND WRM.
+ * Menguraikan tanggal outbound dan mengembalikan daftar reservasi lengkap.
  */
 function getReservasiList_() {
   try {
@@ -194,14 +248,14 @@ function getReservasiList_() {
 
     var tz = Session.getScriptTimeZone();
     var data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
-    var colTanggal = headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'];
-    var colNoRes = headerMap['NO RESERVASI'] || headerMap['No. Reservasi'] || headerMap['No Reservasi'] || headerMap['no reservasi'];
+    // Kolom BARCODE OUTBOUND WRM (prioritas) + fallback kolom RESERVASI lama
+    var colTanggal = headerMap['Tanggal Outbound'] || headerMap['tanggal outbound'] || headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'];
+    var colNoRes = headerMap['MATDOC RESERVASI'] || headerMap['matdoc reservasi'] || headerMap['NO RESERVASI'] || headerMap['No Reservasi'] || headerMap['no reservasi'];
     var colMid = headerMap['MID'] || headerMap['Mid'] || headerMap['mid'];
-    var colDesc = headerMap['MATERIAL DESCRIPTION'] || headerMap['Material Description'] || headerMap['Material description'];
-    var colMvt = headerMap['MOVEMENT TYPE'] || headerMap['Movement Type'] || headerMap['movement type'] || headerMap['MOVEMENT'] || headerMap['Movement'] || headerMap['mvt'];
-    var colQty = headerMap['JUMLAH'] || headerMap['Jumlah'] || headerMap['jumlah'] || headerMap['Qty'];
-    var colUnit = headerMap['UNIT'] || headerMap['Unit'] || headerMap['unit'];
-    var colShift = headerMap['SHIFT'] || headerMap['Shift'] || headerMap['shift'];
+    var colDesc = headerMap['DESC'] || headerMap['desc'] || headerMap['MATERIAL DESCRIPTION'] || headerMap['Material Description'];
+    var colQty = headerMap['QTY'] || headerMap['qty'] || headerMap['JUMLAH'] || headerMap['Jumlah'] || headerMap['jumlah'];
+    var colUnit = headerMap['UOM'] || headerMap['uom'] || headerMap['UNIT'] || headerMap['Unit'] || headerMap['unit'];
+    var colShift = headerMap['Shift'] || headerMap['shift'] || headerMap['SHIFT'];
 
     var list = [];
     var seenIndexMap = {};
@@ -218,10 +272,16 @@ function getReservasiList_() {
 
       var midStr = colMid ? String(row[colMid - 1] || '').trim() : '';
       var descStr = colDesc ? String(row[colDesc - 1] || '').trim() : '';
-      var mvtStr = colMvt ? String(row[colMvt - 1] || '').trim() : '';
       var qtyNum = colQty ? (Number(row[colQty - 1]) || 0) : 0;
       var unitStr = colUnit ? String(row[colUnit - 1] || '').trim() : '';
       var rawShift = colShift ? String(row[colShift - 1] || '').trim() : '';
+
+      var itemData = {
+        mid: midStr,
+        desc: descStr,
+        qty: qtyNum,
+        uom: unitStr
+      };
 
       var itemKey = noRes;
       if (seenIndexMap[itemKey] === undefined) {
@@ -233,12 +293,14 @@ function getReservasiList_() {
           year: parsedDate ? parsedDate.y : 0,
           month: parsedDate ? parsedDate.m : 0,
           day: parsedDate ? parsedDate.d : 0,
-          movementType: mvtStr,
           shift: rawShift,
-          itemCount: 1
+          itemCount: 1,
+          items: [itemData]
         });
       } else {
-        list[seenIndexMap[itemKey]].itemCount += 1;
+        var existingItem = list[seenIndexMap[itemKey]];
+        existingItem.itemCount += 1;
+        existingItem.items.push(itemData);
       }
     });
 
@@ -249,11 +311,48 @@ function getReservasiList_() {
 }
 
 /**
- * Backward compatibility.
+ * Validasi bahwa MID material dari hasil scan terdaftar pada Nomor Reservasi yang diinput/dipilih.
  */
-function getReservasiListForShift_(now) {
-  return getReservasiList_();
+function validateMidInReservasi_(noReservasi, targetMid) {
+  if (!noReservasi) {
+    throw new Error('Nomor Reservasi harus diisi untuk penerimaan material ini.');
+  }
+
+  var reservasiList = getReservasiList_();
+  var foundReservasi = null;
+  var cleanNoRes = String(noReservasi).trim();
+  
+  for (var i = 0; i < reservasiList.length; i++) {
+    if (String(reservasiList[i].noReservasi).trim() === cleanNoRes) {
+      foundReservasi = reservasiList[i];
+      break;
+    }
+  }
+
+  if (!foundReservasi) {
+    throw new Error('Nomor Reservasi "' + cleanNoRes + '" tidak terdaftar di data BARCODE OUTBOUND WRM.');
+  }
+
+  var allowedMids = [];
+  var matchFound = false;
+  for (var j = 0; j < foundReservasi.items.length; j++) {
+    var itemMid = String(foundReservasi.items[j].mid).trim();
+    if (itemMid) {
+      allowedMids.push(itemMid + ' (' + (foundReservasi.items[j].desc || 'No Desc') + ')');
+      if (itemMid === String(targetMid).trim()) {
+        matchFound = true;
+        break;
+      }
+    }
+  }
+
+  if (!matchFound) {
+    throw new Error('MID Tidak Cocok! MID "' + targetMid + '" dari barcode yang discan tidak terdaftar pada Nomor Reservasi "' + cleanNoRes + '". MID yang terdaftar untuk reservasi ini: ' + allowedMids.join(', '));
+  }
+
+  return true;
 }
+
 
 /**
  * Append 1 baris baru ke sheet BARCODE MATERIAL PRODUKSI.
@@ -329,4 +428,58 @@ function appendLog_(logData) {
   });
 
   sheet.appendRow(rowValues);
+}
+
+/**
+ * Cari baris di tab REPRINT BARCODE berdasarkan Kode Induk (BARCODE) atau Kode Anak (BARCODE REPRINT).
+ * Query bisa berupa substring — pencarian case-insensitive.
+ * Return: array of { tanggal, shift, barcodeInduk, mid, deskripsi, barcodeAnak, jumlah }
+ */
+function queryReprintSheet_(query) {
+  var sheet = getSheet_(SHEET_NAMES.REPRINT);
+  var lastRow = sheet.getLastRow();
+  var result = [];
+  if (lastRow < 2 || !query) return result;
+
+  var hm = getHeaderMap_(sheet);
+  var cTgl    = (hm['tanggal'] || 1) - 1;
+  var cShift  = (hm['shift'] || 2) - 1;
+  var cInduk  = (hm['barcode'] || 3) - 1;
+  var cMid    = (hm['mid'] || 4) - 1;
+  var cDesc   = (hm['material description'] || 5) - 1;
+  var cAnak   = (hm['barcode reprint'] || 6) - 1;
+  var cJml    = (hm['jumlah'] || 7) - 1;
+
+  var maxCol  = sheet.getLastColumn();
+  var data    = sheet.getRange(2, 1, lastRow - 1, maxCol).getValues();
+  var q       = String(query).trim().toLowerCase();
+
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    var induk = String(row[cInduk] || '').trim();
+    var anak  = String(row[cAnak] || '').trim();
+    if (!anak) continue;
+    if (induk.toLowerCase().indexOf(q) === -1 && anak.toLowerCase().indexOf(q) === -1) continue;
+
+    var tgl = row[cTgl];
+    if (tgl instanceof Date) {
+      tgl = Utilities.formatDate(tgl, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    } else {
+      tgl = String(tgl || '').trim();
+    }
+
+    result.push({
+      tanggal:      tgl,
+      shift:        String(row[cShift] || '').trim(),
+      barcodeInduk: induk,
+      mid:          String(row[cMid]  || '').trim(),
+      deskripsi:    String(row[cDesc] || '').trim(),
+      barcodeAnak:  anak,
+      jumlah:       Number(row[cJml]) || 0
+    });
+  }
+
+  // Urutkan terbaru dulu (descending by row position)
+  result.reverse();
+  return result;
 }
