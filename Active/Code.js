@@ -303,7 +303,16 @@ function getMaterialListApi() {
 /** Endpoint API Simpan (Tambah/Edit) Material -- sesi 1 (TSP/SPV) */
 function saveMaterialApi(nik, mid, deskripsi, uom, supplier) {
   try {
-    return saveMaterialMaster_(nik, mid, deskripsi, uom, supplier);
+    var result = saveMaterialMaster_(nik, mid, deskripsi, uom, supplier);
+    if (result.success) {
+      var actor = { nik: nik || '-', nama: 'Admin TSP' };
+      try { actor = resolveRole_(nik); } catch (e) {}
+      var inject = ensureMidInActiveShift_(mid, actor.nik, actor.nama);
+      if (inject.injected) {
+        result.message += ' Material langsung aktif di shift berjalan sekarang (stok awal 0).';
+      }
+    }
+    return result;
   } catch (err) {
     return { success: false, message: 'Gagal menyimpan material: ' + err.message };
   }
@@ -312,7 +321,19 @@ function saveMaterialApi(nik, mid, deskripsi, uom, supplier) {
 /** Endpoint API Simpan Batch CSV Material List -- sesi 1 (TSP/SPV) */
 function saveMaterialBatchApi(nik, items) {
   try {
-    return saveMaterialBatch_(nik, items);
+    var result = saveMaterialBatch_(nik, items);
+    if (result.success && items && items.length) {
+      var actor = { nik: nik || '-', nama: 'Admin TSP' };
+      try { actor = resolveRole_(nik); } catch (e) {}
+      var injectedCount = 0;
+      items.forEach(function (item) {
+        if (item && item.mid && ensureMidInActiveShift_(item.mid, actor.nik, actor.nama).injected) injectedCount++;
+      });
+      if (injectedCount > 0) {
+        result.message += ' ' + injectedCount + ' material baru langsung aktif di shift berjalan sekarang.';
+      }
+    }
+    return result;
   } catch (err) {
     return { success: false, message: 'Gagal mengimpor batch material: ' + err.message };
   }

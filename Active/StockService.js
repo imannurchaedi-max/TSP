@@ -962,6 +962,111 @@ function executeShiftRollover_(tspSheet, mesinSheet, activeDateStr, shiftName, a
 }
 
 /**
+ * Pastikan 1 MID langsung punya baris di blok SHIFT AKTIF sekarang (STOCK TSP + STOCK MESIN,
+ * breakdown 6 area), tanpa perlu menunggu "Tarik Stok Awal Shift" shift berikutnya. Dipanggil
+ * otomatis tiap material baru disimpan lewat sesi "Material List" (lihat saveMaterialApi/
+ * saveMaterialBatchApi di Code.js).
+ *
+ * Idempotent & aman:
+ * - No-op kalau MID sudah punya baris di shift aktif (mis. sudah pernah di-tarik normal).
+ * - No-op kalau shift aktif BELUM PERNAH ditarik sama sekali (STOCK TSP belum punya blok untuk
+ *   shift ini) -- sengaja TIDAK membuat blok baru sendirian di sini, supaya tidak membuat
+ *   "Tarik Stok Awal Shift" berikutnya mengira shift ini sudah ditarik (yang akan membuatnya
+ *   skip generate baris untuk material LAIN). Dalam kasus ini material baru otomatis ikut
+ *   ke-generate begitu Tarik Stok Awal Shift beneran dijalankan -- perilaku normal, tidak perlu
+ *   fungsi ini turun tangan.
+ *
+ * Stok awal MID baru = 0 (material baru, belum pernah ada histori shift sebelumnya).
+ */
+function ensureMidInActiveShift_(mid, actorNik, actorNama) {
+  var targetMid = normalizeMid_(mid);
+  if (!targetMid) return { injected: false, reason: 'invalid_mid' };
+
+  var bounds = getShiftBounds_(new Date());
+  var activeDateStr = getNormalizedDateStr_(bounds.start);
+  var activeShiftNum = getNormalizedShiftNum_(bounds.shift);
+
+  var tspSheet = getSheet_(SHEET_NAMES.STOCK_TSP);
+  var hmTsp = getHeaderMap_(tspSheet);
+  var tspLastRow = getRealLastRowAndTrim_(tspSheet);
+
+  var cDate = (hmTsp['tanggal'] || 2) - 1;
+  var cShift = (hmTsp['shift'] || 3) - 1;
+  var cMid = (hmTsp['mid'] || 6) - 1;
+
+  var shiftHasAnyRow = false;
+  var midAlreadyInShift = false;
+
+  if (tspLastRow >= 2) {
+    var maxColCheck = Math.max(cDate, cShift, cMid) + 1;
+    var checkData = tspSheet.getRange(2, 1, tspLastRow - 1, maxColCheck).getValues();
+    for (var i = 0; i < checkData.length; i++) {
+      var dStr = getNormalizedDateStr_(checkData[i][cDate]);
+      var sNum = getNormalizedShiftNum_(checkData[i][cShift]);
+      if (dStr === activeDateStr && sNum === activeShiftNum) {
+        shiftHasAnyRow = true;
+        if (normalizeMid_(checkData[i][cMid]) === targetMid) { midAlreadyInShift = true; break; }
+      }
+    }
+  }
+
+  if (!shiftHasAnyRow) return { injected: false, reason: 'shift_not_tarik' };
+  if (midAlreadyInShift) return { injected: false, reason: 'already_present' };
+
+  var materialMap = getMaterialMap_();
+  var matInfo = materialMap[targetMid] || { deskripsi: '', uom: 'KG' };
+
+  // Baris baru STOCK TSP
+  var maxColTsp = Math.max(tspSheet.getLastColumn(), 30);
+  var newRowTsp = new Array(maxColTsp);
+  for (var p = 0; p < maxColTsp; p++) newRowTsp[p] = (p >= 9 && p <= 23) ? 0 : '';
+  var setTsp = function (colName, val) { var c = hmTsp[colName]; if (c !== undefined) newRowTsp[c - 1] = val; };
+  setTsp('no.', tspLastRow); setTsp('no', tspLastRow);
+  setTsp('tanggal', activeDateStr);
+  setTsp('shift', activeShiftNum);
+  setTsp('nik tsp', actorNik || '-');
+  setTsp('nama tsp', actorNama || 'Admin TSP');
+  setTsp('mid', targetMid);
+  setTsp('deskripsi', matInfo.deskripsi || '');
+  setTsp('uom', matInfo.uom || 'KG');
+  setTsp('stock awal', 0); setTsp('stok awal', 0);
+  setTsp('stock akhir (rumus)', 0);
+  setTsp('stock akhir (hitung aktual)', '');
+  setTsp('stock akhir', '');
+  setTsp('status', 'BELUM DIKONFIRMASI (DRAFT)');
+  setTsp('check', 'BELUM DIKONFIRMASI (DRAFT)');
+  tspSheet.getRange(tspLastRow + 1, 1, 1, maxColTsp).setValues([newRowTsp]);
+
+  // Baris baru STOCK MESIN (breakdown 6 area, semua mulai 0)
+  var mesinSheet = getSheet_(SHEET_NAMES.STOCK_MESIN);
+  var hmMesin = getHeaderMap_(mesinSheet);
+  var mesinLastRow = getRealLastRowAndTrim_(mesinSheet);
+  var maxColMesin = Math.max(mesinSheet.getLastColumn(), 40);
+  var newRowMesin = new Array(maxColMesin);
+  for (var q = 0; q < maxColMesin; q++) newRowMesin[q] = '';
+  var setMesin = function (colName, val) { var c = hmMesin[colName]; if (c !== undefined) newRowMesin[c - 1] = val; };
+  setMesin('no.', mesinLastRow); setMesin('no', mesinLastRow);
+  setMesin('tanggal', activeDateStr);
+  setMesin('shift', activeShiftNum);
+  setMesin('nik operator', actorNik || '-');
+  setMesin('nama operator', actorNama || 'Admin TSP');
+  setMesin('mid', targetMid);
+  setMesin('deskripsi', matInfo.deskripsi || '');
+  setMesin('uom', matInfo.uom || 'KG');
+  for (var m = 0; m < MESIN_LIST.length; m++) {
+    var mesinName = MESIN_LIST[m].toLowerCase();
+    setMesin('stock awal ' + mesinName, 0);
+    setMesin('terima ' + mesinName, 0);
+    setMesin('consume ' + mesinName, 0);
+    setMesin('return ' + mesinName, 0);
+    setMesin('stock akhir ' + mesinName, 0);
+  }
+  mesinSheet.getRange(mesinLastRow + 1, 1, 1, maxColMesin).setValues([newRowMesin]);
+
+  return { injected: true };
+}
+
+/**
  * Fungsi incrementStockCell_ untuk melakukan UPDATE in-place pada satu sel transaksi,
  * sesuai dengan Aturan No. 4 (menambahkan mutasi secara real-time ke sel terkait
  * tanpa melakukan kalkulasi ulang dari awal atau menghapus data).
