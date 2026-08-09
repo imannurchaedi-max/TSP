@@ -108,6 +108,7 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `saveMinMaxBatch_(nik, items)` | NIK aktor, array `{mid,lokasi,minStock,maxStock}` | `getMinMaxSheet_`, `getMaterialMap_`, `normalizeMid_` | `saveMinMaxBatchApi` (Code.js) — import CSV; baris dengan MID belum terdaftar di Material Master di-skip & dilaporkan di pesan hasil |
 | `deleteMinMaxSetting_(nik, mid, lokasi)` | NIK aktor, MID, lokasi | `getMinMaxSheet_`, `normalizeMid_` | `deleteMinMaxSettingApi` (Code.js) — hapus 1 baris threshold MID+Lokasi; **sejak v95 tidak lagi** menyentuh Material Master (dulu sempat cascade-delete di v93) |
 | `getMinMaxSettings()` | — | `getMinMaxSheet_`, `getMaterialMap_`, `getSupplierMap_` | `getMinMaxSettingsApi` (Code.js) — tiap baris sekarang termasuk field `uom` |
+| `ensureMidInActiveShift_(mid, actorNik, actorNama)` | MID, NIK aktor, nama aktor | `getShiftBounds_`, `getSheet_`, `getHeaderMap_`, `getRealLastRowAndTrim_`, `getMaterialMap_`, `normalizeMid_` | `saveMaterialApi`, `saveMaterialBatchApi` (Code.js) — **v98**: sisip 1 baris baru untuk MID ke blok shift AKTIF sekarang (STOCK TSP + STOCK MESIN 6 area, stok awal 0), supaya material baru langsung kepakai tanpa nunggu shift berikutnya. Idempotent; no-op kalau MID sudah ada di shift aktif ATAU shift aktif belum pernah ditarik sama sekali (return `{injected: bool, reason?}`) |
 
 ---
 
@@ -129,6 +130,6 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `saveMinMaxBatchApi(nik, items)` | NIK, array items | `saveMinMaxBatch_` (StockService.js) | `Index.html` — Upload CSV sesi Min/Max Stock |
 | `deleteMinMaxSettingApi(nik, mid, lokasi)` | NIK, MID, lokasi | `deleteMinMaxSetting_` (StockService.js) | `Index.html` — tombol Hapus sesi Min/Max Stock |
 | `getMaterialListApi()` | — | `migrateMaterialMasterIfEmpty_`, `getMaterialList_` (MaterialService.js) | `Index.html` — sesi "Material List" di tab Material Master |
-| `saveMaterialApi(nik, mid, deskripsi, uom, supplier)` | NIK, MID, deskripsi, UOM, supplier | `saveMaterialMaster_` (MaterialService.js) | `Index.html` — modal `modal-material-edit` |
-| `saveMaterialBatchApi(nik, items)` | NIK, array items | `saveMaterialBatch_` (MaterialService.js) | `Index.html` — Upload CSV sesi Material List |
+| `saveMaterialApi(nik, mid, deskripsi, uom, supplier)` | NIK, MID, deskripsi, UOM, supplier | `saveMaterialMaster_` (MaterialService.js), `resolveRole_` (AuthService.js), `ensureMidInActiveShift_` (StockService.js) | `Index.html` — modal `modal-material-edit`; sejak v98 juga menyisipkan MID ke shift aktif kalau berhasil disimpan |
+| `saveMaterialBatchApi(nik, items)` | NIK, array items | `saveMaterialBatch_` (MaterialService.js), `resolveRole_` (AuthService.js), `ensureMidInActiveShift_` (StockService.js) | `Index.html` — Upload CSV sesi Material List; sejak v98 tiap MID baru di batch juga disisip ke shift aktif |
 | `deleteMaterialApi(nik, mid)` | NIK, MID | `deleteMaterial_` (MaterialService.js) | `Index.html` — tombol Hapus sesi Material List |
