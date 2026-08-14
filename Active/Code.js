@@ -254,6 +254,18 @@ function saveBatchReprint(labels) {
   }
 }
 
+/**
+ * REPRINT MODULE: Menghapus barcode anak yang salah cetak.
+ */
+function deleteReprintBarcode(barcodeAnak) {
+  try {
+    var res = deleteReprintBarcode_(barcodeAnak);
+    return res;
+  } catch (err) {
+    return { success: false, message: 'Gagal menghapus barcode reprint: ' + err.message };
+  }
+}
+
 /** Endpoint API Pengaturan Min/Max Stock -- sesi 2 di menu Material Master (TSP/SPV) */
 function getMinMaxSettingsApi() {
   try {
@@ -301,9 +313,9 @@ function getMaterialListApi() {
 }
 
 /** Endpoint API Simpan (Tambah/Edit) Material -- sesi 1 (TSP/SPV) */
-function saveMaterialApi(nik, mid, deskripsi, uom, supplier) {
+function saveMaterialApi(nik, mid, deskripsi, uom, supplier, status) {
   try {
-    var result = saveMaterialMaster_(nik, mid, deskripsi, uom, supplier);
+    var result = saveMaterialMaster_(nik, mid, deskripsi, uom, supplier, status);
     if (result.success) {
       var actor = { nik: nik || '-', nama: 'Admin TSP' };
       try { actor = resolveRole_(nik); } catch (e) {}

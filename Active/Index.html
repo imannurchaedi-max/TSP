@@ -120,6 +120,21 @@
                 <div id="shift-dispatches-wrap"></div>
               </div>
             </div>
+            <div class="stock-toolbar" style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+              <i class="bi bi-search" style="color: var(--text-sub);"></i>
+              <input type="text" id="stock-search-input" placeholder="Cari MID, Supplier, atau Material..." class="form-control" style="flex: 1; border: none; background: transparent; outline: none; font-size: 14px;" oninput="renderStockTableWithFilter()">
+              <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 5px;"></div>
+              <i class="bi bi-funnel" style="color: var(--text-sub);"></i>
+              <select id="stock-sort-select" class="form-select" style="width: 220px; border: none; background: transparent; outline: none; font-size: 14px; cursor: pointer;" onchange="renderStockTableWithFilter()">
+                <option value="">-- Sortir Berdasarkan --</option>
+                <option value="mid_asc">MID (A-Z)</option>
+                <option value="mid_desc">MID (Z-A)</option>
+                <option value="supplier_asc">Supplier (A-Z)</option>
+                <option value="supplier_desc">Supplier (Z-A)</option>
+                <option value="material_asc">Material (A-Z)</option>
+                <option value="material_desc">Material (Z-A)</option>
+              </select>
+            </div>
             <div class="stock-table-frame"><div id="stock-table-wrap"></div></div>
           </div>
 
@@ -264,7 +279,15 @@
             <!-- Riwayat sequence sebelumnya -->
             <div style="margin-bottom:18px;">
               <p style="font-size:13px; font-weight:700; color:#475569; margin-bottom:8px;"><i class="bi bi-clock-history"></i> Riwayat Reprint Sebelumnya</p>
-              <div id="reprint-history-list" style="font-size:13px; color:#64748b;">-</div>
+              <div id="reprint-history-list" style="font-size:13px; color:#64748b; margin-bottom: 12px;">-</div>
+              
+              <!-- Checkbox Cetak Retur -->
+              <div style="display:flex; align-items:center; gap:8px; padding: 10px 14px; background: #fffbe8; border: 1px solid #fef08a; border-radius: 8px;">
+                <input type="checkbox" id="reprint-is-retur" style="width:16px; height:16px; accent-color: #ca8a04; cursor: pointer;">
+                <label for="reprint-is-retur" style="font-size:13px; font-weight:600; color:#854d0e; cursor: pointer; margin:0;">
+                  Cetak sebagai Label Retur (tambah akhiran -R)
+                </label>
+              </div>
             </div>
 
             <!-- Config: Jumlah Label + Qty per Label -->
@@ -414,6 +437,13 @@
             <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Supplier</label>
             <input type="text" id="material-input-supplier" placeholder="Ketik nama supplier..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px;">
           </div>
+        </div>
+        <div>
+          <label style="font-size:12.5px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Status</label>
+          <select id="material-input-status" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13.5px; background:#fff;">
+            <option value="Aktif">Aktif</option>
+            <option value="Tidak Aktif">Tidak Aktif</option>
+          </select>
         </div>
         <p style="font-size:11.5px; color:#94a3b8; margin:0;">Kalau MID belum pernah ada transaksi WRM, Supplier di sini jadi default sampai ada transaksi WRM pertama (yang lalu jadi prioritas).</p>
       </div>
@@ -1773,7 +1803,9 @@
       if (!datalist) return;
       var html = '';
       materialListDataCache.forEach(function(m) {
-        html += '<option value="' + escapeHtml(m.mid) + '">' + escapeHtml(m.deskripsi || '') + '</option>';
+        if (m.status !== 'Tidak Aktif') {
+          html += '<option value="' + escapeHtml(m.mid) + '">' + escapeHtml(m.deskripsi || '') + '</option>';
+        }
       });
       datalist.innerHTML = html;
     }
@@ -1802,6 +1834,7 @@
               '<th style="padding:12px 14px;">MATERIAL DESCRIPTION</th>' +
               '<th style="padding:12px 14px;">UOM</th>' +
               '<th style="padding:12px 14px;">SUPPLIER</th>' +
+              '<th style="padding:12px 14px; text-align:center;">STATUS</th>' +
               '<th style="padding:12px 14px; text-align:center;">AKSI</th>' +
               '</tr></thead><tbody>';
 
@@ -1812,8 +1845,9 @@
                 '<td style="padding:12px 14px; color:#334155; font-weight:500;">' + escapeHtml(item.deskripsi || '-') + '</td>' +
                 '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.uom || '-') + '</td>' +
                 '<td style="padding:12px 14px; color:#475569;">' + escapeHtml(item.supplier || '-') + '</td>' +
+                '<td style="padding:12px 14px; text-align:center;">' + (item.status === 'Tidak Aktif' ? '<span style="background:#fef2f2; color:#ef4444; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600;">Tidak Aktif</span>' : '<span style="background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600;">Aktif</span>') + '</td>' +
                 '<td style="padding:12px 14px; text-align:center; white-space:nowrap;">' +
-                '<button onclick="editMaterialItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.uom || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.supplier || '').replace(/'/g, "\\'") + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                '<button onclick="editMaterialItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.uom || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.supplier || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml(item.status || 'Aktif') + '\')" style="padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#0d6efd;"><i class="bi bi-pencil-square"></i> Edit</button>' +
                 '<button onclick="confirmDeleteMaterialItem(\'' + escapeHtml(item.mid) + '\', \'' + escapeHtml(item.deskripsi || '').replace(/'/g, "\\'") + '\')" style="margin-left:6px; padding:5px 12px; border-radius:6px; border:1px solid #fecaca; background:#fff; cursor:pointer; font-size:12px; font-weight:600; color:#dc2626;"><i class="bi bi-trash3"></i> Hapus</button>' +
                 '</td></tr>';
       }
@@ -1827,15 +1861,17 @@
       document.getElementById('material-input-desc').value = '';
       document.getElementById('material-input-uom').value = '';
       document.getElementById('material-input-supplier').value = '';
+      document.getElementById('material-input-status').value = 'Aktif';
       document.getElementById('modal-material-edit').style.display = 'flex';
     }
 
-    function editMaterialItem(mid, desc, uom, supplier) {
+    function editMaterialItem(mid, desc, uom, supplier, status) {
       document.getElementById('material-input-mid').value = mid;
       document.getElementById('material-input-mid').readOnly = true;
       document.getElementById('material-input-desc').value = desc || '';
       document.getElementById('material-input-uom').value = uom || '';
       document.getElementById('material-input-supplier').value = supplier || '';
+      document.getElementById('material-input-status').value = status || 'Aktif';
       document.getElementById('modal-material-edit').style.display = 'flex';
     }
 
@@ -1850,6 +1886,7 @@
       var desc = document.getElementById('material-input-desc').value.trim();
       var uom = document.getElementById('material-input-uom').value.trim();
       var supplier = document.getElementById('material-input-supplier').value.trim();
+      var status = document.getElementById('material-input-status').value;
 
       if (!mid) {
         showPopupModal('Input Tidak Lengkap', 'MID Material wajib diisi.', 'warning');
@@ -1873,7 +1910,7 @@
           hideFloatingLoading();
           showPopupModal('Error', err.message, 'error');
         })
-        .saveMaterialApi(nik, mid, desc, uom, supplier);
+        .saveMaterialApi(nik, mid, desc, uom, supplier, status);
     }
 
     function confirmDeleteMaterialItem(mid, deskripsi) {
@@ -2290,6 +2327,40 @@
         .saveMinMaxBatchApi(nik, items);
     }
 
+    window.currentStockRows = [];
+    window.currentStockColumns = STOCK_COLUMNS;
+
+    function renderStockTableWithFilter() {
+      var searchVal = (document.getElementById('stock-search-input').value || '').toLowerCase();
+      var sortVal = document.getElementById('stock-sort-select').value;
+      
+      var filtered = window.currentStockRows;
+      
+      if (searchVal) {
+        filtered = filtered.filter(function(r) {
+          var mid = String(r.mid || '').toLowerCase();
+          var sup = String(r.supplier || '').toLowerCase();
+          var mat = String(r.material || '').toLowerCase();
+          return mid.indexOf(searchVal) !== -1 || sup.indexOf(searchVal) !== -1 || mat.indexOf(searchVal) !== -1;
+        });
+      }
+
+      if (sortVal) {
+        filtered = filtered.slice().sort(function(a, b) {
+          var valA = '', valB = '';
+          if (sortVal.indexOf('mid') === 0) { valA = String(a.mid || ''); valB = String(b.mid || ''); }
+          else if (sortVal.indexOf('supplier') === 0) { valA = String(a.supplier || ''); valB = String(b.supplier || ''); }
+          else if (sortVal.indexOf('material') === 0) { valA = String(a.material || ''); valB = String(b.material || ''); }
+          
+          if (valA < valB) return sortVal.indexOf('desc') !== -1 ? 1 : -1;
+          if (valA > valB) return sortVal.indexOf('desc') !== -1 ? -1 : 1;
+          return 0;
+        });
+      }
+
+      renderTable('stock-table-wrap', filtered, window.currentStockColumns);
+    }
+
     function loadStockTab() {
       var wrap = document.getElementById('stock-table-wrap');
       wrap.innerHTML = '<p>Memuat stock...</p>';
@@ -2303,7 +2374,10 @@
           document.getElementById('stock-shift-label').textContent =
             res.data.date + ' — Shift aktif: ' + res.data.shift;
           renderNeracaBanner(res.data.statusNeraca, res.data.validatorNama, res.data.shift);
-          renderTable('stock-table-wrap', res.data.rows, STOCK_COLUMNS);
+          
+          window.currentStockRows = res.data.rows;
+          window.currentStockColumns = STOCK_COLUMNS;
+          renderStockTableWithFilter();
         }).getTspStock();
         loadShiftPanels();
 
@@ -2551,11 +2625,17 @@
             wrap.innerHTML = '<p style="color:#ef4444; padding:16px;"><i class="bi bi-exclamation-circle"></i> ' + (res.message || 'Gagal.') + '</p>';
             return;
           }
-          _reprintCurrentData = res.data || [];
+          if (res.data && res.data.history) {
+            _reprintCurrentData = res.data.history;
+            _reprintParentQty = res.data.parentQty || 0;
+          } else {
+            _reprintCurrentData = Array.isArray(res.data) ? res.data : [];
+            _reprintParentQty = 0;
+          }
           if (_reprintCurrentData.length === 0) {
             wrap.innerHTML = '<div style="text-align:center; padding:30px; border:1px dashed #cbd5e1; border-radius:8px;"><i class="bi bi-search" style="font-size:1.8rem; color:#94a3b8; display:block; margin-bottom:8px;"></i><p style="color:#64748b;">Tidak ada data reprint untuk kode tersebut.<br><small>Pastikan Kode Induk sudah pernah dikirim ke mesin.</small></p></div>';
           } else {
-            showReprintConfig(_reprintCurrentData, q);
+            showReprintConfig(_reprintCurrentData, q, _reprintParentQty);
           }
         })
         .withFailureHandler(function (err) {
@@ -2564,12 +2644,55 @@
         .getReprintData(q);
     }
 
+    function deleteReprintLabel(barcodeAnak, btn) {
+      showConfirmModal(
+        'Konfirmasi Hapus',
+        'Hapus barcode <strong>' + barcodeAnak + '</strong> dari riwayat? Stock akan kembali seperti semula.',
+        'warning',
+        'Ya, Hapus',
+        'Batal',
+        function() {
+          var oldHtml = btn.innerHTML;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+          btn.disabled = true;
+
+          google.script.run
+            .withSuccessHandler(function (res) {
+              if (res.success) {
+                var q = document.getElementById('reprint-info-induk').textContent;
+                searchReprintData(q);
+              } else {
+                showPopupModal('Gagal', res.message, 'error');
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+              }
+            })
+            .withFailureHandler(function (err) {
+              showPopupModal('Error', err.message, 'error');
+              btn.innerHTML = oldHtml;
+              btn.disabled = false;
+            })
+            .deleteReprintBarcode(barcodeAnak);
+        }
+      );
+    }
+
     // --- Tampilkan Step 2: Config Print ---
-    function showReprintConfig(rows, query) {
+    function showReprintConfig(rows, query, parentQty) {
       // Ambil info dari baris pertama (induk dan material)
       var first = rows[0];
+      
+      var printedQty = 0;
+      rows.forEach(function (r) {
+        if (!r.barcodeAnak.endsWith('-00')) {
+          printedQty += Number(r.jumlah) || 0;
+        }
+      });
+      var remainingQty = Math.max(0, parentQty - printedQty);
+
       document.getElementById('reprint-info-induk').textContent    = first.barcodeInduk;
-      document.getElementById('reprint-info-material').textContent = (first.mid ? first.mid + ' — ' : '') + (first.deskripsi || '');
+      document.getElementById('reprint-info-material').innerHTML = (first.mid ? first.mid + ' — ' : '') + (first.deskripsi || '') + 
+        '<br><span style="display:inline-block; margin-top:6px; padding:3px 8px; border-radius:4px; background:#dcfce7; color:#166534; font-weight:700;">Sisa Stock: ' + remainingQty + '</span>';
 
       // Riwayat kode anak yang sudah ada (urutkan berdasarkan barcodeAnak)
       var anakList = rows.slice().sort(function (a, b) {
@@ -2577,9 +2700,13 @@
       });
       var lastAnak = anakList[anakList.length - 1];
       var historyHtml = '<div class="table-scroll"><table class="data-table" style="font-size:12px;">';
-      historyHtml += '<thead><tr><th>Kode Anak</th><th class="num-cell">Qty</th><th>Tanggal</th><th>Shift</th></tr></thead><tbody>';
+      historyHtml += '<thead><tr><th>Kode Anak</th><th class="num-cell">Qty</th><th>Tanggal</th><th>Shift</th><th style="width:50px; text-align:center;">Aksi</th></tr></thead><tbody>';
       anakList.forEach(function (r) {
-        historyHtml += '<tr><td><strong>' + r.barcodeAnak + '</strong></td><td class="num-cell">' + r.jumlah + '</td><td>' + r.tanggal + '</td><td style="text-align:center;">Shift ' + r.shift + '</td></tr>';
+        var actionBtn = '';
+        if (!r.barcodeAnak.endsWith('-00')) {
+          actionBtn = '<button onclick="deleteReprintLabel(\'' + r.barcodeAnak + '\', this)" style="padding:4px 8px; border:none; background:#fee2e2; color:#ef4444; border-radius:4px; cursor:pointer;" title="Hapus"><i class="bi bi-trash"></i></button>';
+        }
+        historyHtml += '<tr><td><strong>' + r.barcodeAnak + '</strong></td><td class="num-cell">' + r.jumlah + '</td><td>' + r.tanggal + '</td><td style="text-align:center;">Shift ' + r.shift + '</td><td style="text-align:center;">' + actionBtn + '</td></tr>';
       });
       historyHtml += '</tbody></table></div>';
       historyHtml += '<p style="margin-top:8px; font-size:12px; color:#0369a1;"><i class="bi bi-info-circle"></i> Terakhir dicetak: <strong>' + lastAnak.barcodeAnak + '</strong> (Qty: ' + lastAnak.jumlah + ')</p>';
@@ -2595,6 +2722,7 @@
 
     function resetReprintSearch() {
       _reprintCurrentData = [];
+      _reprintParentQty = 0;
       document.getElementById('reprint-step-config').style.display = 'none';
       document.getElementById('reprint-step-search').style.display = 'block';
       document.getElementById('reprint-search-input').value = '';
@@ -2615,6 +2743,19 @@
         return;
       }
 
+      var printedQty = 0;
+      _reprintCurrentData.forEach(function (r) {
+        if (!r.barcodeAnak.endsWith('-00')) {
+          printedQty += Number(r.jumlah) || 0;
+        }
+      });
+      var remainingQty = Math.max(0, _reprintParentQty - printedQty);
+
+      if (remainingQty <= 0) {
+        showPopupModal('Stock Habis', 'Stock barcode induk ini sudah 0 dan tidak bisa di-reprint lagi.', 'error');
+        return;
+      }
+
       var first     = _reprintCurrentData[0];
       var induk     = first.barcodeInduk;
       var mid       = first.mid;
@@ -2628,17 +2769,36 @@
       // Ambil nomor urut terakhir — format biasanya: INDUK-XX atau INDUK-XX-YYY
       var nextSeq = _parseNextSequence(lastAnak, induk);
 
+      var isRetur = document.getElementById('reprint-is-retur').checked;
+
       // Build label array
       var labels = [];
+      var currentRemaining = remainingQty;
+      
       for (var i = 0; i < jumlah; i++) {
-        var seq = _padSeq(nextSeq + i);
+        if (currentRemaining <= 0) break;
+
+        var qtyToPrint = qtyPer;
+        if (qtyToPrint > currentRemaining) {
+          qtyToPrint = currentRemaining;
+        }
+
+        var suffix = '';
+        if (isRetur) {
+          suffix = (jumlah === 1) ? '-R' : '-R' + (i + 1);
+        } else {
+          suffix = '-' + _padSeq(nextSeq + i);
+        }
+
         labels.push({
-          barcodeAnak:  induk + '-' + seq,
+          barcodeAnak:  induk + suffix,
           barcodeInduk: induk,
           mid:          mid,
           deskripsi:    deskripsi,
-          jumlah:       qtyPer
+          jumlah:       qtyToPrint
         });
+
+        currentRemaining -= qtyToPrint;
       }
 
       _openBatchPrintModal(labels);
@@ -2752,19 +2912,41 @@
         page.className = 'print-label-page';
         // Kanvas label fisik tetap 75x50mm (roll Dascom DL210) -- preset cuma mengatur
         // kepadatan konten (padding/ukuran font/barcode) di dalam kanvas ini, bukan ukurannya.
-        page.style.cssText = 'page-break-after:always; box-sizing:border-box; width:' + REPRINT_PAGE_SIZE_MM.width + 'mm; height:' + REPRINT_PAGE_SIZE_MM.height + 'mm; overflow:hidden; padding:' + cfg.padding + '; margin:0 auto; font-family:inherit; background:#fff; border:1px solid #e2e8f0;';
+        page.style.cssText = 'page-break-after:always; box-sizing:border-box; width:' + REPRINT_PAGE_SIZE_MM.width + 'mm; height:' + REPRINT_PAGE_SIZE_MM.height + 'mm; overflow:hidden; padding:' + cfg.padding + '; margin:0 auto; font-family:Arial, sans-serif; background:#fff; border:1px solid transparent; color:#000;';
 
         var smallFont = Math.max(cfg.fontSize - 1.5, 6) + 'px';
         var mainFont  = cfg.fontSize + 'px';
 
         page.innerHTML =
-          '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto 2px; width:100%; max-width:100%;"></svg>' +
-          '<table style="width:100%; border-collapse:collapse; font-size:' + mainFont + '; line-height:1.15;">' +
-          '<tr><td style="color:#64748b; padding:1px 0; width:44px;">Kode Anak</td><td style="font-weight:800; color:#0f172a;">' + escapeHtml(lbl.barcodeAnak) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:1px 0;">MID</td><td style="color:#0f172a; font-weight:600;">' + escapeHtml(lbl.mid) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:1px 0;">Material</td><td style="color:#0f172a; font-weight:500;">' + escapeHtml(lbl.deskripsi) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:1px 0;">Qty</td><td style="font-weight:800; color:#16a34a;">' + escapeHtml(String(lbl.jumlah)) + '</td></tr>' +
-          '<tr><td style="color:#64748b; padding:1px 0;">Ref Induk</td><td style="color:#64748b; font-size:' + smallFont + ';">' + escapeHtml(lbl.barcodeInduk) + '</td></tr>' +
+          '<table style="width:100%; height:100%; border-collapse:collapse; font-size:' + mainFont + '; font-family:inherit; border:1px solid #000; table-layout:fixed;">' +
+          '<tr style="height:15%;">' +
+            '<td style="border:1px solid #000; padding:2px; width:30%; text-align:center;">' +
+              '<div style="font-weight:900; font-size:calc(' + mainFont + ' + 1px); line-height:1;">DAM</div>' +
+              '<div style="font-size:5px; font-weight:normal; line-height:1; margin-top:2px;">PT Daya<br>Anugrah Mulya</div>' +
+            '</td>' +
+            '<td style="border:1px solid #000; padding:2px; font-weight:bold; text-align:center; font-size:calc(' + mainFont + ' + 2px);">LABEL REPRINT</td>' +
+          '</tr>' +
+          '<tr style="height:12%;">' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-weight:bold;">MID</td>' +
+            '<td style="border:1px solid #000; padding:2px 4px;">' + escapeHtml(lbl.mid) + '</td>' +
+          '</tr>' +
+          '<tr style="height:12%;">' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-weight:bold;">Deskripsi</td>' +
+            '<td style="border:1px solid #000; padding:2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(lbl.deskripsi) + '</td>' +
+          '</tr>' +
+          '<tr style="height:12%;">' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-weight:bold;">Qty Reprint</td>' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-weight:bold;">' + escapeHtml(String(lbl.jumlah)) + '</td>' +
+          '</tr>' +
+          '<tr style="height:12%;">' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-weight:bold;">Ref Induk</td>' +
+            '<td style="border:1px solid #000; padding:2px 4px; font-size:calc(' + mainFont + ' - 1.5px);">' + escapeHtml(lbl.barcodeInduk) + '</td>' +
+          '</tr>' +
+          '<tr>' +
+            '<td colspan="2" style="border:1px solid #000; padding:2px; text-align:center; vertical-align:middle;">' +
+              '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto; width:100%; max-width:100%; height:auto;"></svg>' +
+            '</td>' +
+          '</tr>' +
           '</table>';
         container.appendChild(page);
 
@@ -2773,7 +2955,7 @@
           try {
             JsBarcode('#' + svgId, code, {
               format: 'CODE128',
-              width: 1.4,
+              width: 1.1,
               height: bHeight,
               displayValue: true,
               fontSize: Math.max(fSize - 1, 6),
@@ -2882,11 +3064,12 @@
     @media print {
       body > *:not(#reprint-label-overlay) { display: none !important; }
       #reprint-label-overlay { display: block !important; position: static !important; background: none !important; box-shadow: none !important; padding: 0 !important; }
-      #reprint-label-overlay > div { box-shadow: none !important; max-height: none !important; border-radius: 0 !important; width: 100% !important; border: none !important; }
+      #reprint-label-overlay > div { box-shadow: none !important; max-height: none !important; border-radius: 0 !important; width: 100% !important; border: none !important; display: block !important; }
       #reprint-label-overlay > div > div:first-child,
       #reprint-label-overlay > div > div:nth-child(2),
       #reprint-label-overlay > div > div:last-child { display: none !important; }
-      .print-label-page { border: none !important; margin: 0 !important; box-shadow: none !important; }
+      #reprint-label-pages { display: block !important; padding: 0 !important; background: none !important; height: auto !important; overflow: visible !important; }
+      .print-label-page { display: block !important; border: none !important; margin: 0 !important; box-shadow: none !important; page-break-after: always !important; }
       .print-label-page button { display: none !important; }
     }
   </style>

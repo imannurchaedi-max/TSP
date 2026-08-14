@@ -69,6 +69,7 @@ function getMaterialList_() {
   var deskripsiCol = resolveDeskCol_(headerMap) || 2;
   var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
   var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+  var statusCol = headerMap['Status'] || headerMap['status'];
 
   var list = [];
   if (lastRow >= 2) {
@@ -80,7 +81,8 @@ function getMaterialList_() {
         mid: String(mid).trim(),
         deskripsi: row[deskripsiCol - 1] || '',
         uom: row[uomCol - 1] || 'KG',
-        supplier: suppCol ? String(row[suppCol - 1] || '').trim() : ''
+        supplier: suppCol ? String(row[suppCol - 1] || '').trim() : '',
+        status: statusCol ? (String(row[statusCol - 1] || '').trim() || 'Aktif') : 'Aktif'
       });
     });
   }
@@ -99,6 +101,7 @@ function getMaterialMap_() {
   var deskripsiCol = resolveDeskCol_(headerMap) || 2;
   var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
   var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+  var statusCol = headerMap['Status'] || headerMap['status'];
 
   var map = {};
   if (lastRow >= 2) {
@@ -109,7 +112,8 @@ function getMaterialMap_() {
       map[String(mid).trim()] = {
         deskripsi: row[deskripsiCol - 1],
         uom: row[uomCol - 1],
-        supplier: suppCol ? String(row[suppCol - 1] || '').trim() : ''
+        supplier: suppCol ? String(row[suppCol - 1] || '').trim() : '',
+        status: statusCol ? (String(row[statusCol - 1] || '').trim() || 'Aktif') : 'Aktif'
       };
     });
   }
@@ -125,7 +129,7 @@ function getMaterialMap_() {
  * dengan nilai baru (bukan cuma mengisi yang kosong) -- karena ini dipanggil dari aksi eksplisit
  * user "Tambah/Edit Material", jadi wajar kalau user memang mau mengubah deskripsi/UOM/supplier.
  */
-function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier) {
+function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier, status) {
   try {
     var targetMid = normalizeMid_(mid);
     if (!targetMid) {
@@ -138,10 +142,15 @@ function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier) {
     var deskCol = resolveDeskCol_(headerMap) || 2;
     var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
     var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+    var statusCol = headerMap['Status'] || headerMap['status'];
 
     if (!suppCol) {
       suppCol = sheet.getLastColumn() + 1;
       sheet.getRange(1, suppCol).setValue('Supplier').setFontWeight('bold').setBackground('#f1f5f9');
+    }
+    if (!statusCol) {
+      statusCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, statusCol).setValue('Status').setFontWeight('bold').setBackground('#f1f5f9');
     }
 
     var lastRow = sheet.getLastRow();
@@ -156,20 +165,23 @@ function saveMaterialMaster_(nik, mid, deskripsi, uom, supplier) {
     var descVal = String(deskripsi || '').trim();
     var uomVal = String(uom || '').trim() || 'KG';
     var suppVal = String(supplier || '').trim();
+    var statusVal = String(status || '').trim() || 'Aktif';
 
     if (targetRow === -1) {
-      var maxCol = Math.max(midCol, deskCol, uomCol, suppCol);
+      var maxCol = Math.max(midCol, deskCol, uomCol, suppCol, statusCol);
       var newRow = [];
       for (var c = 1; c <= maxCol; c++) newRow.push('');
       newRow[midCol - 1] = targetMid;
       newRow[deskCol - 1] = descVal;
       newRow[uomCol - 1] = uomVal;
       newRow[suppCol - 1] = suppVal;
+      newRow[statusCol - 1] = statusVal;
       sheet.appendRow(newRow);
     } else {
       sheet.getRange(targetRow, deskCol).setValue(descVal);
       sheet.getRange(targetRow, uomCol).setValue(uomVal);
       sheet.getRange(targetRow, suppCol).setValue(suppVal);
+      sheet.getRange(targetRow, statusCol).setValue(statusVal);
     }
 
     materialCache_ = null;
@@ -196,10 +208,15 @@ function saveMaterialBatch_(nik, items) {
     var deskCol = resolveDeskCol_(headerMap) || 2;
     var uomCol = headerMap['UOM'] || headerMap['uom'] || 3;
     var suppCol = headerMap['Supplier'] || headerMap['supplier'];
+    var statusCol = headerMap['Status'] || headerMap['status'];
 
     if (!suppCol) {
       suppCol = sheet.getLastColumn() + 1;
       sheet.getRange(1, suppCol).setValue('Supplier').setFontWeight('bold').setBackground('#f1f5f9');
+    }
+    if (!statusCol) {
+      statusCol = sheet.getLastColumn() + 1;
+      sheet.getRange(1, statusCol).setValue('Status').setFontWeight('bold').setBackground('#f1f5f9');
     }
 
     var lastRow = sheet.getLastRow();
@@ -221,20 +238,23 @@ function saveMaterialBatch_(nik, items) {
       var descVal = String(item.deskripsi || '').trim();
       var uomVal = String(item.uom || '').trim() || 'KG';
       var suppVal = String(item.supplier || '').trim();
+      var statusVal = String(item.status || '').trim() || 'Aktif';
 
       if (rowMap[mid]) {
         var rIdx = rowMap[mid];
         sheet.getRange(rIdx, deskCol).setValue(descVal);
         sheet.getRange(rIdx, uomCol).setValue(uomVal);
         sheet.getRange(rIdx, suppCol).setValue(suppVal);
+        sheet.getRange(rIdx, statusCol).setValue(statusVal);
       } else {
-        var maxCol = Math.max(midCol, deskCol, uomCol, suppCol);
+        var maxCol = Math.max(midCol, deskCol, uomCol, suppCol, statusCol);
         var newRow = [];
         for (var c = 1; c <= maxCol; c++) newRow.push('');
         newRow[midCol - 1] = mid;
         newRow[deskCol - 1] = descVal;
         newRow[uomCol - 1] = uomVal;
         newRow[suppCol - 1] = suppVal;
+        newRow[statusCol - 1] = statusVal;
         sheet.appendRow(newRow);
         rowMap[mid] = sheet.getLastRow();
       }

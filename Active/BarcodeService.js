@@ -359,6 +359,17 @@ function getReprintData_(parentBarcode) {
 
   var mid = getCellValue_(parentRow, 'MID');
   var desc = getCellValue_(parentRow, 'MATERIAL DESCRIPTION');
+  var parentQty = Number(getCellValue_(parentRow, 'JUMLAH')) || 0;
+  if (parentQty === 0) {
+    try {
+      var wrmRow = lookupWrmIncoming_(parentStr);
+      if (wrmRow && wrmRow.rowIndex !== -1) {
+        parentQty = Number(getCellValue_(wrmRow, 'QTY')) || 0;
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
 
   // 2. Kumpulkan Histori Reprint Anak dari REPRINT BARCODE
   var sheet = getSheet_(SHEET_NAMES.REPRINT);
@@ -403,7 +414,7 @@ function getReprintData_(parentBarcode) {
     });
   }
 
-  return history;
+  return { history: history, parentQty: parentQty };
 }
 
 /**
@@ -465,4 +476,51 @@ function saveBatchReprint_(labels) {
   }
 
   return { success: true, message: labels.length + ' label reprint berhasil direkam ke database.' };
+}
+
+/**
+ * REPRINT MODULE: Menghapus barcode reprint (anak) dari REPRINT BARCODE
+ * dan dari BARCODE MATERIAL PRODUKSI.
+ */
+function deleteReprintBarcode_(barcodeAnak) {
+  if (!barcodeAnak) throw new Error("Barcode anak tidak valid.");
+  
+  var deletedReprint = false;
+  var deletedProd = false;
+
+  // Hapus dari REPRINT BARCODE
+  var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
+  var repHm = getHeaderMap_(reprintSheet);
+  var colRepAnak = repHm['barcode reprint'];
+  if (colRepAnak) {
+    var repData = reprintSheet.getDataRange().getValues();
+    for (var i = repData.length - 1; i >= 1; i--) {
+      if (String(repData[i][colRepAnak - 1]).trim() === barcodeAnak) {
+        reprintSheet.deleteRow(i + 1);
+        deletedReprint = true;
+        break; // Asumsi hanya 1 baris
+      }
+    }
+  }
+
+  // Hapus dari BARCODE MATERIAL PRODUKSI
+  var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
+  var prodHm = getHeaderMap_(prodSheet);
+  var colProdAnak = prodHm['barcode'];
+  if (colProdAnak) {
+    var prodData = prodSheet.getDataRange().getValues();
+    for (var j = prodData.length - 1; j >= 1; j--) {
+      if (String(prodData[j][colProdAnak - 1]).trim() === barcodeAnak) {
+        prodSheet.deleteRow(j + 1);
+        deletedProd = true;
+        break;
+      }
+    }
+  }
+
+  if (deletedReprint || deletedProd) {
+    return { success: true, message: 'Barcode ' + barcodeAnak + ' berhasil dihapus dari riwayat.' };
+  } else {
+    return { success: false, message: 'Barcode ' + barcodeAnak + ' tidak ditemukan di riwayat.' };
+  }
 }

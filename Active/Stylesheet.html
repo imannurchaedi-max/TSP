@@ -665,7 +665,7 @@
      kecil (lihat selector #recent-receipts-wrap / #shift-dispatches-wrap di atas). */
   .table-scroll {
     width: 100%;
-    max-height: 68vh;
+    max-height: 55vh; /* Diturunkan dari 68vh agar scrollbar terlihat */
     overflow: auto;
     border-radius: 16px;
     box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
@@ -680,7 +680,7 @@
   /* Tabel Min/Max Stock pakai markup custom (bukan renderTable()), jadi frame + scroll universal
      & header sticky-nya disamakan lewat selector terpisah di sini. */
   #minmax-table-wrap .table-responsive {
-    max-height: 68vh;
+    max-height: 55vh; /* Diturunkan dari 68vh */
     overflow: auto !important;
   }
   #minmax-table-wrap .table-responsive::-webkit-scrollbar { width: 8px; height: 8px; }
