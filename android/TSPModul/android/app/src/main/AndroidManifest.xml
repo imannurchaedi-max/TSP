@@ -6,7 +6,7 @@
          (lihat core/update_checker.dart), bukan lewat Play Store. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
-        android:label="tsp_modul"
+        android:label="TSP Modul"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
