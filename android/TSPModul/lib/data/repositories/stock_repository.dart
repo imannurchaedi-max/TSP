@@ -41,4 +41,43 @@ class StockRepository {
 
   Future<List<TransactionRow>> getOperatorConsumption(String mesin) =>
       _callList('getOperatorConsumption', {'mesin': mesin}, TransactionRow.fromJson);
+
+  /// Aksi resmi Admin TSP: tarik/reset Stok Awal shift aktif dari neraca akhir
+  /// shift sebelumnya (aman dipanggil berkali-kali -- mirror tarikStokAwalShift_
+  /// di StockService.js, "hanya memuat, tidak menghapus" kalau datanya sudah ada).
+  Future<String> tarikStokAwalShift() async {
+    final res = await _api.call('tarikStokAwalShift');
+    if (res['success'] != true) {
+      throw ApiException(res['message'] as String? ?? 'Gagal menarik stok awal.');
+    }
+    return res['message'] as String? ?? 'Stok awal berhasil ditarik.';
+  }
+
+  /// Aksi resmi Admin TSP: kunci neraca stok shift aktif sebagai VALID setelah
+  /// verifikasi fisik keliling selesai.
+  Future<String> konfirmasiNeracaStokShift() async {
+    final res = await _api.call('konfirmasiNeracaStokShift', {'aktualData': null});
+    if (res['success'] != true) {
+      throw ApiException(res['message'] as String? ?? 'Gagal mengonfirmasi neraca stok.');
+    }
+    return res['message'] as String? ?? 'Neraca stok berhasil dikonfirmasi.';
+  }
+
+  /// Konfirmasi/revisi 1 item material saat keliling lapangan. statusType:
+  /// 'BENAR' (aktual = nilai rumus sistem apa adanya) atau 'REVISI' (aktual =
+  /// hasil hitung fisik manual).
+  Future<void> konfirmasiItemStokShift({
+    required String mid,
+    required num aktualValue,
+    required String statusType,
+  }) async {
+    final res = await _api.call('konfirmasiItemStokShift', {
+      'mid': mid,
+      'aktualValue': aktualValue,
+      'statusType': statusType,
+    });
+    if (res['success'] != true) {
+      throw ApiException(res['message'] as String? ?? 'Gagal menyimpan status item.');
+    }
+  }
 }

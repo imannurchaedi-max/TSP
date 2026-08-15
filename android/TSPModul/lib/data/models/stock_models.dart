@@ -13,6 +13,7 @@ class TspStockRow {
   final num keluar;
   final num returIn;
   final num returOut;
+  final num rumus;
   final num stockAkhir;
   final String statusItem;
 
@@ -26,6 +27,7 @@ class TspStockRow {
     required this.keluar,
     required this.returIn,
     required this.returOut,
+    required this.rumus,
     required this.stockAkhir,
     required this.statusItem,
   });
@@ -40,6 +42,7 @@ class TspStockRow {
         keluar: _n(json['keluar']),
         returIn: _n(json['returIn']),
         returOut: _n(json['returOut']),
+        rumus: _n(json['rumus']),
         stockAkhir: _n(json['stockAkhir']),
         statusItem: _s(json['statusItem']),
       );
