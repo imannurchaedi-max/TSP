@@ -33,4 +33,5 @@ class AppNavItem {
 const kMainNavItems = [
   AppNavItem(route: '/scan', icon: Icons.qr_code_scanner, label: 'Scan'),
   AppNavItem(route: '/stock', icon: Icons.inventory_2, label: 'Stock'),
+  AppNavItem(route: '/history', icon: Icons.history, label: 'Riwayat'),
 ];

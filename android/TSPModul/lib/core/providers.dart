@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/database.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/history_repository.dart';
 import '../data/repositories/reference_repository.dart';
 import '../data/repositories/scan_repository.dart';
 import '../data/repositories/stock_repository.dart';
@@ -37,6 +38,10 @@ final syncServiceProvider = Provider<SyncService>(
 
 final stockRepositoryProvider = Provider<StockRepository>(
   (ref) => StockRepository(ref.watch(apiClientProvider)),
+);
+
+final historyRepositoryProvider = Provider<HistoryRepository>(
+  (ref) => HistoryRepository(ref.watch(apiClientProvider)),
 );
 
 /// Sesi user yang sedang login. Di-set setelah login sukses / restore sesi

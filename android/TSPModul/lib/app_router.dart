@@ -8,6 +8,7 @@ import 'features/auth/login_screen.dart';
 import 'features/scan/scan_home_screen.dart';
 import 'features/scan/scan_extra_fields_screen.dart';
 import 'features/scan/scanner_screen.dart';
+import 'features/history/history_home_screen.dart';
 import 'features/scan/scan_result_screen.dart';
 import 'features/stock/stock_home_screen.dart';
 import 'features/sync/sync_queue_screen.dart';
@@ -36,6 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/scan/camera', builder: (context, state) => const ScannerScreen()),
       GoRoute(path: '/scan/result', builder: (context, state) => const ScanResultScreen()),
       GoRoute(path: '/stock', builder: (context, state) => const StockHomeScreen()),
+      GoRoute(path: '/history', builder: (context, state) => const HistoryHomeScreen()),
       GoRoute(path: '/sync', builder: (context, state) => const SyncQueueScreen()),
     ],
   );
