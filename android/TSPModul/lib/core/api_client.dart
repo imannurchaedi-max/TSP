@@ -21,10 +21,13 @@ const _kSessionExpiredMarker = 'Sesi API tidak valid';
 /// Client JSON API TSP Modul. Semua request adalah POST ke doPost(e) di
 /// Active/ApiService.js dengan body { action, token, ...params }.
 ///
-/// Endpoint Apps Script /exec selalu membalas 302 redirect (POST diproses di hop
-/// pertama, hasil JSON diambil GET di redirect target) -- perilaku default Dio
-/// (followRedirects mengikuti kaidah HTTP standar: downgrade ke GET tanpa body pada
-/// redirect) sudah cocok untuk pola ini, sudah diverifikasi manual lewat curl.
+/// Endpoint Apps Script /exec selalu membalas 302 redirect ke URL "echo" satu-pakai
+/// (POST diproses di hop pertama, hasil JSON baru bisa diambil lewat GET biasa --
+/// TANPA body -- ke Location itu). curl default (tanpa -X override) otomatis
+/// menangani pola ini dengan benar, tapi Dio's IOHttpClientAdapter TIDAK
+/// auto-follow redirect utk request POST (beda dari asumsi awal yang cuma
+/// dicek lewat curl) -- makanya di-follow manual di sini: matikan
+/// followRedirects, baca header Location dari respons 302, lalu GET ke situ.
 class ApiClient {
   final Dio _dio;
   final SessionManager _session;
@@ -36,14 +39,22 @@ class ApiClient {
           connectTimeout: const Duration(seconds: 20),
           sendTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(seconds: 30),
-          followRedirects: true,
-          maxRedirects: 5,
+          followRedirects: false,
           validateStatus: (status) => status != null && status < 500,
         ));
 
   Future<Map<String, dynamic>> _raw(String action, Map<String, dynamic> body) async {
     try {
-      final response = await _dio.post<dynamic>('', data: {'action': action, ...body});
+      var response = await _dio.post<dynamic>('', data: {'action': action, ...body});
+
+      if (response.statusCode == 302) {
+        final location = response.headers.value('location');
+        if (location == null) {
+          throw ApiException('Server mengembalikan redirect tanpa tujuan (HTTP 302).');
+        }
+        response = await _dio.get<dynamic>(location);
+      }
+
       final data = response.data;
       if (data is Map<String, dynamic>) return data;
       if (data is String && data.trim().isNotEmpty) {
