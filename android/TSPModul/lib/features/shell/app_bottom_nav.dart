@@ -1,28 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Navigasi bawah persisten dipakai tiap layar utama (Scan/Stock/...). Item
-/// yang ditambahkan di fase berikutnya (Riwayat, Reprint, Material Master,
-/// Validator) tinggal ditambahkan di sini -- role-gating (mis. Reprint &
-/// Material Master hanya utk tsp/spv) diterapkan lewat parameter `items`.
-class AppBottomNav extends StatelessWidget {
-  final int currentIndex;
-  final List<AppNavItem> items;
-
-  const AppBottomNav({super.key, required this.currentIndex, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: (index) => context.go(items[index].route),
-      destinations: items
-          .map((item) => NavigationDestination(icon: Icon(item.icon), label: item.label))
-          .toList(),
-    );
-  }
-}
-
 class AppNavItem {
   final String route;
   final IconData icon;
@@ -30,8 +8,44 @@ class AppNavItem {
   const AppNavItem({required this.route, required this.icon, required this.label});
 }
 
-const kMainNavItems = [
+const _kBaseNavItems = [
   AppNavItem(route: '/scan', icon: Icons.qr_code_scanner, label: 'Scan'),
   AppNavItem(route: '/stock', icon: Icons.inventory_2, label: 'Stock'),
   AppNavItem(route: '/history', icon: Icons.history, label: 'Riwayat'),
 ];
+
+/// Item tambahan khusus role tsp/spv, mirror tab-btn-reprint & tab-btn-minmax
+/// yang cuma `display:flex` untuk role itu di Index.html.
+const _kTspOnlyNavItems = [
+  AppNavItem(route: '/reprint', icon: Icons.print, label: 'Reprint'),
+];
+
+List<AppNavItem> navItemsForRole(String? role) {
+  if (role == 'tsp' || role == 'spv') {
+    return [..._kBaseNavItems, ..._kTspOnlyNavItems];
+  }
+  return _kBaseNavItems;
+}
+
+/// Navigasi bawah persisten. Pakai currentRoute (bukan index tetap) supaya
+/// tahan terhadap daftar item yang berubah-ubah per role.
+class AppBottomNav extends StatelessWidget {
+  final String currentRoute;
+  final List<AppNavItem> items;
+
+  const AppBottomNav({super.key, required this.currentRoute, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    var selectedIndex = items.indexWhere((item) => item.route == currentRoute);
+    if (selectedIndex == -1) selectedIndex = 0;
+
+    return NavigationBar(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) => context.go(items[index].route),
+      destinations: items
+          .map((item) => NavigationDestination(icon: Icon(item.icon), label: item.label))
+          .toList(),
+    );
+  }
+}

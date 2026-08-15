@@ -4,6 +4,7 @@ import '../data/local/database.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/history_repository.dart';
 import '../data/repositories/reference_repository.dart';
+import '../data/repositories/reprint_repository.dart';
 import '../data/repositories/scan_repository.dart';
 import '../data/repositories/stock_repository.dart';
 import '../data/repositories/sync_service.dart';
@@ -42,6 +43,10 @@ final stockRepositoryProvider = Provider<StockRepository>(
 
 final historyRepositoryProvider = Provider<HistoryRepository>(
   (ref) => HistoryRepository(ref.watch(apiClientProvider)),
+);
+
+final reprintRepositoryProvider = Provider<ReprintRepository>(
+  (ref) => ReprintRepository(ref.watch(apiClientProvider)),
 );
 
 /// Sesi user yang sedang login. Di-set setelah login sukses / restore sesi

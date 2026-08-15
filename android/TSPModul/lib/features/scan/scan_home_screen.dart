@@ -80,7 +80,7 @@ class ScanHomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0, items: kMainNavItems),
+      bottomNavigationBar: AppBottomNav(currentRoute: '/scan', items: navItemsForRole(user?.role)),
     );
   }
 }

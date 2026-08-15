@@ -143,7 +143,7 @@ class _HistoryHomeScreenState extends ConsumerState<HistoryHomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 2, items: kMainNavItems),
+      bottomNavigationBar: AppBottomNav(currentRoute: '/history', items: navItemsForRole(user?.role)),
     );
   }
 }

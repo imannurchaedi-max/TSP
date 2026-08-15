@@ -22,7 +22,7 @@ class StockHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Stock')),
       body: isOperator ? const _OperatorStockView() : const _TspStockView(),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1, items: kMainNavItems),
+      bottomNavigationBar: AppBottomNav(currentRoute: '/stock', items: navItemsForRole(user?.role)),
     );
   }
 }
