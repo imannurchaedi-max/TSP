@@ -45,6 +45,12 @@ class AppBottomNav extends StatelessWidget {
     return NavigationBar(
       selectedIndex: selectedIndex,
       onDestinationSelected: (index) => context.go(items[index].route),
+      // Role tsp/spv punya lebih banyak menu (6) -- cuma tampilkan label item
+      // yang aktif supaya tidak sesak di layar sempit, mirip pola bottom nav
+      // padat pada umumnya. Role lain (3 item) tetap tampilkan semua label.
+      labelBehavior: items.length > 4
+          ? NavigationDestinationLabelBehavior.onlyShowSelected
+          : NavigationDestinationLabelBehavior.alwaysShow,
       destinations: items
           .map((item) => NavigationDestination(icon: Icon(item.icon), label: item.label))
           .toList(),

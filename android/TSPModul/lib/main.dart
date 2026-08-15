@@ -5,6 +5,7 @@ import 'app_router.dart';
 import 'core/background_sync.dart';
 import 'core/connectivity_sync.dart';
 import 'core/providers.dart';
+import 'features/shell/connectivity_banner.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class _TspModulAppState extends ConsumerState<TspModulApp> {
         useMaterial3: true,
       ),
       routerConfig: router,
+      builder: (context, child) => ConnectivityBanner(child: child ?? const SizedBox.shrink()),
     );
   }
 }
