@@ -18,6 +18,7 @@ const _kBaseNavItems = [
 /// yang cuma `display:flex` untuk role itu di Index.html.
 const _kTspOnlyNavItems = [
   AppNavItem(route: '/reprint', icon: Icons.print, label: 'Reprint'),
+  AppNavItem(route: '/material', icon: Icons.category, label: 'Material'),
 ];
 
 List<AppNavItem> navItemsForRole(String? role) {

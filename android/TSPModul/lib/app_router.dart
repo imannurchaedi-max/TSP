@@ -9,6 +9,7 @@ import 'features/scan/scan_home_screen.dart';
 import 'features/scan/scan_extra_fields_screen.dart';
 import 'features/scan/scanner_screen.dart';
 import 'features/history/history_home_screen.dart';
+import 'features/material/material_home_screen.dart';
 import 'features/reprint/reprint_home_screen.dart';
 import 'features/scan/scan_result_screen.dart';
 import 'features/stock/stock_home_screen.dart';
@@ -40,6 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/stock', builder: (context, state) => const StockHomeScreen()),
       GoRoute(path: '/history', builder: (context, state) => const HistoryHomeScreen()),
       GoRoute(path: '/reprint', builder: (context, state) => const ReprintHomeScreen()),
+      GoRoute(path: '/material', builder: (context, state) => const MaterialHomeScreen()),
       GoRoute(path: '/sync', builder: (context, state) => const SyncQueueScreen()),
     ],
   );
