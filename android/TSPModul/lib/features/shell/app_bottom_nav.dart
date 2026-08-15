@@ -19,6 +19,7 @@ const _kBaseNavItems = [
 const _kTspOnlyNavItems = [
   AppNavItem(route: '/reprint', icon: Icons.print, label: 'Reprint'),
   AppNavItem(route: '/material', icon: Icons.category, label: 'Material'),
+  AppNavItem(route: '/validator', icon: Icons.fact_check, label: 'Validasi'),
 ];
 
 List<AppNavItem> navItemsForRole(String? role) {

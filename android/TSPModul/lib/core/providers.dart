@@ -9,6 +9,7 @@ import '../data/repositories/reprint_repository.dart';
 import '../data/repositories/scan_repository.dart';
 import '../data/repositories/stock_repository.dart';
 import '../data/repositories/sync_service.dart';
+import '../data/repositories/validator_repository.dart';
 import 'api_client.dart';
 import 'session.dart';
 
@@ -52,6 +53,10 @@ final reprintRepositoryProvider = Provider<ReprintRepository>(
 
 final materialRepositoryProvider = Provider<MaterialRepository>(
   (ref) => MaterialRepository(ref.watch(apiClientProvider)),
+);
+
+final validatorRepositoryProvider = Provider<ValidatorRepository>(
+  (ref) => ValidatorRepository(ref.watch(apiClientProvider)),
 );
 
 /// Sesi user yang sedang login. Di-set setelah login sukses / restore sesi

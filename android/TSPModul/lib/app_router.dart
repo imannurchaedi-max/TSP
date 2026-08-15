@@ -14,6 +14,7 @@ import 'features/reprint/reprint_home_screen.dart';
 import 'features/scan/scan_result_screen.dart';
 import 'features/stock/stock_home_screen.dart';
 import 'features/sync/sync_queue_screen.dart';
+import 'features/validator/validator_home_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authListenable = ValueNotifier<SessionUser?>(ref.read(currentUserProvider));
@@ -42,6 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/history', builder: (context, state) => const HistoryHomeScreen()),
       GoRoute(path: '/reprint', builder: (context, state) => const ReprintHomeScreen()),
       GoRoute(path: '/material', builder: (context, state) => const MaterialHomeScreen()),
+      GoRoute(path: '/validator', builder: (context, state) => const ValidatorHomeScreen()),
       GoRoute(path: '/sync', builder: (context, state) => const SyncQueueScreen()),
     ],
   );
