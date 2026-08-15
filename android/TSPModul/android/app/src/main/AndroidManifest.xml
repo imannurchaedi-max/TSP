@@ -2,6 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <!-- Dibutuhkan utk memasang APK update yang didownload sendiri oleh app
+         (lihat core/update_checker.dart), bukan lewat Play Store. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:label="tsp_modul"
         android:name="${applicationName}"

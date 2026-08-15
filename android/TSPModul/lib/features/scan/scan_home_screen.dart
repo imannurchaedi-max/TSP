@@ -5,19 +5,40 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../core/providers.dart';
 import '../shell/app_bottom_nav.dart';
+import '../update/update_dialog.dart';
 import 'scan_flow_state.dart';
 
-class ScanHomeScreen extends ConsumerWidget {
+/// Flag modul-level supaya silent update-check cuma jalan sekali per sesi app
+/// (ScanHomeScreen bisa rebuild berkali-kali tiap user pindah tab lewat bottom nav).
+bool _hasCheckedUpdateThisSession = false;
+
+class ScanHomeScreen extends ConsumerStatefulWidget {
   const ScanHomeScreen({super.key});
 
-  void _selectEvent(BuildContext context, WidgetRef ref, ScanEventDef event) {
+  @override
+  ConsumerState<ScanHomeScreen> createState() => _ScanHomeScreenState();
+}
+
+class _ScanHomeScreenState extends ConsumerState<ScanHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (!_hasCheckedUpdateThisSession) {
+      _hasCheckedUpdateThisSession = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) checkAndPromptUpdate(context, silent: true);
+      });
+    }
+  }
+
+  void _selectEvent(ScanEventDef event) {
     ref.read(scanFlowProvider.notifier).state = ScanFlowState(event: event);
     final needsFields = event.requiresMesin || event.requiresJumlah || event.requiresReservasi;
     context.push(needsFields ? '/scan/fields' : '/scan/camera');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final events = user == null ? const <ScanEventDef>[] : scanEventsForRole(user.role);
     final pendingQueue = ref.watch(pendingQueueProvider);
@@ -30,6 +51,11 @@ class ScanHomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('TSP Modul'),
         actions: [
+          IconButton(
+            tooltip: 'Cek Update',
+            icon: const Icon(Icons.system_update),
+            onPressed: () => checkAndPromptUpdate(context, silent: false),
+          ),
           IconButton(
             tooltip: 'Antrian Sinkronisasi',
             icon: Badge(
@@ -74,7 +100,7 @@ class ScanHomeScreen extends ConsumerWidget {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.1,
                     children: events
-                        .map((event) => _EventCard(event: event, onTap: () => _selectEvent(context, ref, event)))
+                        .map((event) => _EventCard(event: event, onTap: () => _selectEvent(event)))
                         .toList(),
                   ),
           ),
