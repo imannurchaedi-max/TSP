@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
 import '../../core/providers.dart';
+import '../shell/app_bottom_nav.dart';
 import 'scan_flow_state.dart';
 
 class ScanHomeScreen extends ConsumerWidget {
@@ -79,6 +80,7 @@ class ScanHomeScreen extends ConsumerWidget {
           ),
         ],
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0, items: kMainNavItems),
     );
   }
 }

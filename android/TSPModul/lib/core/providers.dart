@@ -4,6 +4,7 @@ import '../data/local/database.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/reference_repository.dart';
 import '../data/repositories/scan_repository.dart';
+import '../data/repositories/stock_repository.dart';
 import '../data/repositories/sync_service.dart';
 import 'api_client.dart';
 import 'session.dart';
@@ -32,6 +33,10 @@ final referenceRepositoryProvider = Provider<ReferenceRepository>(
 
 final syncServiceProvider = Provider<SyncService>(
   (ref) => SyncService(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider)),
+);
+
+final stockRepositoryProvider = Provider<StockRepository>(
+  (ref) => StockRepository(ref.watch(apiClientProvider)),
 );
 
 /// Sesi user yang sedang login. Di-set setelah login sukses / restore sesi
