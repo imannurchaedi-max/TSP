@@ -1,8 +1,15 @@
 """
 LangGraph State Machine Engine for TSP Modul
 -------------------------------------------
-Demonstrates LangGraph StateGraph engine for barcode scan lifecycle:
-terima_wrm -> kirim_mesin -> terima_operator -> consume_operator / retur_dari_mesin -> retur_ke_wrm.
+Demonstrates LangGraph StateGraph engine for the "happy path" (consume) branch of the
+barcode scan lifecycle: terima_wrm -> kirim_mesin -> terima_operator -> consume_operator.
+
+NOT covered here: the retur branch (retur_dari_mesin -> retur_ke_wrm). In the real state
+machine (Active/Config.js EVENTS) retur_dari_mesin's prerequisite is kirim_mesin (not
+terima_operator/consume_operator), so it needs its own conditional edge straight off
+"kirim_mesin" rather than chaining off this graph's linear happy path -- left as a TODO
+rather than bolted on inaccurately. This is a standalone demo/exploration script, not
+wired into npm run docs:build or any deploy step; it does not reflect production traffic.
 """
 
 from typing import Dict, Any, List, Optional

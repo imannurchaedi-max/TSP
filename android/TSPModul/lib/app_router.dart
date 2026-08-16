@@ -16,6 +16,14 @@ import 'features/stock/stock_home_screen.dart';
 import 'features/sync/sync_queue_screen.dart';
 import 'features/validator/validator_home_screen.dart';
 
+/// Route yang cuma boleh diakses role tsp/spv, mirror tab-btn-reprint/minmax/
+/// validasi yang di-hide di Index.html untuk role lain. Server (Code.js/
+/// ApiService.js) tetap jadi penjaga otorisasi sesungguhnya lewat
+/// requireRole_() -- ini cuma defense-in-depth di client supaya operator
+/// yang somehow ter-deep-link ke sini langsung diarahkan balik, bukan
+/// melihat layar yang aksinya toh akan ditolak server.
+const _kTspOnlyRoutes = ['/reprint', '/material', '/validator'];
+
 final routerProvider = Provider<GoRouter>((ref) {
   final authListenable = ValueNotifier<SessionUser?>(ref.read(currentUserProvider));
   ref.listen<SessionUser?>(currentUserProvider, (previous, next) {
@@ -27,10 +35,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/scan',
     refreshListenable: authListenable,
     redirect: (context, state) {
-      final loggedIn = authListenable.value != null;
+      final user = authListenable.value;
+      final loggedIn = user != null;
       final loggingIn = state.matchedLocation == '/login';
       if (!loggedIn && !loggingIn) return '/login';
       if (loggedIn && loggingIn) return '/scan';
+
+      if (loggedIn && _kTspOnlyRoutes.contains(state.matchedLocation) && user.role != 'tsp' && user.role != 'spv') {
+        return '/scan';
+      }
       return null;
     },
     routes: [

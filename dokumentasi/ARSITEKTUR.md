@@ -14,8 +14,15 @@ Sejak Agustus 2026, sistem ini **dual front-end** di atas satu backend Google Ap
 - **App Android** (Flutter, `ApiService.js`/`doPost`) — dipakai operator/TSP di lantai
   produksi untuk scan cepat (kamera live + antrian offline kalau sinyal putus).
 
-Kedua front-end memanggil fungsi bisnis yang **sama persis** (`Code.js` dkk) — tidak ada
-logic yang diduplikasi, tidak ada risiko data antar front-end tidak sinkron.
+Kedua front-end memanggil fungsi bisnis yang **sama persis** (`Code.js` dkk) untuk semua
+operasi yang menyentuh database — tidak ada logic PERSISTENSI yang diduplikasi. Satu
+pengecualian yang perlu jujur disebut: modul **Reprint** di app Android mem-porting ulang
+logic penomoran urut label (`_parseNextSequence`/`_padSeq`) dari `generateReprintLabels()`
+di `Index.html` ke Dart (`reprint_config_screen.dart`) supaya bisa generate preview label
+client-side sebelum dikirim — hasil akhirnya tetap disimpan lewat `saveBatchReprint` yang
+sama, tapi ATURAN penomorannya sendiri kini ada di 2 tempat (JS & Dart) yang bisa divergen
+kalau salah satu diubah tanpa mengubah yang lain. Lihat §13.5 untuk daftar keterbatasan
+lain yang belum 100% ditutup.
 
 ## 2. Stack Teknis
 
@@ -196,6 +203,7 @@ Backend TSP Modul dilengkapi mekanisme dinamis multi-lapis untuk membaca tabel d
 | v97 | Kalibrasi cetak label Reprint untuk printer produksi Tally Dascom DL210 (label thermal 75x50mm) — `@page` CSS baru di-set programatik via `applyReprintPageSize_()` supaya print dialog otomatis pas ukuran kertas fisik, alih-alih fallback ke A4/Letter seperti sebelumnya. |
 | v98 | Material baru langsung aktif di shift berjalan (`ensureMidInActiveShift_`), tidak perlu tunggu "Tarik Stok Awal Shift" shift berikutnya lagi — dipanggil otomatis dari `saveMaterialApi`/`saveMaterialBatchApi` tiap material baru tersimpan (lihat §7). |
 | v99 | Tambah `ApiService.js` (`doPost`) — JSON API layer untuk app Android, additive murni, tidak mengubah satu pun fungsi/perilaku yang dipakai web app (`doGet`). Lihat §12. |
+| v100 | **[SECURITY]** Ditemukan lewat audit eksternal: `tarikStokAwalShift`/`konfirmasiNeracaStokShift`/`konfirmasiItemStokShift` diam-diam lanjut eksekusi pakai actor fallback walau `resolveRole_()` gagal (NIK invalid tidak menghalangi aksi Admin TSP); endpoint tulis Material Master/Min-Max/Reprint sama sekali tidak mengecek role. Fix: `requireRole_(nik, allowedRoles)` baru di `AuthService.js`, diterapkan ke 11 endpoint tulis di `Code.js` (dipakai bareng web app & `ApiService.js`, jadi 1 gerbang otorisasi utk kedua front-end). `saveBatchReprint`/`deleteReprintBarcode` yang sebelumnya tidak menerima `nik` sama sekali sekarang wajib. |
 
 ## 12. JSON API untuk App Android (`ApiService.js`)
 
@@ -313,4 +321,12 @@ AppBar layar Scan:
 - Repo `android/TSPModul/` scaffold default `flutter create` mencakup platform lain (iOS/
   Linux/macOS/Windows/Web) yang tidak dipakai — sengaja dibiarkan (opsi ekspansi cross-platform
   di masa depan), tidak menambah beban maintenance karena tidak di-build/di-deploy.
+- Logic penomoran urut label Reprint (`_parseNextSequence`/`_padSeq`) di-porting manual ke
+  Dart, bukan dipanggil dari 1 sumber bersama — lihat §1. Kalau aturan penomoran di web
+  (`Index.html`) berubah, versi Dart-nya harus diupdate manual juga.
+- Coverage test masih minim: cuma 1 widget smoke test (`LoginScreen`). Fitur berisiko
+  (antrian offline, sinkronisasi background, urutan sequence Reprint, role-gating) belum
+  punya test otomatis.
+- `android/TSPModul/README.md` masih boilerplate default `flutter create`, belum ditulis
+  ulang untuk proyek ini.
 
