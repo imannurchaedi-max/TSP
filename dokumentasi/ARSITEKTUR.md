@@ -2,16 +2,30 @@
 
 ## 1. Ringkasan
 
-TSP Modul adalah web app Google Apps Script untuk digitalisasi pencatatan stock RM/PM
-(raw material/packaging) di area produksi PANTS, PT Daya Anugrah Mulya. Menggantikan
-pencatatan manual dengan mekanisme scan barcode/QR untuk tiap pergerakan material:
+TSP Modul adalah sistem digitalisasi pencatatan stock RM/PM (raw material/packaging) di
+area produksi PANTS, PT Daya Anugrah Mulya. Menggantikan pencatatan manual dengan
+mekanisme scan barcode/QR untuk tiap pergerakan material:
 WRM → TSP → Mesin → Operator → Consume/Retur → WRM.
+
+Sejak Agustus 2026, sistem ini **dual front-end** di atas satu backend Google Apps Script
+& satu Google Sheet yang sama (lihat §12–§13):
+- **Web App** (`Index.html` dkk, `doGet`) — dipakai TSP/SPV di komputer/tablet untuk kerjaan
+  admin-berat (Material Master, CSV import/export, Reprint label, dsb).
+- **App Android** (Flutter, `ApiService.js`/`doPost`) — dipakai operator/TSP di lantai
+  produksi untuk scan cepat (kamera live + antrian offline kalau sinyal putus).
+
+Kedua front-end memanggil fungsi bisnis yang **sama persis** (`Code.js` dkk) — tidak ada
+logic yang diduplikasi, tidak ada risiko data antar front-end tidak sinkron.
 
 ## 2. Stack Teknis
 
 - **Backend**: Google Apps Script (runtime V8) — semua logic server-side di file `.js`.
-- **Frontend**: `HtmlService` single-page app (`Index.html` + partial `Scanner.html` /
+  Dua jalur masuk ke deployment yang sama: `doGet` (HTML, web app) di `Code.js` dan
+  `doPost` (JSON API, app Android) di `ApiService.js` — lihat §12.
+- **Frontend Web**: `HtmlService` single-page app (`Index.html` + partial `Scanner.html` /
   `Stylesheet.html`), vanilla JS, tanpa framework, komunikasi via `google.script.run`.
+- **Frontend Android**: app Flutter native terpisah di `android/TSPModul/` (bukan bagian
+  dari deployment CLASP) — lihat §13.
 - **Database**: Google Sheets, 2 spreadsheet berbeda:
   - Spreadsheet utama **"TSP MODUL"** — ID `1DrwDLaTqqdVwfqNj9hmiPLXmVCzt-rwfR8jgltY5jO8`
   - Spreadsheet **"DATA KARYAWAN"** — ID `14OTl9xYINyRIqnJ2AEaCJFD_D9tNRRueNgFby6FjY9o`,
@@ -181,4 +195,122 @@ Backend TSP Modul dilengkapi mekanisme dinamis multi-lapis untuk membaca tabel d
 | v96 | Sumber Material Master dipindah dari sheet lama `MID EXISTING` ke sheet baru `MATERIAL MASTER` (dibuat manual oleh user) + migrasi otomatis sekali-jalan (`migrateMaterialMasterIfEmpty_`) supaya data lama tidak hilang. `resolveDeskCol_` bikin kode kompatibel dengan header `"Deskripsi"` maupun `"MATERIAL DESCRIPTION"`. |
 | v97 | Kalibrasi cetak label Reprint untuk printer produksi Tally Dascom DL210 (label thermal 75x50mm) — `@page` CSS baru di-set programatik via `applyReprintPageSize_()` supaya print dialog otomatis pas ukuran kertas fisik, alih-alih fallback ke A4/Letter seperti sebelumnya. |
 | v98 | Material baru langsung aktif di shift berjalan (`ensureMidInActiveShift_`), tidak perlu tunggu "Tarik Stok Awal Shift" shift berikutnya lagi — dipanggil otomatis dari `saveMaterialApi`/`saveMaterialBatchApi` tiap material baru tersimpan (lihat §7). |
+| v99 | Tambah `ApiService.js` (`doPost`) — JSON API layer untuk app Android, additive murni, tidak mengubah satu pun fungsi/perilaku yang dipakai web app (`doGet`). Lihat §12. |
+
+## 12. JSON API untuk App Android (`ApiService.js`)
+
+Dibuat additive di file terpisah — tidak satu pun fungsi di `Code.js`/`AuthService.js`/dkk
+yang diubah untuk mendukung ini. Prinsipnya: `doPost(e)` murni jadi **transport JSON** di
+atas fungsi publik `Code.js` yang sama persis dipakai `google.script.run` oleh web app,
+supaya tidak ada logic bisnis yang terduplikasi/berisiko divergen.
+
+- **Routing**: `doGet` (di `Code.js`, tidak diubah) tetap melayani HTML web app. `doPost`
+  (di `ApiService.js`) khusus jalur JSON — dipanggil app Android lewat HTTP POST ke URL
+  `/exec` yang sama. Tidak ada konflik karena beda HTTP method.
+- **Auth token-based** (`apiLogin_`, `validateApiToken_`): app Android login sekali dapat
+  token (bukan kirim ulang NIK+password tiap request). Token disimpan di
+  `CacheService` dengan **sliding-window TTL 6 jam** (batas maksimum CacheService Apps
+  Script) — direfresh tiap request valid, supaya sesi aktif tidak habis di tengah shift.
+  Role **selalu** diverifikasi ulang dari sheet KARYAWAN lewat `resolveRole_()` yang sama
+  dipakai `submitScan` — token tidak pernah dipercaya membawa klaim role sendiri.
+- **Idempotency** (`apiSubmitScanIdempotent_`): khusus action `submitScan`, client Android
+  mengirim `clientRequestId` (UUID per scan). Kalau request dengan id yang sama pernah
+  sukses diproses (mis. respons hilang karena koneksi putus saat sinkronisasi offline),
+  server mengembalikan hasil yang sudah tercatat dari `CacheService` (TTL 2 jam) TANPA
+  memanggil `submitScan()` lagi — mencegah dobel-scan/dobel-reprint/dobel log saat app
+  Android retry otomatis (lihat §13, antrian offline).
+- **Dispatch table** (`API_ACTIONS_`): peta `action` string → fungsi `Code.js` yang sudah
+  ada, 1:1 nama dengan yang dipakai `google.script.run` di web app (`submitScan`,
+  `getTspStock`, `getReprintData`, `saveMaterialApi`, dst). Aksi tulis (`submitScan`,
+  `tarikStokAwalShift`, `konfirmasiNeracaStokShift`, `konfirmasiItemStokShift`,
+  `saveMaterial*`, `saveMinMax*`, `deleteMaterial*`, `deleteMinMax*`) pakai NIK dari
+  **token yang terverifikasi** (`session.nik`), bukan NIK kiriman client — lebih ketat
+  dari jalur `google.script.run` lama yang percaya parameter `nik` dari client.
+- **Kuirk redirect Apps Script**: endpoint `/exec` selalu membalas HTTP 302 ke URL "echo"
+  satu-pakai (`script.googleusercontent.com/macros/echo?...`) — POST diproses di hop
+  pertama, hasil JSON baru bisa diambil lewat **GET biasa tanpa body** ke Location itu.
+  Client Android (Dio) tidak auto-follow redirect untuk POST (beda dari asumsi awal yang
+  cuma divalidasi via `curl`) — di-follow manual di `ApiClient._raw()` (lihat §13, sempat
+  jadi bug produksi v1.0.0–v1.0.1, fixed di v1.0.2).
+
+## 13. App Android (Flutter, `android/TSPModul/`)
+
+Native app terpisah dari deployment CLASP (bukan bagian `Active/`, tidak ikut ter-push
+`clasp push`). Dipakai operator/TSP di lantai produksi sebagai pengganti scan-lewat-foto
+di web app. Full parity 9 area fitur web app, ditambah kemampuan yang web app tidak punya
+(live camera scan, antrian offline, auto-update).
+
+### 13.1 Stack Teknis
+
+| Lapisan | Pilihan | Alasan |
+|---|---|---|
+| State management | Riverpod | provider-based, testable |
+| HTTP client | Dio | perlu kontrol redirect manual (lihat §12) |
+| Database lokal | Drift (SQLite) | antrian scan offline + cache |
+| Barcode scan | `mobile_scanner` (ML Kit) | live camera, ganti trik jepret-foto `html5-qrcode` di web |
+| Kredensial tersimpan | `flutter_secure_storage` | silent re-login saat token API kadaluarsa |
+| Deteksi & sync offline | `connectivity_plus` + `workmanager` | sync foreground instan + jaring pengaman background 15 menit |
+| Import CSV | `file_picker` + `csv` | Material Master & Min/Max, fuzzy header-matching sama persis dgn `processMaterialCsvContent`/`processMinMaxCsvContent` di Index.html |
+| Cetak label | `pdf` + `printing` + `barcode` | render label 75×50mm (sama ukuran fisik §2) → Android Print Framework, ganti `window.print()` browser |
+| Routing | `go_router` | role-gating navigasi, mirror `tab-btn-*` display rule di Index.html |
+| Auto-update | GitHub Releases API + `package_info_plus` + `open_filex` | lihat §13.4 |
+
+### 13.2 Fitur (mirror 9 area web app)
+
+1. **Login** — NIK+password, sesi token (§12) + silent re-login.
+2. **Scan** — event picker per-role → field pendukung (No. Reservasi dgn fallback manual,
+   Mesin, Jumlah) → kamera live scan → hasil. **Antrian offline**: scan yang gagal kirim
+   krn tidak ada koneksi otomatis masuk `PendingScans` (Drift), disinkronkan **berurutan**
+   (bukan paralel — wajib, krn state machine §6 menolak event lanjutan kalau prasyaratnya
+   utk barcode yang sama belum tercatat), idempotent lewat `clientRequestId` (§12).
+3. **Stock/Dashboard** — Stock TSP, Monitoring 6 Mesin, Penerimaan/Pengiriman Shift (role
+   tsp/spv); Stock Mesin + Terima/Consume per mesin terpilih (role operator).
+4. **Admin Shift** — Tarik Stok Awal, Konfirmasi Neraca/Item (role `tsp` khusus, mirror
+   "Aksi resmi Admin TSP" — spv cuma bisa lihat, tidak bisa eksekusi).
+5. **Riwayat** — Stock TSP/Mesin historis + Portal per jam.
+6. **Reprint** — cari Kode Induk → generate label (porting persis logic
+   `generateReprintLabels`/`_parseNextSequence`/`_padSeq` dari Index.html) → cetak PDF
+   75×50mm via Android Print Framework (printer lapangan: Tally Dascom DL210, §2).
+7. **Material Master & Min/Max** — CRUD + import CSV (export/template belum dibuat, lihat
+   §13.5).
+8. **Validasi vs MB51** — read-only, role tsp/spv.
+9. Role-gating nav: `tsp`/`spv` dapat 6 menu (Scan/Stock/Riwayat/Reprint/Material/
+   Validasi), `operator` dapat 3 (Scan/Stock/Riwayat) — mirror `tab-btn-*` display rule.
+
+### 13.3 Release Signing
+
+Ditandatangani release keystore (`tsp_modul_release.jks`) — **disimpan di luar repo**
+(`C:/Users/imann/keystores/tsp_modul/` di mesin dev, tidak pernah masuk git; `key.properties`
+digitignore di `android/.gitignore`). Wajib pakai keystore yang sama tiap build supaya
+update APK bisa menimpa instalasi lama tanpa uninstall — kalau keystore ini hilang, semua
+update ke depan butuh uninstall-reinstall manual di tiap HP.
+
+### 13.4 Auto-Update (GitHub Releases)
+
+App cek update **diam-diam tiap dibuka** (sekali per sesi) + tombol manual "Cek Update" di
+AppBar layar Scan:
+1. `core/update_checker.dart` — `GET api.github.com/repos/imannurchaedi-max/TSP/releases/latest`
+   (repo publik, tanpa token), bandingkan `tag_name` (semver numerik per-segmen) vs versi
+   terpasang (`package_info_plus`). Silent-fail kalau offline/gagal cek.
+2. Kalau ada versi lebih baru → dialog changelog (dari `body` release) → user konfirmasi →
+   `core/apk_installer.dart` download APK asset via Dio → `open_filex` buka installer
+   sistem Android (butuh permission `REQUEST_INSTALL_PACKAGES`).
+3. Rilis baru dibuat manual: bump `pubspec.yaml` → `flutter build apk --release` → git tag
+   `vX.Y.Z` → `gh release create vX.Y.Z build/.../app-release.apk`.
+
+| Versi | Perubahan |
+|---|---|
+| v1.0.0 | Rilis pertama — full parity 9 area + antrian offline + auto-update. |
+| v1.0.1 | Fix `android:label` (tampil "tsp_modul" bukan "TSP Modul" di bawah ikon HP). |
+| v1.0.2 | **Fix kritis**: login selalu gagal ("Respons server tidak dikenali HTTP 302") — Dio tidak auto-follow redirect Apps Script utk POST (lihat §12, kuirk redirect). Ditemukan saat testing pertama di HP fisik. |
+
+### 13.5 Keterbatasan Diketahui
+
+- CSV **export**/template-download belum dibuat (cuma **import**) — beda dari web app yang
+  punya keduanya.
+- Belum ada test fisik alur offline-queue penuh (airplane mode → scan → online → cek urutan
+  sync) di device sungguhan.
+- Repo `android/TSPModul/` scaffold default `flutter create` mencakup platform lain (iOS/
+  Linux/macOS/Windows/Web) yang tidak dipakai — sengaja dibiarkan (opsi ekspansi cross-platform
+  di masa depan), tidak menambah beban maintenance karena tidak di-build/di-deploy.
 
