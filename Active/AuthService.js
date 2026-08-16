@@ -156,3 +156,19 @@ function resolveRole_(nik) {
     role: roleFromJabatan_(karyawan.jabatan)
   };
 }
+
+/**
+ * Pastikan nik valid DAN rolenya termasuk salah satu dari allowedRoles -- throw Error kalau
+ * tidak (NIK kosong/tidak ditemukan, atau role tidak diizinkan). Dipakai di semua endpoint
+ * TULIS yang sensitif (Admin Shift, Material Master, Min/Max, Reprint) supaya otorisasi
+ * benar-benar ditegakkan di server, bukan cuma disembunyikan lewat tab mana yang ditampilkan
+ * di UI -- client (web maupun app Android) tidak pernah boleh dipercaya sebagai penjaga akses,
+ * cuma resolveRole_() yang boleh jadi sumber kebenaran role.
+ */
+function requireRole_(nik, allowedRoles) {
+  var actor = resolveRole_(nik); // throws kalau NIK invalid/tidak terdaftar
+  if (allowedRoles.indexOf(actor.role) === -1) {
+    throw new Error('Akses ditolak: role "' + actor.role + '" tidak berhak melakukan aksi ini.');
+  }
+  return actor;
+}

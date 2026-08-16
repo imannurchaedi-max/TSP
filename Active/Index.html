@@ -2672,7 +2672,7 @@
               btn.innerHTML = oldHtml;
               btn.disabled = false;
             })
-            .deleteReprintBarcode(barcodeAnak);
+            .deleteReprintBarcode(CURRENT_NIK, barcodeAnak);
         }
       );
     }
@@ -2995,7 +2995,7 @@
           btn.innerHTML = originalHtml;
           showPopupModal('Gagal Menyimpan', 'Error server: ' + (err.message || String(err)), 'error');
         })
-        .saveBatchReprint(_reprintPendingLabels);
+        .saveBatchReprint(CURRENT_NIK, _reprintPendingLabels);
     }
   </script>
 

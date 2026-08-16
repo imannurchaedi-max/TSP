@@ -165,8 +165,7 @@ function getOperatorConsumption(mesin) {
 /** Aksi resmi Admin TSP untuk menarik stok akhir dari shift sebelumnya ke shift aktif. */
 function tarikStokAwalShift(nik) {
   try {
-    var actor = { nik: '-', nama: 'Admin TSP' };
-    try { actor = resolveRole_(nik); } catch(e) {}
+    var actor = requireRole_(nik, ['tsp']);
     var res = tarikStokAwalShift_(actor.nik, actor.nama);
     return res;
   } catch (err) {
@@ -177,8 +176,7 @@ function tarikStokAwalShift(nik) {
 /** Aksi resmi Admin TSP untuk mengunci neraca stok sesudah verifikasi fisik keliling. */
 function konfirmasiNeracaStokShift(nik, aktualData) {
   try {
-    var actor = { nik: '-', nama: 'Admin TSP' };
-    try { actor = resolveRole_(nik); } catch(e) {}
+    var actor = requireRole_(nik, ['tsp']);
     var res = konfirmasiStokShift_(actor.nik, actor.nama, aktualData);
     return res;
   } catch (err) {
@@ -189,8 +187,7 @@ function konfirmasiNeracaStokShift(nik, aktualData) {
 /** Aksi resmi Admin TSP untuk konfirmasi atau revisi aktual per item material saat keliling lapangan. */
 function konfirmasiItemStokShift(nik, mid, aktualValue, statusType) {
   try {
-    var actor = { nik: '-', nama: 'Admin TSP' };
-    try { actor = resolveRole_(nik); } catch(e) {}
+    var actor = requireRole_(nik, ['tsp']);
     var res = konfirmasiItemStokShift_(actor.nik, actor.nama, mid, aktualValue, statusType);
     return res;
   } catch (err) {
@@ -243,10 +240,11 @@ function getReprintData(query) {
 
 /**
  * REPRINT MODULE: Menyimpan sejumlah label reprint ke REPRINT BARCODE
- * dan mendaftarkannya ke BARCODE MATERIAL PRODUKSI.
+ * dan mendaftarkannya ke BARCODE MATERIAL PRODUKSI. Role tsp/spv saja (tab Reprint).
  */
-function saveBatchReprint(labels) {
+function saveBatchReprint(nik, labels) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     var res = saveBatchReprint_(labels);
     return res;
   } catch (err) {
@@ -255,10 +253,11 @@ function saveBatchReprint(labels) {
 }
 
 /**
- * REPRINT MODULE: Menghapus barcode anak yang salah cetak.
+ * REPRINT MODULE: Menghapus barcode anak yang salah cetak. Role tsp/spv saja (tab Reprint).
  */
-function deleteReprintBarcode(barcodeAnak) {
+function deleteReprintBarcode(nik, barcodeAnak) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     var res = deleteReprintBarcode_(barcodeAnak);
     return res;
   } catch (err) {
@@ -278,6 +277,7 @@ function getMinMaxSettingsApi() {
 /** Endpoint API Simpan Min/Max Stock -- sesi 2 (TSP/SPV) */
 function saveMinMaxSettingApi(nik, mid, lokasi, minStock, maxStock) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     return saveMinMaxSetting(nik, mid, lokasi, minStock, maxStock);
   } catch (err) {
     return { success: false, message: 'Gagal menyimpan min/max: ' + err.message };
@@ -287,6 +287,7 @@ function saveMinMaxSettingApi(nik, mid, lokasi, minStock, maxStock) {
 /** Endpoint API Simpan Batch CSV Min/Max Stock -- sesi 2 (TSP/SPV) */
 function saveMinMaxBatchApi(nik, items) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     return saveMinMaxBatch_(nik, items);
   } catch (err) {
     return { success: false, message: 'Gagal mengimpor batch min/max: ' + err.message };
@@ -296,6 +297,7 @@ function saveMinMaxBatchApi(nik, items) {
 /** Endpoint API Hapus Pengaturan Min/Max Stock -- sesi 2 (TSP/SPV) */
 function deleteMinMaxSettingApi(nik, mid, lokasi) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     return deleteMinMaxSetting_(nik, mid, lokasi);
   } catch (err) {
     return { success: false, message: 'Gagal menghapus: ' + err.message };
@@ -315,10 +317,9 @@ function getMaterialListApi() {
 /** Endpoint API Simpan (Tambah/Edit) Material -- sesi 1 (TSP/SPV) */
 function saveMaterialApi(nik, mid, deskripsi, uom, supplier, status) {
   try {
+    var actor = requireRole_(nik, ['tsp', 'spv']);
     var result = saveMaterialMaster_(nik, mid, deskripsi, uom, supplier, status);
     if (result.success) {
-      var actor = { nik: nik || '-', nama: 'Admin TSP' };
-      try { actor = resolveRole_(nik); } catch (e) {}
       var inject = ensureMidInActiveShift_(mid, actor.nik, actor.nama);
       if (inject.injected) {
         result.message += ' Material langsung aktif di shift berjalan sekarang (stok awal 0).';
@@ -333,10 +334,9 @@ function saveMaterialApi(nik, mid, deskripsi, uom, supplier, status) {
 /** Endpoint API Simpan Batch CSV Material List -- sesi 1 (TSP/SPV) */
 function saveMaterialBatchApi(nik, items) {
   try {
+    var actor = requireRole_(nik, ['tsp', 'spv']);
     var result = saveMaterialBatch_(nik, items);
     if (result.success && items && items.length) {
-      var actor = { nik: nik || '-', nama: 'Admin TSP' };
-      try { actor = resolveRole_(nik); } catch (e) {}
       var injectedCount = 0;
       items.forEach(function (item) {
         if (item && item.mid && ensureMidInActiveShift_(item.mid, actor.nik, actor.nama).injected) injectedCount++;
@@ -354,6 +354,7 @@ function saveMaterialBatchApi(nik, items) {
 /** Endpoint API Hapus Material -- sesi 1 (TSP/SPV) */
 function deleteMaterialApi(nik, mid) {
   try {
+    requireRole_(nik, ['tsp', 'spv']);
     return deleteMaterial_(nik, mid);
   } catch (err) {
     return { success: false, message: 'Gagal menghapus material: ' + err.message };

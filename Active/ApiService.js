@@ -123,8 +123,8 @@ var API_ACTIONS_ = {
   getPortalHistory: function (body) { return getPortalHistory(body.mesinCode, body.dateStr, body.shiftNum); },
 
   getReprintData: function (body) { return getReprintData(body.query); },
-  saveBatchReprint: function (body) { return saveBatchReprint(body.labels); },
-  deleteReprintBarcode: function (body) { return deleteReprintBarcode(body.barcodeAnak); },
+  saveBatchReprint: function (body, session) { return saveBatchReprint(session.nik, body.labels); },
+  deleteReprintBarcode: function (body, session) { return deleteReprintBarcode(session.nik, body.barcodeAnak); },
 
   getMinMaxSettings: function () { return getMinMaxSettingsApi(); },
   saveMinMaxSetting: function (body, session) { return saveMinMaxSettingApi(session.nik, body.mid, body.lokasi, body.minStock, body.maxStock); },
