@@ -312,6 +312,7 @@ AppBar layar Scan:
 | v1.0.1 | Fix `android:label` (tampil "tsp_modul" bukan "TSP Modul" di bawah ikon HP). |
 | v1.0.2 | **Fix kritis**: login selalu gagal ("Respons server tidak dikenali HTTP 302") — Dio tidak auto-follow redirect Apps Script utk POST (lihat §12, kuirk redirect). Ditemukan saat testing pertama di HP fisik. |
 | v1.0.3 | **Fix keamanan**: router (`app_router.dart`) sekarang menolak navigasi ke route tsp/spv-only (`/reprint`, `/material`, `/validator`) kalau role user bukan `tsp`/`spv` — defense-in-depth menyusul fix `requireRole_()` di server (§12, v100 CLASP). Ditemukan lewat audit eksternal. |
+| v1.0.4 | App icon Android diganti jadi icon TSP (generate semua mipmap density + adaptive icon via `flutter_launcher_icons`), tambah footer branding logo DAM (PT Daya Anugrah Mulya) & WINGS di layar Login. Sumber gambar di `logo/` (root repo), dicopy ke `assets/branding/` utk di-bundle. |
 
 ### 13.5 Keterbatasan Diketahui
 
