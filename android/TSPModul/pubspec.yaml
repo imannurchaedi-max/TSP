@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.3+4
+version: 1.0.4+5
 
 environment:
   sdk: ^3.13.0
@@ -68,6 +68,7 @@ dev_dependencies:
   drift_dev: ^2.34.5
   build_runner: ^2.16.0
   json_serializable: ^6.14.1
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -79,6 +80,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/branding/icon_tsp.png
+    - assets/branding/logo_dam.jpg
+    - assets/branding/logo_wings.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -110,3 +116,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Konfigurasi flutter_launcher_icons -- generate ulang mipmap launcher icon dari
+# assets/branding/icon_tsp.png tiap `dart run flutter_launcher_icons`. Icon sumbernya
+# sudah berbentuk rounded-square siap pakai, jadi dipakai apa adanya utk icon
+# legacy & sebagai foreground adaptive icon (background putih polos, kanvasnya
+# sendiri sudah punya padding).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/branding/icon_tsp.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/branding/icon_tsp.png"

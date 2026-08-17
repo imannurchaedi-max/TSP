@@ -60,7 +60,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.qr_code_scanner, size: 64, color: Color(0xFF2563EB)),
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset('assets/branding/icon_tsp.png', width: 88, height: 88),
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'TSP Modul',
@@ -120,6 +125,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Masuk'),
+                    ),
+                    const SizedBox(height: 40),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('assets/branding/logo_dam.jpg', height: 36),
+                        const SizedBox(width: 20),
+                        Container(width: 1, height: 28, color: Colors.grey.shade300),
+                        const SizedBox(width: 20),
+                        Image.asset('assets/branding/logo_wings.jpg', height: 32),
+                      ],
                     ),
                   ],
                 ),
