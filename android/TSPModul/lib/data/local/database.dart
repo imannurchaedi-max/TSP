@@ -44,15 +44,28 @@ class AppDatabase extends _$AppDatabase {
     return (select(pendingScans)..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).watch();
   }
 
-  Future<List<PendingScan>> getPendingInOrder() {
+  /// Hanya scan milik [nik] yang diambil -- mencegah antrian offline operator
+  /// lain (yang belum sempat sync sebelum ganti sesi) ikut terkirim atas nama
+  /// user yang sedang login sekarang.
+  Future<List<PendingScan>> getPendingInOrder({required String nik}) {
     return (select(pendingScans)
-          ..where((t) => t.syncStatus.equals('pending'))
+          ..where((t) => t.syncStatus.equals('pending') & t.nik.equals(nik))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
   }
 
+  /// Dipanggil di awal syncPending() untuk memulihkan baris yang macet di
+  /// status 'syncing' akibat app/proses mati di tengah request sebelumnya --
+  /// tanpa ini baris tsb tidak pernah terpilih lagi oleh getPendingInOrder()
+  /// dan tidak ada jalan retry dari UI (lihat SyncQueueScreen).
+  Future<void> resetStuckSyncing() {
+    return (update(pendingScans)..where((t) => t.syncStatus.equals('syncing'))).write(
+      const PendingScansCompanion(syncStatus: Value('pending')),
+    );
+  }
+
   Future<int> countPending() async {
-    final rows = await getPendingInOrder();
+    final rows = await (select(pendingScans)..where((t) => t.syncStatus.equals('pending'))).get();
     return rows.length;
   }
 

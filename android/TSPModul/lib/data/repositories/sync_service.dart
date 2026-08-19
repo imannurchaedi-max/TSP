@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/session.dart';
 import '../local/database.dart';
 
 /// Memproses PendingScans yang berstatus 'pending', SATU PER SATU secara
@@ -14,9 +15,10 @@ import '../local/database.dart';
 class SyncService {
   final ApiClient _api;
   final AppDatabase _db;
+  final SessionManager _session;
   bool _isSyncing = false;
 
-  SyncService(this._api, this._db);
+  SyncService(this._api, this._db, this._session);
 
   bool get isSyncing => _isSyncing;
 
@@ -24,7 +26,18 @@ class SyncService {
     if (_isSyncing) return;
     _isSyncing = true;
     try {
-      final pending = await _db.getPendingInOrder();
+      // Baris yang macet di 'syncing' akibat app/proses mati di tengah request
+      // sebelumnya dipulihkan dulu ke 'pending' supaya tidak tertahan permanen.
+      await _db.resetStuckSyncing();
+
+      // Hanya sync antrian milik user yang SEDANG login -- antrian operator
+      // lain yang belum sempat terkirim sebelum ganti sesi dibiarkan pending
+      // sampai operator tsb login kembali, supaya tidak terkirim atas nama
+      // user yang salah.
+      final user = await _session.getUser();
+      if (user == null) return;
+
+      final pending = await _db.getPendingInOrder(nik: user.nik);
       for (final scan in pending) {
         await _db.updateStatus(scan.localId, status: 'syncing');
         try {
@@ -46,6 +59,12 @@ class SyncService {
           }
         } on ApiException catch (e) {
           await _db.updateStatus(scan.localId, status: 'pending', message: e.message);
+          break;
+        } catch (e) {
+          // Kegagalan tak terduga (mis. parsing/DB) -- jangan biarkan baris
+          // tertahan selamanya di 'syncing', kembalikan ke 'pending' supaya
+          // tetap punya jalan retry otomatis di siklus berikutnya.
+          await _db.updateStatus(scan.localId, status: 'pending', message: e.toString());
           break;
         }
       }

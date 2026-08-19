@@ -19,7 +19,7 @@ void backgroundSyncDispatcher() {
       final session = SessionManager();
       final api = ApiClient(session);
       final db = AppDatabase();
-      final sync = SyncService(api, db);
+      final sync = SyncService(api, db, session);
       await sync.syncPending();
       await db.close();
       return true;

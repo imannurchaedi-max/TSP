@@ -36,7 +36,7 @@ final referenceRepositoryProvider = Provider<ReferenceRepository>(
 );
 
 final syncServiceProvider = Provider<SyncService>(
-  (ref) => SyncService(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider)),
+  (ref) => SyncService(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider), ref.watch(sessionManagerProvider)),
 );
 
 final stockRepositoryProvider = Provider<StockRepository>(

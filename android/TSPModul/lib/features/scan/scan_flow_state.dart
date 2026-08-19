@@ -15,19 +15,24 @@ class ScanFlowState {
 
   const ScanFlowState({this.event, this.mesin, this.jumlah, this.noReservasi, this.lastResult});
 
+  /// Sentinel supaya copyWith(lastResult: null) benar-benar mengosongkan
+  /// lastResult, dibedakan dari "parameter tidak diisi" (yang tetap
+  /// mempertahankan nilai lama).
+  static const Object _unset = Object();
+
   ScanFlowState copyWith({
     ScanEventDef? event,
     String? mesin,
     String? jumlah,
     String? noReservasi,
-    Object? lastResult,
+    Object? lastResult = _unset,
   }) {
     return ScanFlowState(
       event: event ?? this.event,
       mesin: mesin ?? this.mesin,
       jumlah: jumlah ?? this.jumlah,
       noReservasi: noReservasi ?? this.noReservasi,
-      lastResult: lastResult ?? this.lastResult,
+      lastResult: identical(lastResult, _unset) ? this.lastResult : lastResult,
     );
   }
 }
