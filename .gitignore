@@ -33,6 +33,7 @@ Thumbs.db
 
 # Flutter / Android machine-specific & secrets (NEVER commit)
 **/key.properties
+**/key.properties.bak
 **/local.properties
 *.jks
 *.keystore
