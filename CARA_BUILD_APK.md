@@ -129,6 +129,11 @@ sesuai jaringan. Jangan mengunci IPv4: Google Apps Script berada di endpoint Goo
 dan jaringan IPv6-only akan gagal bila dipaksa ke IPv4. Transportnya HTTPS HTTP/1.1, kompatibel
 dengan endpoint `/exec` Apps Script.
 
+Kontrak yang tidak boleh diubah tanpa uji koneksi nyata: HTTPS port 443 dengan validasi sertifikat
+TLS normal, tanpa IP hardcode, proxy/`ConnectionFactory` custom, atau bypass sertifikat. Timeout
+connect/send adalah 20 detik, receive 30 detik, dan socket idle 15 detik. Kegagalan koneksi scan
+masuk antrean offline lalu dikirim ulang berurutan dengan `clientRequestId` idempotent.
+
 Ringkasan mekanisme koneksi (biar tidak bingung):
 1. App **POST JSON** ke `https://script.google.com/macros/s/AKfycby.../exec` (action login, dst).
 2. Apps Script balas redirect (**umumnya HTTP 302**) → app membaca `Location` dan melakukan

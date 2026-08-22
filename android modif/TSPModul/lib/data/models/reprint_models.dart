@@ -47,7 +47,28 @@ class ReprintSearchResult {
       );
 }
 
-/// 1 label yang dialokasikan server dan kemudian dicetak oleh client.
+/// Permintaan alokasi label. Client hanya boleh menentukan induk, jumlah, dan
+/// mode retur; barcode anak, MID, dan deskripsi selalu ditetapkan ulang oleh
+/// server setelah validasi stok dan lock sequence berhasil.
+class ReprintRequest {
+  final String barcodeInduk;
+  final num jumlah;
+  final bool isRetur;
+
+  const ReprintRequest({
+    required this.barcodeInduk,
+    required this.jumlah,
+    this.isRetur = false,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'barcodeInduk': barcodeInduk,
+        'jumlah': jumlah,
+        'isRetur': isRetur,
+      };
+}
+
+/// Label kanonis yang sudah dialokasikan server dan baru boleh dicetak client.
 class ReprintLabel {
   final String barcodeInduk;
   final String barcodeAnak;
@@ -74,12 +95,4 @@ class ReprintLabel {
         isRetur: json['isRetur'] == true,
       );
 
-  Map<String, dynamic> toJson() => {
-        'barcodeInduk': barcodeInduk,
-        'barcodeAnak': barcodeAnak,
-        'mid': mid,
-        'deskripsi': deskripsi,
-        'jumlah': jumlah,
-        'isRetur': isRetur,
-      };
 }

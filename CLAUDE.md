@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **TSP** (1713 symbols, 3527 relationships, 137 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **TSP** (3085 symbols, 6474 relationships, 249 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -47,7 +47,8 @@ This project is indexed by GitNexus as **TSP** (1713 symbols, 3527 relationships
 At the end of **every** coding fix or update — no exceptions unless the user explicitly says to hold off — run all three of the following, in this order:
 
 1. **Deploy**: `npm run deploy`. NEVER use only `clasp push` — it only updates `@HEAD` (`/dev`) and leaves the production URL (`/exec`) unchanged. `npm run deploy` builds docs, force-pushes code, and promotes the production Web App deployment in one pass.
-2. **Commit**: commit to the git repo (`origin` → github.com/imannurchaedi-max/TSP.git, branch `master`) with a clear message describing what changed and why. Don't batch unrelated changes into one commit.
-3. Confirm both succeeded before reporting the task done.
+2. **Commit and push backup**: commit intended changes with a clear message, then run `git push origin master`. A local commit alone is not a backup. Don't batch unrelated changes into one commit.
+3. **Sync safely**: before integrating remote history, run `git fetch origin`, inspect ahead/behind and changed paths, then resolve conflicts deliberately without overwriting a validated connection design with an older local or remote variant.
+4. Confirm deployment (when GAS changed), commit, and remote push all succeeded before reporting the task done.
 
 This applies automatically after finishing implementation work — don't wait to be asked separately for deploy vs. commit each time. If a change is exploratory/WIP and not meant to ship yet, say so instead of silently skipping this workflow.

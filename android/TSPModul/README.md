@@ -1,5 +1,9 @@
 # TSP Modul (Android)
 
+> **Legacy — jangan dipakai untuk build, uji, atau rilis.** Sumber Android kanonis ada di
+> `../../android modif/TSPModul/`. Folder ini dipertahankan sementara untuk menghindari
+> penghapusan perubahan lokal yang belum direkonsiliasi.
+
 App Flutter native untuk TSP Modul — full parity dengan web app (`Active/Index.html`) di
 root repo ini, ditambah live camera barcode scan, antrian scan offline, cetak label PDF,
 dan auto-update lewat GitHub Releases.

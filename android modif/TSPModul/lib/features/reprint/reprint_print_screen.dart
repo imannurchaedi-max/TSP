@@ -21,8 +21,8 @@ const _kLabelHeightMm = 50.0;
 /// perangkat Android, termasuk Dascom DL210 kalau device sudah punya print
 /// service-nya terpasang).
 class ReprintPrintScreen extends ConsumerStatefulWidget {
-  final List<ReprintLabel> labels;
-  const ReprintPrintScreen({super.key, required this.labels});
+  final List<ReprintRequest> requests;
+  const ReprintPrintScreen({super.key, required this.requests});
 
   @override
   ConsumerState<ReprintPrintScreen> createState() => _ReprintPrintScreenState();
@@ -37,10 +37,12 @@ class _ReprintPrintScreenState extends ConsumerState<ReprintPrintScreen> {
     setState(() => _saving = true);
     try {
       if (!_saved) {
-        _savedLabels = await ref.read(reprintRepositoryProvider).saveBatchReprint(widget.labels);
+        _savedLabels = await ref.read(reprintRepositoryProvider).saveBatchReprint(widget.requests);
         _saved = true;
       }
-      final doc = _buildPdf(_savedLabels ?? widget.labels);
+      final labels = _savedLabels;
+      if (labels == null) throw StateError('Server belum mengalokasikan label.');
+      final doc = _buildPdf(labels);
       await Printing.layoutPdf(onLayout: (format) async => doc.save());
       if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
     } on ApiException catch (e) {
@@ -113,15 +115,31 @@ class _ReprintPrintScreenState extends ConsumerState<ReprintPrintScreen> {
       appBar: AppBar(title: const Text('Cetak Label')),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: (_savedLabels ?? widget.labels).length,
+        itemCount: _savedLabels?.length ?? widget.requests.length,
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
-          final label = (_savedLabels ?? widget.labels)[index];
+          final savedLabel = _savedLabels?[index];
+          final request = widget.requests[index];
+          final label = savedLabel ??
+              ReprintLabel(
+                barcodeInduk: request.barcodeInduk,
+                barcodeAnak: '',
+                mid: 'Draf',
+                deskripsi: request.isRetur ? 'Mode retur' : 'Mode reprint',
+                jumlah: request.jumlah,
+                isRetur: request.isRetur,
+              );
           return Card(
             child: ListTile(
-              title: Text(label.barcodeAnak, style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                savedLabel?.barcodeAnak ?? 'Barcode akan dialokasikan server',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text('${label.mid} — ${label.deskripsi}'),
-              trailing: Text('${label.jumlah}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              trailing: Text(
+                '${savedLabel?.jumlah ?? request.jumlah}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           );
         },

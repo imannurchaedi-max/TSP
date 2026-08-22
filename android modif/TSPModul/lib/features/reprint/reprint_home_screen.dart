@@ -231,7 +231,7 @@ class _ResultView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: remainingQty > 0
                     ? () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => ReprintConfigScreen(result: result, query: query, remainingQty: remainingQty),
+                          builder: (context) => ReprintConfigScreen(result: result, query: query),
                         ))
                     : null,
                 icon: const Icon(Icons.print),

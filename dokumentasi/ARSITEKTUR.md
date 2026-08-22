@@ -15,14 +15,11 @@ Sejak Agustus 2026, sistem ini **dual front-end** di atas satu backend Google Ap
   produksi untuk scan cepat (kamera live + antrian offline kalau sinyal putus).
 
 Kedua front-end memanggil fungsi bisnis yang **sama persis** (`Code.js` dkk) untuk semua
-operasi yang menyentuh database — tidak ada logic PERSISTENSI yang diduplikasi. Satu
-pengecualian yang perlu jujur disebut: modul **Reprint** di app Android mem-porting ulang
-logic penomoran urut label (`_parseNextSequence`/`_padSeq`) dari `generateReprintLabels()`
-di `Index.html` ke Dart (`reprint_config_screen.dart`) supaya bisa generate preview label
-client-side sebelum dikirim — hasil akhirnya tetap disimpan lewat `saveBatchReprint` yang
-sama, tapi ATURAN penomorannya sendiri kini ada di 2 tempat (JS & Dart) yang bisa divergen
-kalau salah satu diubah tanpa mengubah yang lain. Lihat §13.5 untuk daftar keterbatasan
-lain yang belum 100% ditutup.
+operasi yang menyentuh database — tidak ada logic PERSISTENSI yang diduplikasi. Khusus
+Reprint, app Android hanya membentuk `ReprintRequest` (kode induk, jumlah, mode retur).
+`saveBatchReprint_()` di server memvalidasi sisa kuantitas, mengalokasikan barcode anak di
+dalam `LockService`, menyimpan batch, lalu mengembalikan label kanonis yang baru boleh
+dicetak. Aturan sequence tidak ada di Dart.
 
 ## 2. Stack Teknis
 
@@ -238,11 +235,11 @@ supaya tidak ada logic bisnis yang terduplikasi/berisiko divergen.
   diverifikasi server sebelum membuka route berhak akses. Respons hanya berasal dari
   `session` hasil `validateApiToken_`; NIK/role dari storage atau parameter client tidak
   dipakai sebagai sumber otoritas.
-- **Alokasi Reprint di server** (`saveBatchReprint_`): client hanya mengirim permintaan
-  induk, jumlah, dan mode retur. Di dalam `LockService` server menghitung sisa kuantitas,
-  menghasilkan barcode anak kanonis, mencegah tabrakan sequence, dan mengembalikan label
-  yang benar-benar disimpan untuk dicetak client. Client tidak lagi menjadi otoritas nomor
-  barcode atau kuantitas reprint.
+- **Alokasi Reprint di server** (`saveBatchReprint_`): Android mengirim `ReprintRequest`
+  yang hanya berisi induk, jumlah, dan mode retur. Di dalam `LockService` server menghitung
+  sisa kuantitas, menghasilkan barcode anak kanonis, mencegah tabrakan sequence, dan
+  mengembalikan label yang benar-benar disimpan. App menampilkan draf tanpa nomor barcode
+  sebelum respons dan hanya mencetak label respons server.
 - **Kuirk redirect Apps Script**: endpoint `/exec` selalu membalas HTTP 302 ke URL "echo"
   satu-pakai (`script.googleusercontent.com/macros/echo?...`) — POST diproses di hop
   pertama, hasil JSON baru bisa diambil lewat **GET biasa tanpa body** ke Location itu.
@@ -250,6 +247,13 @@ supaya tidak ada logic bisnis yang terduplikasi/berisiko divergen.
   cuma divalidasi via `curl`) — di-follow manual di `ApiClient._raw()`. Status 301/302/303/
   307/308 diperiksa eksplisit, karena `Response.isRedirect` tidak konsisten pada adapter
   Dio yang memakai `followRedirects: false` (lihat §13).
+- **Kontrak transport Android (wajib dipertahankan)**: `ApiClient` memakai DNS/socket
+  bawaan Android/Dart; alamat IPv4 atau IPv6 dipilih oleh jaringan, tanpa IP hardcode atau
+  pemaksaan satu keluarga alamat. Semua trafik ke Apps Script memakai HTTPS port 443 dan
+  HTTP/1.1 dengan validasi TLS normal (tanpa bypass sertifikat, proxy custom, atau
+  `badCertificateCallback`). Batas waktu: connect/send 20 detik, receive 30 detik,
+  socket idle 15 detik. Timeout/kegagalan koneksi scan masuk `PendingScans` dan hanya
+  disinkronkan ulang berurutan dengan `clientRequestId` yang idempotent.
 
 ## 13. App Android (Flutter, `android modif/TSPModul/`)
 

@@ -4,6 +4,11 @@ App Flutter native untuk TSP Modul — full parity dengan web app (`Active/Index
 root repo ini, ditambah live camera barcode scan, antrian scan offline, cetak label PDF,
 dan auto-update lewat GitHub Releases.
 
+> Sumber Android kanonis hanya folder ini: `android modif/TSPModul/`. Folder
+> `../../android/TSPModul/` adalah salinan legacy dan bukan target build, uji, atau rilis.
+> Jalur Reprint mengirim permintaan alokasi ke server; label hanya boleh dicetak dari
+> respons `saveBatchReprint` yang sudah disimpan server.
+
 Dokumentasi arsitektur lengkap ada di **`../../dokumentasi/ARSITEKTUR.md` §12–§13**
 (backend JSON API `ApiService.js`, stack teknis app ini, mapping fitur ke web app, release
 signing, mekanisme auto-update, dan keterbatasan yang masih terbuka).

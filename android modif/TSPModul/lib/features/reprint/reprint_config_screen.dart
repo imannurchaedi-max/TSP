@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import '../../data/models/reprint_models.dart';
 import 'reprint_print_screen.dart';
 
-/// Step 2: konfigurasi jumlah label & qty per label, lalu generate array
-/// ReprintLabel client-side. Mirror generateReprintLabels() + _parseNextSequence()
-/// + _padSeq() di Index.html persis (termasuk mode "Retur" pakai suffix -R).
+/// Step 2: konfigurasi jumlah label dan qty per label. Layar ini hanya membuat
+/// permintaan alokasi; barcode anak baru dibuat server di dalam lock saat user
+/// memilih simpan/cetak pada langkah berikutnya.
 class ReprintConfigScreen extends StatefulWidget {
   final ReprintSearchResult result;
   final String query;
-  final num remainingQty;
 
-  const ReprintConfigScreen({super.key, required this.result, required this.query, required this.remainingQty});
+  const ReprintConfigScreen({super.key, required this.result, required this.query});
 
   @override
   State<ReprintConfigScreen> createState() => _ReprintConfigScreenState();
@@ -37,23 +36,6 @@ class _ReprintConfigScreenState extends State<ReprintConfigScreen> {
     super.dispose();
   }
 
-  int _parseNextSequence(String lastAnak, String induk) {
-    var suffix = lastAnak.replaceFirst(induk, '');
-    suffix = suffix.replaceFirst(RegExp(r'^[-_]'), '');
-    final parts = suffix.split(RegExp(r'[-_]'));
-    var lastNum = 0;
-    for (var i = parts.length - 1; i >= 0; i--) {
-      final n = int.tryParse(parts[i]);
-      if (n != null) {
-        lastNum = n;
-        break;
-      }
-    }
-    return lastNum + 1;
-  }
-
-  String _padSeq(int n) => n < 10 ? '0$n' : '$n';
-
   void _generate() {
     final jumlah = int.tryParse(_jumlahLabelController.text.trim()) ?? 1;
     final qtyPer = int.tryParse(_qtyPerLabelController.text.trim());
@@ -69,38 +51,16 @@ class _ReprintConfigScreenState extends State<ReprintConfigScreen> {
 
     final first = widget.result.history.first;
     final induk = first.barcodeInduk;
-    final mid = first.mid;
-    final deskripsi = first.deskripsi;
-
-    final sorted = [...widget.result.history]..sort((a, b) => a.barcodeAnak.compareTo(b.barcodeAnak));
-    final lastAnak = sorted.last.barcodeAnak;
-    final nextSeq = _parseNextSequence(lastAnak, induk);
-
-    final labels = <ReprintLabel>[];
-    num currentRemaining = widget.remainingQty;
+    final requests = <ReprintRequest>[];
     for (var i = 0; i < jumlah; i++) {
-      if (currentRemaining <= 0) break;
-      final qtyToPrint = qtyPer > currentRemaining ? currentRemaining : qtyPer;
-
-      final String suffix;
-      if (_isRetur) {
-        suffix = jumlah == 1 ? '-R' : '-R${i + 1}';
-      } else {
-        suffix = '-${_padSeq(nextSeq + i)}';
-      }
-
-      labels.add(ReprintLabel(
+      requests.add(ReprintRequest(
         barcodeInduk: induk,
-        barcodeAnak: '$induk$suffix',
-        mid: mid,
-        deskripsi: deskripsi,
-        jumlah: qtyToPrint,
+        jumlah: qtyPer,
         isRetur: _isRetur,
       ));
-      currentRemaining -= qtyToPrint;
     }
 
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ReprintPrintScreen(labels: labels)));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ReprintPrintScreen(requests: requests)));
   }
 
   void _showValidation(String message) {

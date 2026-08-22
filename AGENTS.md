@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **TSP** (1713 symbols, 3527 relationships, 137 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **TSP** (3085 symbols, 6474 relationships, 249 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -46,3 +46,7 @@ This project is indexed by GitNexus as **TSP** (1713 symbols, 3527 relationships
 # Mandatory Deployment Rules (SINGLE-COMMAND COMPLETE EXECUTION)
 - **NEVER use only `clasp push`** when deploying changes for the user. `clasp push` only updates `@HEAD` (development version `/dev`) and leaves the user's production URL (`/exec`) completely unchanged, wasting tokens and forcing repeated requests.
 - **ALWAYS run `npm run deploy`** to finalize code tasks in ONE single pass. This automated script executes documentation builders (`docs:build`), force pushes code (`clasp push`), and immediately promotes the production Web App (`/exec`) deployment to the newest version simultaneously.
+
+# Mandatory Git Backup
+- **ALWAYS commit and push validated, intended changes** to `origin/master` before declaring work complete. A local commit alone is not a backup.
+- Before integrating remote history, fetch first and inspect ahead/behind plus changed paths. Preserve the active canonical source and resolve conflicts deliberately; never overwrite a validated connection design with an older local or remote variant.

@@ -13,8 +13,8 @@ class ReprintRepository {
     return ReprintSearchResult.fromJson(res['data'] as Map<String, dynamic>);
   }
 
-  Future<List<ReprintLabel>> saveBatchReprint(List<ReprintLabel> labels) async {
-    final res = await _api.call('saveBatchReprint', {'labels': labels.map((l) => l.toJson()).toList()});
+  Future<List<ReprintLabel>> saveBatchReprint(List<ReprintRequest> requests) async {
+    final res = await _api.call('saveBatchReprint', {'labels': requests.map((request) => request.toJson()).toList()});
     if (res['success'] != true) {
       throw ApiException(res['message'] as String? ?? 'Gagal merekam reprint.');
     }
