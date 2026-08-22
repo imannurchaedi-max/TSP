@@ -2795,7 +2795,8 @@
           barcodeInduk: induk,
           mid:          mid,
           deskripsi:    deskripsi,
-          jumlah:       qtyToPrint
+          jumlah:       qtyToPrint,
+          isRetur:      isRetur
         });
 
         currentRemaining -= qtyToPrint;
@@ -2982,10 +2983,21 @@
           btn.disabled = false;
           btn.innerHTML = originalHtml;
           if (res.success) {
-            window.print();
-            _reprintPendingLabels = []; // Clear after print
-            searchReprintData();
-            closeReprintLabel();
+            var savedLabels = res.data && res.data.labels;
+            if (!Array.isArray(savedLabels) || savedLabels.length === 0) {
+              showPopupModal('Gagal Menyimpan', 'Server tidak mengembalikan label yang dialokasikan.', 'error');
+              return;
+            }
+            _reprintPendingLabels = savedLabels;
+            renderReprintLabelsWithCurrentSize();
+            // JsBarcode dirender async per label; tunggu seluruh preview kanonis siap
+            // sebelum browser membuka dialog print.
+            setTimeout(function () {
+              window.print();
+              _reprintPendingLabels = [];
+              searchReprintData();
+              closeReprintLabel();
+            }, Math.max(300, savedLabels.length * 35));
           } else {
             showPopupModal('Gagal Menyimpan', 'Tidak dapat merekam barcode reprint ke database:<br>' + res.message, 'error');
           }

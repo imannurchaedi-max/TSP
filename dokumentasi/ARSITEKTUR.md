@@ -31,7 +31,7 @@ lain yang belum 100% ditutup.
   `doPost` (JSON API, app Android) di `ApiService.js` — lihat §12.
 - **Frontend Web**: `HtmlService` single-page app (`Index.html` + partial `Scanner.html` /
   `Stylesheet.html`), vanilla JS, tanpa framework, komunikasi via `google.script.run`.
-- **Frontend Android**: app Flutter native terpisah di `android/TSPModul/` (bukan bagian
+- **Frontend Android**: app Flutter native terpisah di `android modif/TSPModul/` (bukan bagian
   dari deployment CLASP) — lihat §13.
 - **Database**: Google Sheets, 2 spreadsheet berbeda:
   - Spreadsheet utama **"TSP MODUL"** — ID `1DrwDLaTqqdVwfqNj9hmiPLXmVCzt-rwfR8jgltY5jO8`
@@ -234,14 +234,24 @@ supaya tidak ada logic bisnis yang terduplikasi/berisiko divergen.
   `saveMaterial*`, `saveMinMax*`, `deleteMaterial*`, `deleteMinMax*`) pakai NIK dari
   **token yang terverifikasi** (`session.nik`), bukan NIK kiriman client — lebih ketat
   dari jalur `google.script.run` lama yang percaya parameter `nik` dari client.
+- **Revalidasi sesi bootstrap** (`getSession`): app meminta identitas sesi yang telah
+  diverifikasi server sebelum membuka route berhak akses. Respons hanya berasal dari
+  `session` hasil `validateApiToken_`; NIK/role dari storage atau parameter client tidak
+  dipakai sebagai sumber otoritas.
+- **Alokasi Reprint di server** (`saveBatchReprint_`): client hanya mengirim permintaan
+  induk, jumlah, dan mode retur. Di dalam `LockService` server menghitung sisa kuantitas,
+  menghasilkan barcode anak kanonis, mencegah tabrakan sequence, dan mengembalikan label
+  yang benar-benar disimpan untuk dicetak client. Client tidak lagi menjadi otoritas nomor
+  barcode atau kuantitas reprint.
 - **Kuirk redirect Apps Script**: endpoint `/exec` selalu membalas HTTP 302 ke URL "echo"
   satu-pakai (`script.googleusercontent.com/macros/echo?...`) — POST diproses di hop
   pertama, hasil JSON baru bisa diambil lewat **GET biasa tanpa body** ke Location itu.
   Client Android (Dio) tidak auto-follow redirect untuk POST (beda dari asumsi awal yang
-  cuma divalidasi via `curl`) — di-follow manual di `ApiClient._raw()` (lihat §13, sempat
-  jadi bug produksi v1.0.0–v1.0.1, fixed di v1.0.2).
+  cuma divalidasi via `curl`) — di-follow manual di `ApiClient._raw()`. Status 301/302/303/
+  307/308 diperiksa eksplisit, karena `Response.isRedirect` tidak konsisten pada adapter
+  Dio yang memakai `followRedirects: false` (lihat §13).
 
-## 13. App Android (Flutter, `android/TSPModul/`)
+## 13. App Android (Flutter, `android modif/TSPModul/`)
 
 Native app terpisah dari deployment CLASP (bukan bagian `Active/`, tidak ikut ter-push
 `clasp push`). Dipakai operator/TSP di lantai produksi sebagai pengganti scan-lewat-foto
@@ -254,6 +264,7 @@ di web app. Full parity 9 area fitur web app, ditambah kemampuan yang web app ti
 |---|---|---|
 | State management | Riverpod | provider-based, testable |
 | HTTP client | Dio | perlu kontrol redirect manual (lihat §12) |
+| Resolver koneksi | `dart:io` `HttpClient` standar | DNS dan koneksi dual-stack IPv4/IPv6 dari platform; HTTPS HTTP/1.1 kompatibel dengan Apps Script |
 | Database lokal | Drift (SQLite) | antrian scan offline + cache |
 | Barcode scan | `mobile_scanner` (ML Kit) | live camera, ganti trik jepret-foto `html5-qrcode` di web |
 | Kredensial tersimpan | `flutter_secure_storage` | silent re-login saat token API kadaluarsa |
@@ -276,9 +287,9 @@ di web app. Full parity 9 area fitur web app, ditambah kemampuan yang web app ti
 4. **Admin Shift** — Tarik Stok Awal, Konfirmasi Neraca/Item (role `tsp` khusus, mirror
    "Aksi resmi Admin TSP" — spv cuma bisa lihat, tidak bisa eksekusi).
 5. **Riwayat** — Stock TSP/Mesin historis + Portal per jam.
-6. **Reprint** — cari Kode Induk → generate label (porting persis logic
-   `generateReprintLabels`/`_parseNextSequence`/`_padSeq` dari Index.html) → cetak PDF
-   75×50mm via Android Print Framework (printer lapangan: Tally Dascom DL210, §2).
+6. **Reprint** — cari Kode Induk → kirim permintaan jumlah/mode retur → server mengalokasikan
+   barcode anak dan kuantitas kanonis di dalam lock → app mencetak label respons server sebagai
+   PDF 75×50mm via Android Print Framework (printer lapangan: Tally Dascom DL210, §2).
 7. **Material Master & Min/Max** — CRUD + import CSV (export/template belum dibuat, lihat
    §13.5).
 8. **Validasi vs MB51** — read-only, role tsp/spv.
@@ -303,8 +314,11 @@ AppBar layar Scan:
 2. Kalau ada versi lebih baru → dialog changelog (dari `body` release) → user konfirmasi →
    `core/apk_installer.dart` download APK asset via Dio → `open_filex` buka installer
    sistem Android (butuh permission `REQUEST_INSTALL_PACKAGES`).
-3. Rilis baru dibuat manual: bump `pubspec.yaml` → `flutter build apk --release` → git tag
-   `vX.Y.Z` → `gh release create vX.Y.Z build/.../app-release.apk`.
+3. Rilis baru dibuat manual: bump `pubspec.yaml` → jalankan `BUILD_RELEASE_LOCAL.cmd` dari
+   checkout Android → git tag `vX.Y.Z` → `gh release create vX.Y.Z
+   build/.../app-release.apk`. Launcher membangun di `C:\BuildWorkspaces\TSPModul` lalu
+   menyalin hanya APK final kembali ke SynologyDrive; jangan jalankan build release langsung
+   di folder yang tersinkron.
 
 | Versi | Perubahan |
 |---|---|
@@ -313,22 +327,48 @@ AppBar layar Scan:
 | v1.0.2 | **Fix kritis**: login selalu gagal ("Respons server tidak dikenali HTTP 302") — Dio tidak auto-follow redirect Apps Script utk POST (lihat §12, kuirk redirect). Ditemukan saat testing pertama di HP fisik. |
 | v1.0.3 | **Fix keamanan**: router (`app_router.dart`) sekarang menolak navigasi ke route tsp/spv-only (`/reprint`, `/material`, `/validator`) kalau role user bukan `tsp`/`spv` — defense-in-depth menyusul fix `requireRole_()` di server (§12, v100 CLASP). Ditemukan lewat audit eksternal. |
 | v1.0.4 | App icon Android diganti jadi icon TSP (generate semua mipmap density + adaptive icon via `flutter_launcher_icons`), tambah footer branding logo DAM (PT Daya Anugrah Mulya) & WINGS di layar Login. Sumber gambar di `logo/` (root repo), dicopy ke `assets/branding/` utk di-bundle. |
+| Unreleased | Perbaikan koneksi Apps Script: redirect 302 ditangani eksplisit, resolver kembali dual-stack IPv4/IPv6, dan ditambah tes probe redirect. Bootstrap me-revalidasi sesi server; alokasi reprint menjadi otoritatif di server. Workflow release dipindahkan ke workspace lokal agar artefak native Gradle tidak bentrok dengan reparse point SynologyDrive. |
 
-### 13.5 Keterbatasan Diketahui
+### 13.5 Workflow Koneksi dan Release
+
+```mermaid
+sequenceDiagram
+  participant A as App Android
+  participant G as Apps Script /exec
+  participant E as Google echo URL
+  A->>G: HTTPS POST {action, token, ...}
+  G-->>A: 302 Location
+  A->>E: HTTPS GET Location tanpa body
+  E-->>A: JSON respons API
+```
+
+```mermaid
+flowchart LR
+  S[Source di SynologyDrive] --> L[BUILD_RELEASE_LOCAL.cmd]
+  L --> W[Workspace lokal C:\\BuildWorkspaces\\TSPModul]
+  W --> V[clean -> pub get -> analyze -> test]
+  V --> B[flutter build apk --release]
+  B --> A[Salin hanya app-release.apk ke SynologyDrive]
+```
+
+`BUILD_RELEASE_LOCAL.cmd` adalah entry point wajib untuk release. Cache Gradle global juga
+mematikan file-system watcher (`org.gradle.vfs.watch=false`), tetapi isolasi workspace lokal
+adalah perlindungan utama terhadap reparse point SynologyDrive.
+
+### 13.6 Keterbatasan Diketahui
 
 - CSV **export**/template-download belum dibuat (cuma **import**) — beda dari web app yang
   punya keduanya.
 - Belum ada test fisik alur offline-queue penuh (airplane mode → scan → online → cek urutan
   sync) di device sungguhan.
-- Repo `android/TSPModul/` scaffold default `flutter create` mencakup platform lain (iOS/
+- Repo `android modif/TSPModul/` scaffold default `flutter create` mencakup platform lain (iOS/
   Linux/macOS/Windows/Web) yang tidak dipakai — sengaja dibiarkan (opsi ekspansi cross-platform
   di masa depan), tidak menambah beban maintenance karena tidak di-build/di-deploy.
-- Logic penomoran urut label Reprint (`_parseNextSequence`/`_padSeq`) di-porting manual ke
-  Dart, bukan dipanggil dari 1 sumber bersama — lihat §1. Kalau aturan penomoran di web
-  (`Index.html`) berubah, versi Dart-nya harus diupdate manual juga.
-- Coverage test masih minim: cuma 1 widget smoke test (`LoginScreen`). Fitur berisiko
-  (antrian offline, sinkronisasi background, urutan sequence Reprint, role-gating) belum
-  punya test otomatis.
-- `android/TSPModul/README.md` masih boilerplate default `flutter create`, belum ditulis
-  ulang untuk proyek ini.
-
+- Penomoran dan kuantitas reprint sekarang diotorisasi server, tetapi perlu uji integrasi
+  multi-user pada spreadsheet produksi untuk memverifikasi lock dan sisa kuantitas di bawah
+  beban nyata.
+- Coverage test masih terbatas: ada widget smoke test dan probe redirect Apps Script dengan
+  kredensial dummy. Fitur berisiko lain (antrian offline, sinkronisasi background, dan
+  role-gating lintas route) belum punya test otomatis menyeluruh.
+- Build release bergantung pada launcher workspace lokal. `BUILD_RELEASE_LOCAL.cmd` wajib
+  dipakai selama checkout berada di SynologyDrive; direct build di checkout tidak didukung.

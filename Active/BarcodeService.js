@@ -18,7 +18,7 @@ function padSeq_(n) {
  * Kode Induk (Mother Barcode dari WRM).
  */
 function classifyBarcode_(raw) {
-  var match = /^(.+)-(\d{2})$/.exec(raw);
+  var match = /^(.+)-(?:\d{2}|R\d*)$/.exec(raw);
   if (match) {
     var potentialParent = match[1];
     var parentRow = findBarcodeRow_(potentialParent);
@@ -41,12 +41,22 @@ function getNextChildSequence_(parentBarcode) {
   var parentCol = headerMap['NO RESERVASI'] || headerMap['Parent Barcode'] || headerMap['parent barcode'];
   if (!parentCol) return 1;
 
-  var values = sheet.getRange(2, parentCol, lastRow - 1, 1).getValues();
-  var count = 0;
+  var barcodeCol = headerMap['BARCODE'] || headerMap['barcode'];
+  if (!barcodeCol) return 1;
+
+  var values = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
+  var highest = 0;
+  var expression = new RegExp('^' + escapeRegex_(parentBarcode) + '-(\\d+)$');
   for (var i = 0; i < values.length; i++) {
-    if (String(values[i][0]).trim() === parentBarcode) count++;
+    if (String(values[i][parentCol - 1]).trim() !== parentBarcode) continue;
+    var match = expression.exec(String(values[i][barcodeCol - 1]).trim());
+    if (match) highest = Math.max(highest, Number(match[1]) || 0);
   }
-  return count + 1;
+  return highest + 1;
+}
+
+function escapeRegex_(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function getShift_(date) {
@@ -421,61 +431,113 @@ function getReprintData_(parentBarcode) {
  * REPRINT MODULE: Menyimpan sejumlah label reprint ke REPRINT BARCODE 
  * dan mendaftarkannya ke BARCODE MATERIAL PRODUKSI.
  */
-function saveBatchReprint_(labels) {
-  if (!labels || labels.length === 0) throw new Error('Tidak ada label yang dicetak.');
-  
-  var now = new Date();
-  var shift = getShift_(now);
-  var ts = formatTimestamp_(now);
+function saveBatchReprint_(requestedLabels) {
+  if (!Array.isArray(requestedLabels) || requestedLabels.length === 0) {
+    throw new Error('Tidak ada label yang dicetak.');
+  }
+  if (requestedLabels.length > 20) throw new Error('Maksimum 20 label per proses reprint.');
 
-  var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
-  var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
-  
-  var reprintHm = getHeaderMap_(reprintSheet);
-  var prodHm = getHeaderMap_(prodSheet);
-
-  var maxColRep = reprintSheet.getLastColumn();
-  var maxColProd = prodSheet.getLastColumn();
-
-  var repRowsToAppend = [];
-  var prodRowsToAppend = [];
-
-  for (var i = 0; i < labels.length; i++) {
-    var lbl = labels[i];
-
-    // 1. Row untuk REPRINT BARCODE
-    var rRow = new Array(maxColRep).fill('');
-    if (reprintHm['tanggal']) rRow[reprintHm['tanggal'] - 1] = ts;
-    if (reprintHm['shift']) rRow[reprintHm['shift'] - 1] = shift;
-    if (reprintHm['barcode']) rRow[reprintHm['barcode'] - 1] = lbl.barcodeInduk;
-    if (reprintHm['mid']) rRow[reprintHm['mid'] - 1] = lbl.mid;
-    if (reprintHm['material description']) rRow[reprintHm['material description'] - 1] = lbl.deskripsi;
-    if (reprintHm['barcode reprint']) rRow[reprintHm['barcode reprint'] - 1] = lbl.barcodeAnak;
-    if (reprintHm['jumlah']) rRow[reprintHm['jumlah'] - 1] = lbl.jumlah;
-    repRowsToAppend.push(rRow);
-
-    // 2. Row untuk BARCODE MATERIAL PRODUKSI (Agar bisa di-scan operator mesin nanti)
-    var pRow = new Array(maxColProd).fill('');
-    if (prodHm['tanggal']) pRow[prodHm['tanggal'] - 1] = ts;
-    if (prodHm['shift']) pRow[prodHm['shift'] - 1] = shift;
-    if (prodHm['barcode']) pRow[prodHm['barcode'] - 1] = lbl.barcodeAnak;
-    if (prodHm['no reservasi']) pRow[prodHm['no reservasi'] - 1] = lbl.barcodeInduk;
-    if (prodHm['mid']) pRow[prodHm['mid'] - 1] = lbl.mid;
-    if (prodHm['material description']) pRow[prodHm['material description'] - 1] = lbl.deskripsi;
-    if (prodHm['jumlah']) pRow[prodHm['jumlah'] - 1] = lbl.jumlah;
-    if (prodHm['diterima oleh tsp dari wrm']) pRow[prodHm['diterima oleh tsp dari wrm'] - 1] = ts;
-    prodRowsToAppend.push(pRow);
+  var parentBarcode = String(requestedLabels[0].barcodeInduk || '').trim();
+  if (!parentBarcode) throw new Error('Kode induk wajib diisi.');
+  var isRetur = requestedLabels[0].isRetur === true;
+  var requestedQty = [];
+  for (var i = 0; i < requestedLabels.length; i++) {
+    var item = requestedLabels[i] || {};
+    if (String(item.barcodeInduk || '').trim() !== parentBarcode) {
+      throw new Error('Semua label harus menggunakan kode induk yang sama.');
+    }
+    if ((item.isRetur === true) !== isRetur) {
+      throw new Error('Mode label reprint tidak boleh dicampur dengan mode retur.');
+    }
+    var qty = Number(item.jumlah);
+    if (!isFinite(qty) || qty <= 0) throw new Error('Jumlah setiap label harus lebih besar dari 0.');
+    requestedQty.push(qty);
   }
 
-  // Gunakan teknik batch append untuk performa Google Sheets
-  if (repRowsToAppend.length > 0) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+
+    var reprintData = getReprintData_(parentBarcode);
+    var parent = reprintData.history[0];
+    var alreadyPrinted = 0;
+    for (var j = 0; j < reprintData.history.length; j++) {
+      if (!/-00$/.test(String(reprintData.history[j].barcodeAnak || ''))) {
+        alreadyPrinted += Number(reprintData.history[j].jumlah) || 0;
+      }
+    }
+    var totalRequested = requestedQty.reduce(function(sum, qty) { return sum + qty; }, 0);
+    var remainingQty = Math.max(0, (Number(reprintData.parentQty) || 0) - alreadyPrinted);
+    if (totalRequested > remainingQty) {
+      throw new Error('Jumlah reprint (' + totalRequested + ') melebihi sisa stok induk (' + remainingQty + ').');
+    }
+
+    var nextSequence = getNextChildSequence_(parentBarcode);
+    var nextReturSequence = 1;
+    var returPattern = new RegExp('^' + escapeRegex_(parentBarcode) + '-R(\\d*)$');
+    for (var h = 0; h < reprintData.history.length; h++) {
+      var returMatch = returPattern.exec(String(reprintData.history[h].barcodeAnak || ''));
+      if (returMatch) nextReturSequence = Math.max(nextReturSequence, (Number(returMatch[1]) || 0) + 1);
+    }
+
+    var labels = [];
+    for (var k = 0; k < requestedQty.length; k++) {
+      var suffix = isRetur ? '-R' + padSeq_(nextReturSequence + k) : '-' + padSeq_(nextSequence + k);
+      labels.push({
+        barcodeInduk: parentBarcode,
+        barcodeAnak: parentBarcode + suffix,
+        mid: parent.mid,
+        deskripsi: parent.deskripsi,
+        jumlah: requestedQty[k],
+        isRetur: isRetur
+      });
+    }
+
+    var now = new Date();
+    var shift = getShift_(now);
+    var ts = formatTimestamp_(now);
+    var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
+    var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
+    var reprintHm = getHeaderMap_(reprintSheet);
+    var prodHm = getHeaderMap_(prodSheet);
+    var maxColRep = reprintSheet.getLastColumn();
+    var maxColProd = prodSheet.getLastColumn();
+    var repRowsToAppend = [];
+    var prodRowsToAppend = [];
+
+    for (var l = 0; l < labels.length; l++) {
+      var lbl = labels[l];
+      if (findBarcodeRow_(lbl.barcodeAnak).rowIndex !== -1) {
+        throw new Error('Barcode reprint ' + lbl.barcodeAnak + ' sudah terdaftar. Coba ulangi proses.');
+      }
+      var rRow = new Array(maxColRep).fill('');
+      if (reprintHm['tanggal']) rRow[reprintHm['tanggal'] - 1] = ts;
+      if (reprintHm['shift']) rRow[reprintHm['shift'] - 1] = shift;
+      if (reprintHm['barcode']) rRow[reprintHm['barcode'] - 1] = lbl.barcodeInduk;
+      if (reprintHm['mid']) rRow[reprintHm['mid'] - 1] = lbl.mid;
+      if (reprintHm['material description']) rRow[reprintHm['material description'] - 1] = lbl.deskripsi;
+      if (reprintHm['barcode reprint']) rRow[reprintHm['barcode reprint'] - 1] = lbl.barcodeAnak;
+      if (reprintHm['jumlah']) rRow[reprintHm['jumlah'] - 1] = lbl.jumlah;
+      repRowsToAppend.push(rRow);
+
+      var pRow = new Array(maxColProd).fill('');
+      if (prodHm['tanggal']) pRow[prodHm['tanggal'] - 1] = ts;
+      if (prodHm['shift']) pRow[prodHm['shift'] - 1] = shift;
+      if (prodHm['barcode']) pRow[prodHm['barcode'] - 1] = lbl.barcodeAnak;
+      if (prodHm['no reservasi']) pRow[prodHm['no reservasi'] - 1] = lbl.barcodeInduk;
+      if (prodHm['mid']) pRow[prodHm['mid'] - 1] = lbl.mid;
+      if (prodHm['material description']) pRow[prodHm['material description'] - 1] = lbl.deskripsi;
+      if (prodHm['jumlah']) pRow[prodHm['jumlah'] - 1] = lbl.jumlah;
+      if (prodHm['diterima oleh tsp dari wrm']) pRow[prodHm['diterima oleh tsp dari wrm'] - 1] = ts;
+      prodRowsToAppend.push(pRow);
+    }
+
     reprintSheet.getRange(reprintSheet.getLastRow() + 1, 1, repRowsToAppend.length, maxColRep).setValues(repRowsToAppend);
-  }
-  if (prodRowsToAppend.length > 0) {
     prodSheet.getRange(prodSheet.getLastRow() + 1, 1, prodRowsToAppend.length, maxColProd).setValues(prodRowsToAppend);
+    return { success: true, message: labels.length + ' label reprint berhasil direkam ke database.', data: { labels: labels } };
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
   }
-
-  return { success: true, message: labels.length + ' label reprint berhasil direkam ke database.' };
 }
 
 /**

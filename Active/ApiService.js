@@ -103,6 +103,9 @@ function apiSubmitScanIdempotent_(body, session) {
  */
 var API_ACTIONS_ = {
   submitScan: function (body, session) { return apiSubmitScanIdempotent_(body, session); },
+  getSession: function (body, session) {
+    return { success: true, data: { nik: session.nik, nama: session.nama, jabatan: '', role: session.role } };
+  },
   getMesinList: function () { return { success: true, data: getMesinList() }; },
   getReservasiOptions: function () { return getReservasiOptions(); },
   getTspStock: function () { return getTspStock(); },

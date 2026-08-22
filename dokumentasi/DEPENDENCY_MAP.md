@@ -67,14 +67,14 @@ graph LR
   StyleHtml["Stylesheet.html<br/>(partial CSS)"]
   CodeJs["Code.js<br/>(doGet)"]
   ApiSvc["ApiService.js<br/>(doPost)"]
-  FlutterApp["App Android (Flutter)<br/>android/TSPModul/"]
+  FlutterApp["App Android (Flutter)<br/>android modif/TSPModul/"]
 
   IndexHtml -- "include()" --> StyleHtml
   IndexHtml -- "include()" --> ScannerHtml
   IndexHtml -- "google.script.run:<br/>~25 fungsi (lihat FUNCTION_MAPPING §7)" --> CodeJs
   ScannerHtml -- "google.script.run:<br/>getMesinList, submitScan" --> CodeJs
   ScannerHtml -. "shared global vars<br/>(PAGE_ROLE, PAGE_EVENTS, CURRENT_NIK)" .-> IndexHtml
-  FlutterApp -- "HTTP POST /exec<br/>{action, token, ...} -> JSON" --> ApiSvc
+  FlutterApp -- "POST /exec {action, token, ...}<br/>302 Location -> GET echo -> JSON" --> ApiSvc
   ApiSvc -- "dispatch ke fungsi Code.js<br/>yang sama (lihat §1)" --> CodeJs
 ```
 
@@ -197,7 +197,7 @@ gantinya, masing-masing dgn mekanisme anti-stale sendiri:
   `tools/graphify_codebase.py`, jalan otomatis tiap `npm run deploy` (via `docs:build`),
   jadi TIDAK PERNAH stale relatif terhadap `Active/*.js` versi yang di-deploy. Catatan:
   graf ini granularitasnya **file → function** (bukan function → function), dan hanya
-  memindai `Active/*.js` (tidak mencakup `android/TSPModul/`, karena app Android bukan
+  memindai `Active/*.js` (tidak mencakup `android modif/TSPModul/`, karena app Android bukan
   bagian deployment CLASP) — pelengkap, bukan pengganti, `FUNCTION_MAPPING.md`.
 
 ## 7. Fungsi "Akar" vs "Daun" vs "Hub"

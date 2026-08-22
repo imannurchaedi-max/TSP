@@ -88,7 +88,8 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 |---|---|---|---|
 | `padSeq_(n)` | angka urutan | — | `handleKirimMesin_` |
 | `classifyBarcode_(raw)` | teks barcode | `findBarcodeRow_`, `getCellValue_` | `processScan_` |
-| `getNextChildSequence_(parentBarcode)` | kode induk | `getSheet_`, `getHeaderMap_` | `handleKirimMesin_` |
+| `getNextChildSequence_(parentBarcode)` | kode induk | `getSheet_`, `getHeaderMap_`, `escapeRegex_` | `handleKirimMesin_`, `saveBatchReprint_` |
+| `escapeRegex_(value)` | teks | — | `getNextChildSequence_`, `saveBatchReprint_` |
 | `getShift_(date)` | Date | `getShiftBounds_` | `handleTerimaWrm_`, `handleKirimMesin_` |
 | `getShiftBounds_(date)` | Date | — | `getShift_`, `computeTspStock_`, `computeMesinStock_`, `computeTspMesinMonitoring_`, `computeShiftReceipts_`, `computeShiftDispatches_`, `computeOperatorReceipts_`, `computeOperatorConsumption_`, `computeValidator_`, `computeHistoricalTspStock_`/`Mesin_`, `computePortalHistory_`, `executeShiftRollover_` (tidak langsung, pakai `getRealLastRowAndTrim_`) |
 | `formatTimestamp_(value)` | Date/nilai sel | — | `handleTerimaWrm_`, `handleKirimMesin_`, `handleChildCheckpoint_`, `getReprintData_`, `saveBatchReprint_` |
@@ -98,7 +99,7 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `handleKirimMesin_(raw, mesinCode, jumlah, now)` | kode induk, mesin, qty, waktu | `findBarcodeRow_`, `getCellValue_`, `getNextChildSequence_`, `padSeq_`, `getShift_`, `appendBarcodeRow_`, `appendReprintRow_`, `incrementStockCell_` | `processScan_` |
 | `handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)` | klasifikasi, eventDef, waktu, mesin, kode event | `findBarcodeRow_`, `getCellValue_`, `formatTimestamp_`, `updateBarcodeCell_`, `getSheet_`, `incrementStockCell_` | `processScan_` |
 | `getReprintData_(parentBarcode)` | kode induk | `findBarcodeRow_`, `getCellValue_`, `lookupWrmIncoming_`, `getSheet_`, `getHeaderMap_`, `formatTimestamp_`, `getShift_` | `getReprintData` (Code.js) — return `{history[], parentQty}` |
-| `saveBatchReprint_(labels)` | array `{barcodeInduk,barcodeAnak,mid,deskripsi,jumlah}` | `getSheet_`, `getHeaderMap_` | `saveBatchReprint` (Code.js) — batch-append ke REPRINT BARCODE + BARCODE MATERIAL PRODUKSI |
+| `saveBatchReprint_(requestedLabels)` | array `{barcodeInduk,jumlah,isRetur}` | `getReprintData_`, `getNextChildSequence_`, `escapeRegex_`, `LockService`, `findBarcodeRow_`, `getSheet_`, `getHeaderMap_` | `saveBatchReprint` (Code.js) — server memvalidasi kuantitas tersisa, mengalokasikan nomor barcode kanonis di dalam lock, lalu batch-append ke REPRINT BARCODE + BARCODE MATERIAL PRODUKSI |
 | `deleteReprintBarcode_(barcodeAnak)` | kode anak | `getSheet_`, `getHeaderMap_` | `deleteReprintBarcode` (Code.js) — hapus dari REPRINT BARCODE + BARCODE MATERIAL PRODUKSI |
 
 ---
@@ -189,6 +190,7 @@ di file ini utk peta lengkap `action` string → fungsi `Code.js`).
 | `doPost(e)` | request Apps Script (body JSON) | `apiLogin_`, `validateApiToken_`, `dispatchApiAction_` | App Android (`/exec`, POST) |
 | `apiLogin_(nik, password)` | NIK, password | `login_` (AuthService.js), `Utilities.getUuid`, `CacheService` | `doPost` — action `"login"`, terbitkan token sesi |
 | `validateApiToken_(token)` | token sesi | `CacheService`, `resolveRole_` (AuthService.js) | `doPost` — semua action selain `"login"`; sliding-window TTL 6 jam, role selalu diverifikasi ulang dari sheet KARYAWAN |
+| `API_ACTIONS_.getSession` *(entry dispatch)* | token sesi tervalidasi | — | bootstrap aplikasi Android — mengembalikan NIK, nama, dan role dari sesi server untuk revalidasi route; tidak menerima identitas dari client |
 | `apiSubmitScanIdempotent_(body, session)` | body request, sesi terverifikasi | `submitScan` (Code.js), `CacheService` | `API_ACTIONS_.submitScan` — cek `clientRequestId` di cache dulu sebelum panggil `submitScan()`, cegah dobel-proses saat retry offline-sync |
 | `dispatchApiAction_(action, body, session)` | nama action, body, sesi | `API_ACTIONS_[action]` | `doPost` — lempar Error kalau action tidak dikenal |
 | `API_ACTIONS_` *(bukan function, object literal)* | — | Setiap entry memanggil 1 fungsi `Code.js` (lihat §7) dgn `session.nik` utk aksi tulis | `dispatchApiAction_` |
