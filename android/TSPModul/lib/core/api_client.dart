@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 
 import 'constants.dart';
 import 'session.dart';
@@ -41,7 +43,35 @@ class ApiClient {
           receiveTimeout: const Duration(seconds: 30),
           followRedirects: false,
           validateStatus: (status) => status != null && status < 500,
-        ));
+        )) {
+    // Paksa koneksi ke script.google.com lewat IPv4 + HTTP/1.1.
+    // dart:io HttpClient TIDAK implementasi Happy Eyeballs (RFC 6555), jadi
+    // kalau resolver OS memprioritaskan alamat IPv6 (record AAAA) dan rute
+    // IPv6 di jaringan/device bermasalah, POST ke /exec akan hang/gagal ->
+    // login muncul error "tidak terkonek". Memaksa IPv4 (fallback ke alamat
+    // pertama bila tidak ada AAAA) + memaksa ALPN http/1.1 (hindari isu
+    // negosiasi HTTP/2 di sebagian device) mengatasi keduanya.
+    final httpClient = HttpClient();
+    httpClient.connectionFactory = (uri, proxyHost, proxyPort) async {
+      final addresses = await InternetAddress.lookup(uri.host);
+      final ipv4 =
+          addresses.where((a) => a.type == InternetAddressType.IPv4).toList();
+      final target = ipv4.isNotEmpty ? ipv4.first : addresses.first;
+      if (uri.scheme == 'https') {
+        final socket = await Socket.connect(target, uri.port);
+        final secure = await SecureSocket.secure(
+          socket,
+          host: uri.host,
+          supportedProtocols: const ['http/1.1'],
+        );
+        return ConnectionTask.fromSocket(
+            Future.value(secure), () => secure.destroy());
+      }
+      return Socket.startConnect(target, uri.port);
+    };
+    _dio.httpClientAdapter =
+        IOHttpClientAdapter(createHttpClient: () => httpClient);
+  }
 
   Future<Map<String, dynamic>> _raw(String action, Map<String, dynamic> body) async {
     try {
