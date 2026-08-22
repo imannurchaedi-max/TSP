@@ -30,3 +30,16 @@ Thumbs.db
 
 # Claude Code runtime/session state
 .claude/scheduled_tasks.lock
+
+# Flutter / Android machine-specific & secrets (NEVER commit)
+**/key.properties
+**/key.properties.bak
+**/local.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+.dart_tool/
+
+# Scratch / debug dumps (local only)
+scratch_*.txt
