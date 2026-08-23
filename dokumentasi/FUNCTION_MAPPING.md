@@ -42,9 +42,9 @@ grep itu untuk verifikasi cepat sebelum percaya isi dokumen ini.
 | `parseSapDate_(val, tz)` | nilai sel, zona waktu | `Session.getScriptTimeZone` | `getReservasiList_` |
 | `getReservasiList_()` | — | `getSheet_`, `getHeaderMap_`, `parseSapDate_` | `getReservasiOptions` (Code.js), `validateMidInReservasi_` — baca dari BARCODE OUTBOUND WRM (kolom `Tanggal Outbound`, `MATDOC RESERVASI`, `MID`, `DESC`, `QTY`, `UOM`, `Shift`) |
 | `validateMidInReservasi_(noReservasi, targetMid)` | no. reservasi, MID | `getReservasiList_` | `handleTerimaWrm_` |
-| `appendBarcodeRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | `handleTerimaWrm_`, `handleKirimMesin_` |
-| `appendReprintRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | `handleKirimMesin_` |
-| `updateBarcodeCell_(rowIndex, columnName, value)` | index baris, nama kolom, nilai | `getSheet_`, `getHeaderMap_` | `handleChildCheckpoint_` |
+| `appendBarcodeRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | `handleTerimaWrm_` — sejak v114 `handleKirimMesin_` **tidak** lagi memakainya (penulisan pindah ke `allocateChildBarcodes_` yang batch-append via `setValues` di dalam lock) |
+| `appendReprintRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | **tidak dipanggil siapa pun sejak v114** (dead code) — penulisan REPRINT BARCODE pindah ke `allocateChildBarcodes_`. Dibiarkan ada karena tidak berbahaya; hapus kalau memang dipastikan tak dipakai lagi |
+| `updateBarcodeCell_(rowIndex, columnName, value)` | index baris, nama kolom, nilai | `getSheet_`, `getHeaderMap_` | `handleChildCheckpoint_` — dipakai untuk kolom checkpoint **dan** untuk mengunci kolom `MESIN` (v114) |
 | `appendLog_(logObject)` | objek log | `getSheet_` | `submitScan` (Code.js) |
 | `queryReprintSheet_(query)` | substring pencarian | `getSheet_`, `getHeaderMap_` | *(tidak ada caller aktif saat ini — `getReprintData` Code.js pakai `getReprintData_` di BarcodeService.js, bukan fungsi ini. Kandidat dead code, dipertahankan kalau-kalau dipakai lagi utk pencarian substring bebas.)* |
 
@@ -86,21 +86,23 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 
 | Fungsi | Parameter | Calls | Called by |
 |---|---|---|---|
-| `padSeq_(n)` | angka urutan | — | `handleKirimMesin_` |
+| `padSeq_(n)` | angka urutan | — | `allocateChildBarcodes_` |
 | `classifyBarcode_(raw)` | teks barcode | `findBarcodeRow_`, `getCellValue_` | `processScan_` |
-| `getNextChildSequence_(parentBarcode)` | kode induk | `getSheet_`, `getHeaderMap_`, `escapeRegex_` | `handleKirimMesin_`, `saveBatchReprint_` |
-| `escapeRegex_(value)` | teks | — | `getNextChildSequence_`, `saveBatchReprint_` |
-| `getShift_(date)` | Date | `getShiftBounds_` | `handleTerimaWrm_`, `handleKirimMesin_` |
+| `getNextChildSequence_(parentBarcode)` | kode induk | `getSheet_`, `getHeaderMap_`, `escapeRegex_` | `allocateChildBarcodes_` — **hanya** dari dalam allocator, selalu di dalam script lock (v114). Sebelumnya dipanggil langsung oleh `handleKirimMesin_` tanpa lock, sumber celah barcode anak ganda |
+| `escapeRegex_(value)` | teks | — | `getNextChildSequence_`, `allocateChildBarcodes_` |
+| `allocateChildBarcodes_(parentBarcode, quantities, options)` | kode induk, array qty per label, `{isRetur, mesinCode, markSentToMesin, now}` | `LockService`, `getReprintData_`, `getNextChildSequence_`, `escapeRegex_`, `padSeq_`, `findBarcodeRow_`, `getSheet_`, `getHeaderMap_`, `getShift_`, `formatTimestamp_` | `handleKirimMesin_`, `saveBatchReprint_` — **[BARU v114]** satu-satunya jalan penerbitan Kode Anak. Empat jaminan: (1) script lock membungkus sequence + cek duplikat + penulisan; (2) total penerbitan tidak melebihi sisa kuantitas induk; (3) barcode anak yang sudah terdaftar ditolak; (4) penulisan REPRINT BARCODE + BARCODE MATERIAL PRODUKSI punya rollback kompensasi |
+| `lookupMesinFromLog_(barcodeText)` | teks barcode | `getSheet_` | `handleChildCheckpoint_` — **[BARU v114]** fallback terakhir mencari mesin dari Log Aktivitas (event `terima_operator`/`kirim_mesin` terakhir) untuk baris warisan yang kolom `MESIN`-nya kosong. Jumlah baris dibaca dari `lastRow`, bukan 500 baris tetap seperti kode lama yang melempar error saat sheet log lebih pendek |
+| `getShift_(date)` | Date | `getShiftBounds_` | `handleTerimaWrm_`, `handleKirimMesin_`, `allocateChildBarcodes_` |
 | `getShiftBounds_(date)` | Date | — | `getShift_`, `computeTspStock_`, `computeMesinStock_`, `computeTspMesinMonitoring_`, `computeShiftReceipts_`, `computeShiftDispatches_`, `computeOperatorReceipts_`, `computeOperatorConsumption_`, `computeValidator_`, `computeHistoricalTspStock_`/`Mesin_`, `computePortalHistory_`, `executeShiftRollover_` (tidak langsung, pakai `getRealLastRowAndTrim_`) |
 | `formatTimestamp_(value)` | Date/nilai sel | — | `handleTerimaWrm_`, `handleKirimMesin_`, `handleChildCheckpoint_`, `getReprintData_`, `saveBatchReprint_` |
 | `getCellValue_(rowResult, columnName)` | hasil row, nama kolom | — | `classifyBarcode_`, `handleTerimaWrm_`, `handleKirimMesin_`, `handleChildCheckpoint_`, `getReprintData_` |
 | `processScan_(barcodeText, eventCode, mesinCode, jumlah, noReservasi, actorEmail, role)` | data scan lengkap | `ensureSheetsReady_`, `handleTerimaWrm_`, `handleKirimMesin_`, `classifyBarcode_`, `handleChildCheckpoint_` | `submitScan` (Code.js) |
 | `handleTerimaWrm_(raw, noReservasi, now)` | kode barcode, no. reservasi, waktu | `findBarcodeRow_`, `lookupWrmIncoming_`, `validateMidInReservasi_`, `formatTimestamp_`, `getCellValue_`, `getShift_`, `appendBarcodeRow_`, `incrementStockCell_` | `processScan_` |
-| `handleKirimMesin_(raw, mesinCode, jumlah, now)` | kode induk, mesin, qty, waktu | `findBarcodeRow_`, `getCellValue_`, `getNextChildSequence_`, `padSeq_`, `getShift_`, `appendBarcodeRow_`, `appendReprintRow_`, `incrementStockCell_` | `processScan_` |
-| `handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)` | klasifikasi, eventDef, waktu, mesin, kode event | `findBarcodeRow_`, `getCellValue_`, `formatTimestamp_`, `updateBarcodeCell_`, `getSheet_`, `incrementStockCell_` | `processScan_` |
+| `handleKirimMesin_(raw, mesinCode, jumlah, now)` | kode induk, mesin, qty, waktu | `classifyBarcode_`, `allocateChildBarcodes_`, `getShift_`, `formatTimestamp_`, `incrementStockCell_` | `processScan_` — sejak v114 hanya validasi input (mesin ada & dikenal `MESIN_LIST`, qty > 0) lalu delegasi penerbitan ke allocator; sejak v115 **menolak Kode Anak** lewat `classifyBarcode_` supaya tidak terbit "cucu". Return menyertakan `childBarcode` + `mesin` |
+| `handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)` | klasifikasi, eventDef, waktu, mesin, kode event | `findBarcodeRow_`, `getCellValue_`, `formatTimestamp_`, `updateBarcodeCell_`, `lookupMesinFromLog_`, `incrementStockCell_` | `processScan_` — **resolusi mesin (v114)**: mesin dari client → kolom `MESIN` → `lookupMesinFromLog_`. Validasi mesin berjalan **sebelum** checkpoint ditulis; mesin yang berbeda dari kolom `MESIN` ditolak untuk semua event; mesin tak terselesaikan → `warning: true` tanpa mutasi stok. Return menyertakan `mesin` |
 | `getReprintData_(parentBarcode)` | kode induk | `findBarcodeRow_`, `getCellValue_`, `lookupWrmIncoming_`, `getSheet_`, `getHeaderMap_`, `formatTimestamp_`, `getShift_` | `getReprintData` (Code.js) — return `{history[], parentQty}` |
-| `saveBatchReprint_(requestedLabels)` | array `{barcodeInduk,jumlah,isRetur}` | `getReprintData_`, `getNextChildSequence_`, `escapeRegex_`, `LockService`, `findBarcodeRow_`, `getSheet_`, `getHeaderMap_` | `saveBatchReprint` (Code.js) — server memvalidasi kuantitas tersisa, mengalokasikan nomor barcode kanonis di dalam lock, lalu batch-append ke REPRINT BARCODE + BARCODE MATERIAL PRODUKSI. Android mengirim `ReprintRequest`, tidak pernah `ReprintLabel` atau nomor barcode anak. |
-| `deleteReprintBarcode_(barcodeAnak)` | kode anak | `getSheet_`, `getHeaderMap_` | `deleteReprintBarcode` (Code.js) — hapus dari REPRINT BARCODE + BARCODE MATERIAL PRODUKSI |
+| `saveBatchReprint_(requestedLabels)` | array `{barcodeInduk,jumlah,isRetur}` | `allocateChildBarcodes_` | `saveBatchReprint` (Code.js) — sejak v114 hanya memvalidasi **bentuk** request (kode induk seragam, mode retur tidak dicampur, qty > 0, maks 20 label); validasi sisa kuantitas, alokasi nomor kanonis di dalam lock, dan batch-append ke REPRINT BARCODE + BARCODE MATERIAL PRODUKSI dilakukan allocator. Android mengirim `ReprintRequest`, tidak pernah `ReprintLabel` atau nomor barcode anak. |
+| `deleteReprintBarcode_(barcodeAnak, actor, force)` | kode anak, actor hasil `requireRole_`, flag override | `getSheet_`, `getHeaderMap_`, `findBarcodeRow_`, `getCellValue_`, `appendLog_`, `LockService` | `deleteReprintBarcode` (Code.js) — hapus dari REPRINT BARCODE + BARCODE MATERIAL PRODUKSI, di dalam script lock dengan rollback kompensasi. Barcode wajib terdaftar di kolom `BARCODE REPRINT`; barcode yang sudah punya checkpoint operator ditolak sebagai hasil terstruktur `{blocked, requiresForce, blockingColumns}` (bukan throw) supaya client bisa menawarkan override. `force` hanya dihormati untuk role `spv`, dan override-nya dicatat di Log Aktivitas sebagai `hapus_reprint_force` |
 
 ---
 
@@ -148,7 +150,7 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `doGet(e)` | request Apps Script | `HtmlService.createTemplateFromFile('Index')` | Browser (`/exec`, GET) |
 | `include(filename)` | nama file HTML | `HtmlService.createHtmlOutputFromFile` | Template `Index.html` (`<?!= include(...) ?>`) |
 | `login(nik, password)` | NIK, password | `login_` (AuthService.js) | `Index.html` |
-| `submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik)` | data scan | `resolveRole_`, `processScan_`, `appendLog_` | `Scanner.html` |
+| `submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik)` | data scan | `resolveRole_`, `processScan_`, `appendLog_` | `Scanner.html`, `API_ACTIONS_.submitScan` (lewat `apiSubmitScanIdempotent_`) — **kontrak respons (v114)**: `{success, warning, message, barcode, childBarcode, mesin, details}`. `warning` dan `childBarcode` sebelumnya dibuang/selalu `null` walau handler mengembalikannya, membuat state warning kuning & tampilan Kode Reprint di web/Android jadi kode mati. Kolom Mesin di Log Aktivitas memakai `result.mesin` hasil resolusi server, bukan `mesinCode` mentah dari client |
 | `getMesinList()` | — | — (baca `MESIN_LIST` langsung) | `Scanner.html` |
 | `getReservasiOptions()` | — | `getReservasiList_` | `Scanner.html` |
 | `getTspStock()` | — | `computeTspStock_` | `Index.html` |
@@ -167,7 +169,7 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `getPortalHistory(mesinCode, dateStr, shiftNum)` | mesin, tanggal, shift | `computePortalHistory_` | `Index.html` |
 | `getReprintData(query)` | Kode Induk | `getReprintData_` | `Index.html` |
 | `saveBatchReprint(nik, labels)` | NIK, array label | `requireRole_(['tsp','spv'])`, `saveBatchReprint_` | `Index.html` |
-| `deleteReprintBarcode(nik, barcodeAnak)` | NIK, kode anak | `requireRole_(['tsp','spv'])`, `deleteReprintBarcode_` | `Index.html` |
+| `deleteReprintBarcode(nik, barcodeAnak, force)` | NIK, kode anak, flag override (`spv` saja) | `requireRole_(['tsp','spv'])`, `deleteReprintBarcode_` | `Index.html`, `API_ACTIONS_.deleteReprintBarcode` — sejak v114 app Android ikut mengirim `force` (`ReprintDeleteResult` di `reprint_repository.dart`); sebelumnya override hapus paksa cuma bisa dilakukan dari web |
 | `getMinMaxSettingsApi()` | — | `getMinMaxSettings` | `Index.html` |
 | `saveMinMaxSettingApi(nik, mid, lokasi, minStock, maxStock)` | NIK, MID, lokasi, min, max | `requireRole_(['tsp','spv'])`, `saveMinMaxSetting` | `Index.html` |
 | `saveMinMaxBatchApi(nik, items)` | NIK, array items | `requireRole_(['tsp','spv'])`, `saveMinMaxBatch_` | `Index.html` |

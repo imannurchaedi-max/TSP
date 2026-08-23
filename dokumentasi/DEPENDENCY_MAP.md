@@ -49,6 +49,10 @@ graph TD
 3. `MaterialService.js`, `AuthService.js` — bergantung ke `SheetService.js`/`Config.js`.
 4. `BarcodeService.js` — bergantung ke `SheetService.js`, `Config.js` (state machine EVENTS),
    juga berisi modul Reprint (`getReprintData_`, `saveBatchReprint_`, `deleteReprintBarcode_`).
+   Sejak v114 penerbitan Kode Anak dipusatkan di `allocateChildBarcodes_()`: jalur scan
+   (`handleKirimMesin_`) dan jalur Reprint batch (`saveBatchReprint_`) sama-sama memanggilnya,
+   jadi relasi keduanya ke `SheetService.js` sekarang **tidak langsung** — lewat allocator itu,
+   bukan lagi `appendBarcodeRow_`/`appendReprintRow_` masing-masing.
 5. `StockService.js` — **paling banyak dependensi**: `SheetService.js`, `MaterialService.js`
    (`getMaterialMap_`), `BarcodeService.js` (`getShiftBounds_`), `Config.js`. Juga tempat
    logic Admin Shift (`tarikStokAwalShift_`, `konfirmasiStokShift_`, dst) dan Riwayat/History.

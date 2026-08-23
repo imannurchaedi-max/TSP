@@ -74,7 +74,7 @@ Stock TSP (dipegang TSP) --scan Kode Unik yang sama--> event kirim_mesin
 |---|---|---|
 | **BARCODE MATERIAL PRODUKSI** | TSP MODUL | Log transaksi utama. 1 baris = 1 unit barcode (induk atau anak), diisi progresif lewat 6 kolom checkpoint (timestamp). |
 | **BARCODE OUTBOUND WRM** | TSP MODUL | Registry pallet fisik outbound dari WRM. Sumber lookup MID/Deskripsi/UOM/Qty saat event `terima_wrm`, sekaligus sumber data reservasi via kolom `MATDOC RESERVASI` (menggantikan tab RESERVASI lama). Kolom utama: `Tanggal Outbound`, `Shift`, `MID`, `DESC`, `UOM`, `QTY`, `Supplier`, `Kode Unik`, `MATDOC RESERVASI`. Menyediakan dropdown No. Reservasi dan daftar MID yang diizinkan saat event `terima_wrm`. |
-| **REPRINT BARCODE** | TSP MODUL | Log penerbitan Barcode Reprint (Kode Anak) oleh TSP saat event `kirim_mesin`. |
+| **REPRINT BARCODE** | TSP MODUL | Log penerbitan Barcode Reprint (Kode Anak) oleh TSP — lewat event `kirim_mesin` **maupun** menu Reprint batch. Sejak v114 kedua jalur menulis ke sini lewat allocator yang sama (`allocateChildBarcodes_`), jadi sheet ini jadi basis perhitungan sisa kuantitas induk. |
 | **STOCK TSP** | TSP MODUL | Rekap saldo real-time stok area TSP per MID (30 kolom, termasuk breakdown Kirim/Return per 6 area mesin: BHP 1-5, AHP 1). |
 | **STOCK MESIN** | TSP MODUL | Rekap saldo 39 kolom real-time stok 6 area Mesin (BHP 1..5, AHP 1). |
 | **MATERIAL MASTER** (`SHEET_NAMES.MATERIAL_MASTER`) | TSP MODUL | Master material aktif (MID, Deskripsi/**MATERIAL DESCRIPTION** — kedua penamaan header diterima, UOM, **Supplier** — kolom ditambahkan otomatis kalau belum ada) — dipakai mengisi tabel Stock supaya semua material master selalu tampil, dan jadi sumber fallback Supplier untuk MID yang belum pernah ada transaksi WRM. Dikelola lewat menu **Material Master → Material List** (lihat §7). |
@@ -85,7 +85,15 @@ Stock TSP (dipegang TSP) --scan Kode Unik yang sama--> event kirim_mesin
 | **KARYAWAN** | DATA KARYAWAN | Master NIK/Nama/Departemen/Jabatan/Password untuk login. |
 
 Header lengkap sheet "BARCODE MATERIAL PRODUKSI" (`BARCODE_COLUMNS` di `Config.js`):
-`TANGGAL, SHIFT, BARCODE, NO RESERVASI, MID, MATERIAL DESCRIPTION, JUMLAH, DITERIMA OLEH TSP DARI WRM, DIKIRIM OLEH TSP KE MESIN, RETUR DITARIK OLEH TSP DARI MESIN, DITERIMA OLEH OPERATOR DARI TSP, DICONSUME OLEH OPERATOR, RETUR DIKIRIM KEMBALI OLEH TSP KE WRM`
+`TANGGAL, SHIFT, BARCODE, NO RESERVASI, MID, MATERIAL DESCRIPTION, JUMLAH, MESIN, DITERIMA OLEH TSP DARI WRM, DIKIRIM OLEH TSP KE MESIN, RETUR DITARIK OLEH TSP DARI MESIN, DITERIMA OLEH OPERATOR DARI TSP, DICONSUME OLEH OPERATOR, RETUR DIKIRIM KEMBALI OLEH TSP KE WRM`
+
+> **Kolom `MESIN` (v114)** — catatan resmi mesin tujuan tiap barcode anak, dan **satu-satunya sumber
+> kebenaran** atribusi mesin. Dikunci saat `kirim_mesin`, diwarisi `consume_operator`/`retur_dari_mesin`
+> tanpa input ulang. Sebelum kolom ini ada, client mengirim `mesinCode = null` untuk event operator
+> sehingga mutasi STOCK MESIN tidak pernah tercatat dan retur tidak bisa menemukan mesin asal.
+> `ensureSheetsReady_()` menambahkan kolom ini otomatis ke sheet lama (di-append di ujung kanan;
+> semua akses lewat header-map, jadi posisinya tidak penting). Baris warisan sebelum v114 punya
+> `MESIN` kosong — event operator di baris itu menghasilkan **warning**, bukan sukses diam-diam.
 
 ## 5. Model Data Barcode (Induk-Anak)
 
@@ -98,6 +106,18 @@ Header lengkap sheet "BARCODE MATERIAL PRODUKSI" (`BARCODE_COLUMNS` di `Config.j
 - Klasifikasi induk vs anak (`classifyBarcode_` di `BarcodeService.js`): cek pola regex
   suffix `-\d{2}$` **dan** verifikasi bagian sebelum suffix itu terdaftar sebagai baris
   induk yang sudah diterima.
+- **Penerbitan barcode anak terpusat (v114)** — hanya `allocateChildBarcodes_()` yang boleh
+  menerbitkan Kode Anak. Dipakai bersama oleh jalur scan `kirim_mesin` dan menu Reprint batch,
+  di dalam satu `LockService` script lock, dengan empat jaminan: nomor urut + cek duplikat +
+  penulisan berada dalam satu bagian kritis; total penerbitan tidak pernah melebihi sisa
+  kuantitas induk; barcode anak yang sudah terdaftar ditolak; penulisan REPRINT BARCODE +
+  BARCODE MATERIAL PRODUKSI punya rollback kompensasi. Sebelumnya jalur scan menulis dua sheet
+  sendiri tanpa lock/cek duplikat/validasi sisa, sehingga dua scan berbarengan bisa memakai
+  sequence yang sama dan total kirim bisa melebihi qty induk.
+- **Anak tidak boleh beranak (v115)** — `kirim_mesin` menolak barcode yang terklasifikasi sebagai
+  Kode Anak. Tanpa penjagaan ini, men-scan Kode Anak menerbitkan "cucu" (`INDUK-01-01`) yang
+  menghitung qty dua kali di STOCK TSP dan lolos dari plafon sisa kuantitas induk, karena
+  allocator memakai baris anak itu sebagai induk barunya.
 
 ## 6. State Machine — 6 Checkpoint
 
@@ -105,10 +125,23 @@ Header lengkap sheet "BARCODE MATERIAL PRODUKSI" (`BARCODE_COLUMNS` di `Config.j
 |---|---|---|---|---|
 | `terima_wrm` | Diterima Oleh TSP dari WRM | — (bikin baris induk baru) | TSP | Pilih No. Reservasi (Filter Tanggal Calendar + Dropdown Unik dari kolom `MATDOC RESERVASI` di BARCODE OUTBOUND WRM + Validasi Cocok MID scan vs daftar MID reservasi) |
 | `kirim_mesin` | Dikirim Oleh TSP ke Mesin | `terima_wrm` | TSP | pilih Mesin + isi Jumlah manual |
-| `terima_operator` | Diterima Oleh Operator dari TSP | `kirim_mesin` | Operator | tidak ada |
-| `consume_operator` | Diconsume Oleh Operator | `terima_operator` | Operator | tidak ada |
-| `retur_dari_mesin` | Retur Ditarik Oleh TSP dari Mesin | `kirim_mesin` | TSP | tidak ada |
+| `terima_operator` | Diterima Oleh Operator dari TSP | `kirim_mesin` | Operator | **pilih Mesin (wajib sejak v114)** — server menolak kalau kosong, dan menolak kalau berbeda dari kolom `MESIN` yang sudah dikunci TSP |
+| `consume_operator` | Diconsume Oleh Operator | `terima_operator` | Operator | tidak ada — mesin diwarisi dari kolom `MESIN` |
+| `retur_dari_mesin` | Retur Ditarik Oleh TSP dari Mesin | `kirim_mesin` | TSP | tidak ada — mesin diwarisi dari kolom `MESIN`, fallback `lookupMesinFromLog_` untuk baris warisan |
 | `retur_ke_wrm` | Retur Dikirim Kembali Oleh TSP ke WRM | `retur_dari_mesin` | TSP | tidak ada |
+
+**Resolusi mesin (`handleChildCheckpoint_`, sejak v114).** Urutan: mesin yang dikirim client →
+kolom `MESIN` di baris barcode → `lookupMesinFromLog_()` (fallback baris warisan). Validasi mesin
+berjalan **sebelum** checkpoint ditulis, jadi penolakan tidak pernah meninggalkan checkpoint
+setengah tercatat. Kalau mesin dari client berbeda dari kolom `MESIN`, scan ditolak untuk **semua**
+event — bukan cuma `terima_operator` — supaya mutasi stok tidak pernah dibebankan ke mesin yang
+salah. Kalau mesin tetap tidak ketemu untuk event yang membutuhkannya, hasilnya ditandai
+`warning: true` dan **tidak ada mutasi stok yang dikarang**.
+
+> **Catatan alur (bukan bug).** Label dari menu Reprint batch tidak mengisi kolom
+> `DIKIRIM OLEH TSP KE MESIN`, jadi prasyarat `terima_operator` belum terpenuhi dan label itu
+> belum bisa discan operator. Ini perilaku sejak awal, bukan regresi v114 — belum diputuskan
+> apakah label reprint memang murni pengganti label fisik, atau seharusnya bisa masuk alur operator.
 
 ## 7. Model Perhitungan Stock & Side Panels (`StockService.js`)
 
@@ -201,6 +234,9 @@ Backend TSP Modul dilengkapi mekanisme dinamis multi-lapis untuk membaca tabel d
 | v98 | Material baru langsung aktif di shift berjalan (`ensureMidInActiveShift_`), tidak perlu tunggu "Tarik Stok Awal Shift" shift berikutnya lagi — dipanggil otomatis dari `saveMaterialApi`/`saveMaterialBatchApi` tiap material baru tersimpan (lihat §7). |
 | v99 | Tambah `ApiService.js` (`doPost`) — JSON API layer untuk app Android, additive murni, tidak mengubah satu pun fungsi/perilaku yang dipakai web app (`doGet`). Lihat §12. |
 | v100 | **[SECURITY]** Ditemukan lewat audit eksternal: `tarikStokAwalShift`/`konfirmasiNeracaStokShift`/`konfirmasiItemStokShift` diam-diam lanjut eksekusi pakai actor fallback walau `resolveRole_()` gagal (NIK invalid tidak menghalangi aksi Admin TSP); endpoint tulis Material Master/Min-Max/Reprint sama sekali tidak mengecek role. Fix: `requireRole_(nik, allowedRoles)` baru di `AuthService.js`, diterapkan ke 11 endpoint tulis di `Code.js` (dipakai bareng web app & `ApiService.js`, jadi 1 gerbang otorisasi utk kedua front-end). `saveBatchReprint`/`deleteReprintBarcode` yang sebelumnya tidak menerima `nik` sama sekali sekarang wajib. |
+| v101–v113 | *(tidak terdokumentasi)* — deployment antara v100 dan v114 tidak tercatat di tabel ini. Untuk menelusuri perubahannya, pakai `git log` pada rentang commit terkait, bukan tabel ini. |
+| v114 | **Konsistensi workflow barcode (audit internal).** (1) **Kolom `MESIN` baru** di BARCODE MATERIAL PRODUKSI + `terima_operator` wajib mesin — sebelumnya `requiresMesin:false` bikin client kirim `null`, mutasi STOCK MESIN tidak pernah tercatat, dan retur tidak bisa menemukan mesin asal; mesin yang tidak terselesaikan sekarang jadi warning eksplisit, bukan sukses diam-diam. (2) **`allocateChildBarcodes_()`** — allocator terkunci tunggal yang dipakai bersama `handleKirimMesin_` dan `saveBatchReprint_`; menutup celah barcode anak ganda & total kirim melebihi qty induk pada jalur scan yang dulu tanpa lock. (3) **Rollback kompensasi** pada penulisan REPRINT BARCODE + BARCODE MATERIAL PRODUKSI. (4) **Kontrak respons `submitScan` diperbaiki** — `warning` dan `childBarcode` sebelumnya dibuang/selalu `null`, membuat UI warning kuning & tampilan Kode Reprint di web/Android jadi kode mati. (5) Kolom Mesin di Log Aktivitas memakai mesin hasil resolusi server. (6) **Override hapus paksa SPV di Android** (sebelumnya cuma ada di web). (7) `lookupMesinFromLog_` tidak lagi membaca 500 baris tetap yang melempar error kalau sheet log lebih pendek. |
+| v115 | **`kirim_mesin` menolak Kode Anak.** `handleKirimMesin_` tidak pernah memakai `classifyBarcode_`, jadi men-scan barcode anak menerbitkan "cucu" (`INDUK-01-01`): qty dihitung dua kali di STOCK TSP dan penerbitannya lolos dari plafon sisa kuantitas induk (terbukti pada probe — induk qty 100 tetap tercatat terpakai 40 walau cucu 10 sudah terbit). |
 
 ## 12. JSON API untuk App Android (`ApiService.js`)
 

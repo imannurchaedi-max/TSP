@@ -113,6 +113,29 @@ Output APK:
 android modif\TSPModul\build\app\outputs\flutter-apk\app-release.apk
 ```
 
+> **Hati-hati salah ambil file.** Folder legacy `android\TSPModul\build\...` juga berisi
+> `app-release.apk` dari build lama. Ukurannya cuma beda belasan KB dari yang baru, jadi gampang
+> tertukar. Pastikan path-nya diawali **`android modif\`**, dan cek tanggal file-nya cocok dengan
+> waktu build barusan sebelum dibagikan.
+>
+> Cara cepat memastikan APK memuat kode terbaru — cari string fitur terbaru di dalam binary-nya:
+> ```powershell
+> # ekstrak lib/arm64-v8a/libapp.so dari APK, lalu:
+> Select-String -Path libapp.so -Pattern "Mesin Penerima" -Encoding Byte
+> ```
+> Verifikasi tanda tangan release (bukan debug):
+> ```powershell
+> apksigner verify --print-certs app-release.apk   # harus CN=TSP Modul
+> ```
+
+### Kapan APK WAJIB di-rebuild & disebar ulang
+
+Perbaikan sisi **Apps Script** langsung aktif untuk semua APK yang sudah terpasang begitu
+`npm run deploy` jalan — tidak perlu APK baru. Yang menuntut APK baru hanya perubahan kode
+**Dart**. Rilis v114 termasuk kategori wajib sebar ulang untuk **role operator**: server kini
+mewajibkan pilihan mesin pada event `terima_operator`, sedangkan APK sebelum v114 belum punya
+field-nya sehingga scan operator akan ditolak server. Role TSP/SPV tidak terblokir.
+
 ### Rename jadi "TSP Modul.apk"
 ```powershell
 Copy-Item "build\app\outputs\flutter-apk\app-release.apk" "..\..\TSP Modul.apk"
