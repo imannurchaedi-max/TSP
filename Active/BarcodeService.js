@@ -397,6 +397,16 @@ function handleKirimMesin_(raw, mesinCode, jumlah, now) {
   if (isNaN(qtyNum) || qtyNum <= 0) throw new Error('Jumlah yang dikirim harus lebih besar dari 0.');
 
   var parentStr = String(raw).trim();
+
+  // Kirim ke Mesin hanya boleh dari Kode Induk (mother barcode WRM). Tanpa penjagaan ini, men-scan
+  // barcode ANAK akan menerbitkan "cucu" (PARENT-01-01): qty-nya dihitung dua kali di STOCK TSP dan
+  // penerbitannya lolos dari plafon sisa kuantitas induk, karena allocator memakai baris anak itu
+  // sebagai induk barunya. classifyBarcode_ memakai aturan yang sama dengan jalur checkpoint.
+  if (classifyBarcode_(parentStr).isChild) {
+    throw new Error('Barcode "' + parentStr + '" adalah Kode Anak hasil reprint, bukan Kode Induk. ' +
+      'Event "Kirim ke Mesin" hanya boleh discan dari Kode Induk (mother barcode dari WRM).');
+  }
+
   var allocation = allocateChildBarcodes_(parentStr, [qtyNum], {
     isRetur: false,
     mesinCode: mesin,
