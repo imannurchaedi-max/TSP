@@ -589,7 +589,11 @@
         icon: 'bi-box-seam-fill',
         bg: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
         shadow: 'rgba(8, 145, 178, 0.3)',
-        requiresMesin: false, 
+        // Wajib mesin -- harus sinkron dengan EVENTS.terima_operator di Config.js. Tanpa mesin,
+        // mutasi STOCK MESIN tidak pernah tercatat dan retur tidak bisa menemukan asal
+        // barang. Server memvalidasi pilihan ini terhadap kolom MESIN yang sudah dikunci
+        // TSP saat kirim_mesin.
+        requiresMesin: true, 
         requiresJumlah: false, 
         requiresReservasi: false 
       },

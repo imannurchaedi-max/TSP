@@ -87,9 +87,57 @@ class _ReprintHomeScreenState extends ConsumerState<ReprintHomeScreen> {
       ),
     );
     if (confirmed != true) return;
+    await _runDelete(row.barcodeAnak, force: false);
+  }
+
+  /// Eksekusi hapus. Kalau server menolak karena barcode sudah punya checkpoint operator dan
+  /// user-nya SPV (res.requiresForce), tawarkan konfirmasi kedua untuk hapus paksa -- mirror
+  /// _runDeleteReprint() di Index.html.
+  Future<void> _runDelete(String barcodeAnak, {required bool force}) async {
     try {
-      await ref.read(reprintRepositoryProvider).deleteReprintBarcode(row.barcodeAnak);
-      await _search();
+      final res = await ref.read(reprintRepositoryProvider).deleteReprintBarcode(barcodeAnak, force: force);
+
+      if (res.success) {
+        if (mounted && res.forced) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(res.message), backgroundColor: Colors.orange.shade800),
+          );
+        }
+        await _search();
+        return;
+      }
+
+      if (!mounted) return;
+
+      if (res.blocked && res.requiresForce && !force) {
+        final forceConfirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Barcode Sudah Dipakai'),
+            content: Text(
+              '${res.message}\n\n'
+              'Hapus paksa? Riwayat transaksi barcode ini ikut hilang dan neraca stok bisa '
+              'berubah. Aksi ini tercatat di Log Aktivitas Barcode.',
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Batal')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Ya, Hapus Paksa'),
+              ),
+            ],
+          ),
+        );
+        if (forceConfirmed == true) {
+          await _runDelete(barcodeAnak, force: true);
+        }
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res.message), backgroundColor: Colors.red),
+      );
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));

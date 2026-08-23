@@ -31,7 +31,7 @@
         </div>
       </div>
       <div id="mesin-field" style="display:none; margin-bottom: 18px;">
-        <p style="margin-bottom:6px; font-weight:700; color:var(--text-main); font-size:14px;">Pilih mesin tujuan:</p>
+        <p id="mesin-field-label" style="margin-bottom:6px; font-weight:700; color:var(--text-main); font-size:14px;">Pilih mesin tujuan:</p>
         <select id="mesin-select" style="margin-top:0;"></select>
       </div>
       <div id="jumlah-field" style="display:none; margin-bottom: 18px;">
@@ -128,6 +128,12 @@
         setupReservasiPicker();
       }
       if (ev.requiresMesin) {
+        var mesinLabel = document.getElementById('mesin-field-label');
+        if (mesinLabel) {
+          mesinLabel.textContent = (ev.code === 'terima_operator')
+            ? 'Pilih mesin penerima:'
+            : 'Pilih mesin tujuan:';
+        }
         var select = document.getElementById('mesin-select');
         google.script.run.withSuccessHandler(function (list) {
           select.innerHTML = '';

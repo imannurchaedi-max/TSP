@@ -59,6 +59,196 @@ function escapeRegex_(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * ALLOCATOR BARCODE ANAK -- SATU-SATUNYA jalan penerbitan kode anak/reprint.
+ *
+ * Sebelumnya ada dua jalur terpisah: handleKirimMesin_() (scan reguler) mengambil sequence lalu
+ * menulis dua sheet tanpa lock, tanpa cek barcode ganda, dan tanpa validasi sisa kuantitas induk;
+ * sementara saveBatchReprint_() (reprint batch) sudah aman. Akibatnya dua scan "Kirim ke Mesin"
+ * yang berbarengan bisa memakai sequence yang sama (barcode anak ganda) dan total kirim bisa
+ * melebihi qty induk. Keduanya sekarang memakai fungsi ini supaya aturan alokasi cuma punya satu
+ * sumber kebenaran.
+ *
+ * Jaminan:
+ *  1. Script lock -- perhitungan sequence, cek duplikat, dan penulisan ada di satu bagian kritis.
+ *  2. Total kuantitas yang diterbitkan tidak pernah melebihi sisa kuantitas induk.
+ *  3. Barcode anak yang sudah terdaftar ditolak (pengaman kedua kalau sequence terlanjur meleset).
+ *  4. Penulisan REPRINT BARCODE + BARCODE MATERIAL PRODUKSI punya rollback kompensasi, jadi tidak
+ *     pernah ada baris yang cuma masuk ke satu sheet.
+ *
+ * @param {string} parentBarcode Kode induk.
+ * @param {Array<number>} quantities Kuantitas per label yang mau diterbitkan.
+ * @param {{isRetur?: boolean, mesinCode?: string, markSentToMesin?: boolean, now?: Date}=} options
+ * @return {{labels: Array<Object>, mid: string, deskripsi: string, remainingQty: number}}
+ */
+function allocateChildBarcodes_(parentBarcode, quantities, options) {
+  var opts = options || {};
+  var parentStr = String(parentBarcode == null ? '' : parentBarcode).trim();
+  if (!parentStr) throw new Error('Kode induk wajib diisi.');
+  if (!Array.isArray(quantities) || quantities.length === 0) {
+    throw new Error('Tidak ada label yang dicetak.');
+  }
+  if (quantities.length > 20) throw new Error('Maksimum 20 label per proses reprint.');
+
+  var qtyList = [];
+  for (var q = 0; q < quantities.length; q++) {
+    var qty = Number(quantities[q]);
+    if (!isFinite(qty) || qty <= 0) throw new Error('Jumlah setiap label harus lebih besar dari 0.');
+    qtyList.push(qty);
+  }
+
+  var isRetur = opts.isRetur === true;
+  var now = (opts.now instanceof Date) ? opts.now : new Date();
+  var mesinCode = opts.mesinCode ? String(opts.mesinCode).trim() : '';
+  var markSentToMesin = opts.markSentToMesin === true;
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    // --- 1. Induk wajib ada & sudah dikonfirmasi diterima dari WRM (dilempar getReprintData_) ---
+    var reprintData = getReprintData_(parentStr);
+    var parent = reprintData.history[0];
+
+    // --- 2. Sisa kuantitas induk: berlaku untuk SEMUA jalur, termasuk kirim_mesin ---
+    var alreadyPrinted = 0;
+    for (var j = 0; j < reprintData.history.length; j++) {
+      if (!/-00$/.test(String(reprintData.history[j].barcodeAnak || ''))) {
+        alreadyPrinted += Number(reprintData.history[j].jumlah) || 0;
+      }
+    }
+    var totalRequested = qtyList.reduce(function (sum, v) { return sum + v; }, 0);
+    var parentQty = Number(reprintData.parentQty) || 0;
+    var remainingQty = Math.max(0, parentQty - alreadyPrinted);
+    if (totalRequested > remainingQty) {
+      throw new Error('Jumlah (' + totalRequested + ') melebihi sisa kuantitas induk "' + parentStr +
+        '" (sisa ' + remainingQty + ' dari total ' + parentQty + ').');
+    }
+
+    // --- 3. Nomor urut (reguler -01, -02... / retur -R01, -R02...) ---
+    var nextSequence = getNextChildSequence_(parentStr);
+    var nextReturSequence = 1;
+    var returPattern = new RegExp('^' + escapeRegex_(parentStr) + '-R(\\d*)$');
+    for (var h = 0; h < reprintData.history.length; h++) {
+      var returMatch = returPattern.exec(String(reprintData.history[h].barcodeAnak || ''));
+      if (returMatch) nextReturSequence = Math.max(nextReturSequence, (Number(returMatch[1]) || 0) + 1);
+    }
+
+    var labels = [];
+    for (var k = 0; k < qtyList.length; k++) {
+      var suffix = isRetur ? '-R' + padSeq_(nextReturSequence + k) : '-' + padSeq_(nextSequence + k);
+      labels.push({
+        barcodeInduk: parentStr,
+        barcodeAnak: parentStr + suffix,
+        mid: parent.mid,
+        deskripsi: parent.deskripsi,
+        jumlah: qtyList[k],
+        isRetur: isRetur
+      });
+    }
+
+    // --- 4. Susun baris kedua sheet, tolak barcode anak yang sudah terdaftar ---
+    var ts = formatTimestamp_(now);
+    var shift = getShift_(now);
+    var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
+    var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
+    var reprintHm = getHeaderMap_(reprintSheet);
+    var prodHm = getHeaderMap_(prodSheet);
+    var maxColRep = reprintSheet.getLastColumn();
+    var maxColProd = prodSheet.getLastColumn();
+    var repRowsToAppend = [];
+    var prodRowsToAppend = [];
+
+    for (var l = 0; l < labels.length; l++) {
+      var lbl = labels[l];
+      if (findBarcodeRow_(lbl.barcodeAnak).rowIndex !== -1) {
+        throw new Error('Barcode reprint ' + lbl.barcodeAnak + ' sudah terdaftar. Coba ulangi proses.');
+      }
+
+      var rRow = new Array(maxColRep).fill('');
+      if (reprintHm['tanggal']) rRow[reprintHm['tanggal'] - 1] = ts;
+      if (reprintHm['shift']) rRow[reprintHm['shift'] - 1] = shift;
+      if (reprintHm['barcode']) rRow[reprintHm['barcode'] - 1] = lbl.barcodeInduk;
+      if (reprintHm['mid']) rRow[reprintHm['mid'] - 1] = lbl.mid;
+      if (reprintHm['material description']) rRow[reprintHm['material description'] - 1] = lbl.deskripsi;
+      if (reprintHm['barcode reprint']) rRow[reprintHm['barcode reprint'] - 1] = lbl.barcodeAnak;
+      if (reprintHm['jumlah']) rRow[reprintHm['jumlah'] - 1] = lbl.jumlah;
+      repRowsToAppend.push(rRow);
+
+      var pRow = new Array(maxColProd).fill('');
+      if (prodHm['tanggal']) pRow[prodHm['tanggal'] - 1] = ts;
+      if (prodHm['shift']) pRow[prodHm['shift'] - 1] = shift;
+      if (prodHm['barcode']) pRow[prodHm['barcode'] - 1] = lbl.barcodeAnak;
+      if (prodHm['no reservasi']) pRow[prodHm['no reservasi'] - 1] = lbl.barcodeInduk;
+      if (prodHm['mid']) pRow[prodHm['mid'] - 1] = lbl.mid;
+      if (prodHm['material description']) pRow[prodHm['material description'] - 1] = lbl.deskripsi;
+      if (prodHm['jumlah']) pRow[prodHm['jumlah'] - 1] = lbl.jumlah;
+      if (prodHm['mesin'] && mesinCode) pRow[prodHm['mesin'] - 1] = mesinCode;
+      if (prodHm['diterima oleh tsp dari wrm']) pRow[prodHm['diterima oleh tsp dari wrm'] - 1] = ts;
+      if (markSentToMesin && prodHm['dikirim oleh tsp ke mesin']) {
+        pRow[prodHm['dikirim oleh tsp ke mesin'] - 1] = ts;
+      }
+      prodRowsToAppend.push(pRow);
+    }
+
+    // --- 5. Tulis dua sheet dengan rollback kompensasi ---
+    var repStartRow = reprintSheet.getLastRow() + 1;
+    reprintSheet.getRange(repStartRow, 1, repRowsToAppend.length, maxColRep).setValues(repRowsToAppend);
+    try {
+      prodSheet.getRange(prodSheet.getLastRow() + 1, 1, prodRowsToAppend.length, maxColProd)
+        .setValues(prodRowsToAppend);
+    } catch (prodErr) {
+      try {
+        reprintSheet.deleteRows(repStartRow, repRowsToAppend.length);
+      } catch (rollbackErr) {
+        throw new Error('KRITIS: ' + labels.length + ' baris reprint untuk induk "' + parentStr +
+          '" sudah tertulis di ' + SHEET_NAMES.REPRINT + ' tapi gagal ditulis ke ' + SHEET_NAMES.BARCODE +
+          ' dan gagal di-rollback (' + rollbackErr.message + '). Hubungi Admin TSP untuk perbaikan manual.');
+      }
+      throw new Error('Gagal menerbitkan barcode anak untuk induk "' + parentStr + '" (' + prodErr.message +
+        '). Tidak ada data yang berubah.');
+    }
+
+    return {
+      labels: labels,
+      mid: parent.mid,
+      deskripsi: parent.deskripsi,
+      remainingQty: remainingQty - totalRequested
+    };
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+/**
+ * Cari mesin terakhir yang tercatat untuk 1 barcode di Log Aktivitas -- fallback terakhir untuk
+ * barcode lama yang diterbitkan sebelum kolom MESIN ada.
+ *
+ * Catatan: versi lama membaca 500 baris tetap (getRange(start, 1, 500, 6)) sehingga melempar error
+ * kalau sheet log lebih pendek dari itu; di sini jumlah baris dihitung dari lastRow.
+ */
+function lookupMesinFromLog_(barcodeText) {
+  try {
+    var target = String(barcodeText).trim();
+    var logSheet = getSheet_(SHEET_NAMES.LOG);
+    var lastRow = logSheet.getLastRow();
+    if (lastRow < 2) return '';
+
+    var startRow = Math.max(2, lastRow - 500);
+    var numRows = lastRow - startRow + 1;
+    var logData = logSheet.getRange(startRow, 1, numRows, 6).getValues();
+    for (var n = logData.length - 1; n >= 0; n--) {
+      if (String(logData[n][1]).trim() !== target) continue;
+      var ev = String(logData[n][2]).trim();
+      if ((ev === 'terima_operator' || ev === 'kirim_mesin') && logData[n][5]) {
+        return String(logData[n][5]).trim();
+      }
+    }
+  } catch (e) {
+    // Log cuma fallback -- kegagalan baca tidak boleh menggagalkan scan.
+  }
+  return '';
+}
+
 function getShift_(date) {
   return getShiftBounds_(date).shift;
 }
@@ -192,65 +382,53 @@ function handleTerimaWrm_(raw, noReservasi, now) {
 
 /**
  * Event 2: kirim_mesin -> scan Kode Unik Induk, REPRINT Barcode Anak (<KodeInduk>-01), dan kirim ke Mesin.
+ *
+ * Penerbitan barcode anak didelegasikan ke allocateChildBarcodes_() -- allocator terkunci yang
+ * dipakai bersama dengan reprint batch. Jalur ini dulu menulis dua sheet sendiri tanpa lock,
+ * tanpa cek duplikat, dan tanpa validasi sisa kuantitas induk.
  */
 function handleKirimMesin_(raw, mesinCode, jumlah, now) {
   if (!mesinCode) throw new Error('Mesin harus dipilih untuk event Kirim ke Mesin.');
+  var mesin = String(mesinCode).trim();
+  if (MESIN_LIST.indexOf(mesin) === -1) {
+    throw new Error('Mesin "' + mesin + '" tidak dikenal.');
+  }
   var qtyNum = Number(jumlah);
   if (isNaN(qtyNum) || qtyNum <= 0) throw new Error('Jumlah yang dikirim harus lebih besar dari 0.');
 
-  var parentRow = findBarcodeRow_(raw);
-  if (parentRow.rowIndex === -1) {
-    throw new Error('Barcode Induk "' + raw + '" belum diterima oleh TSP dari WRM.');
-  }
+  var parentStr = String(raw).trim();
+  var allocation = allocateChildBarcodes_(parentStr, [qtyNum], {
+    isRetur: false,
+    mesinCode: mesin,
+    markSentToMesin: true,
+    now: now
+  });
 
-  var tsTerima = getCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM');
-  if (!tsTerima) {
-    throw new Error('Barcode Induk "' + raw + '" belum dikonfirmasi penerimaannya dari WRM.');
-  }
-
-  var parentMid = getCellValue_(parentRow, 'MID');
-  var parentDesc = getCellValue_(parentRow, 'MATERIAL DESCRIPTION');
-
-  // Generate Kode Reprint / Kode Anak
-  var seq = getNextChildSequence_(raw);
-  var childBarcode = raw + '-' + padSeq_(seq);
-
+  var childBarcode = allocation.labels[0].barcodeAnak;
   var childRow = {
     'TANGGAL': formatTimestamp_(now),
     'SHIFT': getShift_(now),
     'BARCODE': childBarcode,
-    'NO RESERVASI': raw,
-    'MID': parentMid,
-    'MATERIAL DESCRIPTION': parentDesc,
+    'NO RESERVASI': parentStr,
+    'MID': allocation.mid,
+    'MATERIAL DESCRIPTION': allocation.deskripsi,
     'JUMLAH': qtyNum,
+    'MESIN': mesin,
     'DITERIMA OLEH TSP DARI WRM': formatTimestamp_(now),
     'DIKIRIM OLEH TSP KE MESIN': formatTimestamp_(now)
   };
 
-  appendBarcodeRow_(childRow);
-
-  // Log penerbitan barcode reprint ke sheet REPRINT BARCODE
-  var reprintLog = {
-    'TANGGAL': formatTimestamp_(now),
-    'SHIFT': getShift_(now),
-    'BARCODE': raw,
-    'MID': parentMid,
-    'MATERIAL DESCRIPTION': parentDesc,
-    'BARCODE REPRINT': childBarcode,
-    'JUMLAH': qtyNum
-  };
-  appendReprintRow_(reprintLog);
-
   var stockSynced = true;
   try {
-    stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, parentMid, 'Kirim ' + mesinCode, qtyNum, now);
+    stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, allocation.mid, 'Kirim ' + mesin, qtyNum, now);
   } catch(e) {
     stockSynced = false;
   }
 
-  var msg = 'Berhasil reprint Kode Anak "' + childBarcode + '" (Qty: ' + qtyNum + ') dikirim ke ' + mesinCode;
+  var msg = 'Berhasil reprint Kode Anak "' + childBarcode + '" (Qty: ' + qtyNum + ') dikirim ke ' + mesin +
+    '\n\u2022 Sisa kuantitas induk: ' + allocation.remainingQty;
   if (!stockSynced) {
-    msg += '\n\n⚠️ PERHATIAN: Barcode berhasil dicatat, TAPI Stock TSP BELUM tersinkron untuk shift ini ' +
+    msg += '\n\n\u26a0\ufe0f PERHATIAN: Barcode berhasil dicatat, TAPI Stock TSP BELUM tersinkron untuk shift ini ' +
       '(kemungkinan "Tarik Stok Awal Shift" belum dilakukan). Hubungi Admin TSP untuk Tarik Stok Awal, ' +
       'lalu minta Admin TSP memverifikasi ulang transaksi ini agar tercatat di Stock TSP.';
   }
@@ -259,7 +437,9 @@ function handleKirimMesin_(raw, mesinCode, jumlah, now) {
     success: true,
     warning: !stockSynced,
     barcode: childBarcode,
-    parentBarcode: raw,
+    childBarcode: childBarcode,
+    parentBarcode: parentStr,
+    mesin: mesin,
     event: 'kirim_mesin',
     message: msg,
     details: childRow
@@ -268,6 +448,13 @@ function handleKirimMesin_(raw, mesinCode, jumlah, now) {
 
 /**
  * Event 3, 4, 5, 6 -> Operasi pada Barcode Reprint / Kode Anak.
+ *
+ * Atribusi mesin: kolom MESIN di BARCODE MATERIAL PRODUKSI adalah sumber kebenarannya. TSP
+ * menguncinya saat kirim_mesin; operator mengisinya saat terima_operator untuk label reprint
+ * yang belum punya tujuan. consume_operator dan retur_dari_mesin tinggal membacanya, jadi tidak
+ * ada lagi mutasi STOCK MESIN yang hilang diam-diam karena client mengirim mesinCode = null.
+ * Kalau mesin tetap tidak ketemu untuk event yang butuh, hasilnya ditandai warning -- BUKAN
+ * sukses polos seperti sebelumnya.
  */
 function handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode) {
   var raw = classified.raw;
@@ -290,52 +477,74 @@ function handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)
     throw new Error('Event "' + eventDef.label + '" sudah pernah dicatat sebelumnya untuk barcode "' + raw + '".');
   }
 
+  // --- Resolusi mesin SEBELUM ada penulisan apa pun, supaya mismatch tidak setengah tercatat ---
+  var recordedMesin = String(getCellValue_(barcodeRow, 'MESIN') || '').trim();
+  var requestedMesin = mesinCode ? String(mesinCode).trim() : '';
+
+  if (requestedMesin && MESIN_LIST.indexOf(requestedMesin) === -1) {
+    throw new Error('Mesin "' + requestedMesin + '" tidak dikenal.');
+  }
+
+  // Kolom MESIN adalah catatan resmi tujuan barcode. Kalau client mengirim mesin lain, itu
+  // tanda label salah scan -- ditolak untuk SEMUA event, bukan cuma terima_operator, supaya
+  // mutasi stok tidak pernah dibebankan ke mesin yang salah.
+  if (requestedMesin && recordedMesin && requestedMesin !== recordedMesin) {
+    throw new Error('Barcode "' + raw + '" tercatat di mesin ' + recordedMesin + ', bukan ' + requestedMesin +
+      '. Periksa kembali label yang discan atau minta TSP mengoreksi data mesinnya.');
+  }
+
+  if (eventCode === 'terima_operator' && !requestedMesin && !recordedMesin) {
+    throw new Error('Mesin wajib dipilih untuk event "' + eventDef.label + '" supaya mutasi Stock Mesin tercatat.');
+  }
+
+  var activeMesin = requestedMesin || recordedMesin || lookupMesinFromLog_(raw);
+
   updateBarcodeCell_(barcodeRow.rowIndex, eventDef.column, formatTimestamp_(now));
+
+  // Kunci mesin ke baris barcode begitu diketahui, supaya consume/retur tidak perlu menebak lagi.
+  if (activeMesin && !recordedMesin && barcodeRow.headerMap['MESIN']) {
+    try {
+      updateBarcodeCell_(barcodeRow.rowIndex, 'MESIN', activeMesin);
+    } catch (e) {
+      // Bukan kegagalan fatal: checkpoint-nya sudah tercatat, mutasi stok di bawah tetap jalan.
+    }
+  }
+
+  var MESIN_REQUIRED_EVENTS = ['terima_operator', 'consume_operator', 'retur_dari_mesin'];
+  var mesinMissing = !activeMesin && MESIN_REQUIRED_EVENTS.indexOf(eventCode) !== -1;
 
   var stockSynced = true;
   try {
     var mid = getCellValue_(barcodeRow, 'MID');
     var qty = Number(getCellValue_(barcodeRow, 'JUMLAH')) || 0;
 
-    // Fallback: cari mesinCode di barcodeRow jika undefined (kadang retur dari TSP tidak isi mesin dari frontend)
-    var activeMesin = mesinCode;
-    if (!activeMesin && eventCode === 'retur_dari_mesin') {
-      var logSheet = getSheet_(SHEET_NAMES.LOG);
-      var lastR = logSheet.getLastRow();
-      if (lastR > 1) {
-        var logData = logSheet.getRange(Math.max(2, lastR - 500), 1, 500, 6).getValues();
-        for (var n = logData.length - 1; n >= 0; n--) {
-          if (logData[n][1] === raw && logData[n][2] === 'terima_operator' && logData[n][5]) {
-            activeMesin = logData[n][5];
-            break;
-          }
-        }
-      }
-    }
-
-    if (eventCode === 'terima_operator' && activeMesin) {
-       stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Terima ' + activeMesin, qty, now);
-    } else if (eventCode === 'consume_operator' && activeMesin) {
-       stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Consume ' + activeMesin, qty, now);
+    if (mesinMissing) {
+      // Tidak ada mesin -> mutasi stok mesin tidak mungkin benar. Ditandai supaya operator dan
+      // Admin TSP tahu harus koreksi manual, bukan dibiarkan lewat sebagai sukses.
+      stockSynced = false;
+    } else if (eventCode === 'terima_operator') {
+      stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Terima ' + activeMesin, qty, now);
+    } else if (eventCode === 'consume_operator') {
+      stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Consume ' + activeMesin, qty, now);
     } else if (eventCode === 'retur_dari_mesin') {
-       if (activeMesin) {
-         var syncedTsp = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'Return ' + activeMesin, qty, now);
-         var syncedMesin = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Return ' + activeMesin, qty, now);
-         stockSynced = syncedTsp && syncedMesin;
-       } else {
-         // Fallback manual jika gagal lookup
-         stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'Return', qty, now);
-       }
+      var syncedTsp = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'Return ' + activeMesin, qty, now);
+      var syncedMesin = incrementStockCell_(SHEET_NAMES.STOCK_MESIN, mid, 'Return ' + activeMesin, qty, now);
+      stockSynced = syncedTsp && syncedMesin;
     } else if (eventCode === 'retur_ke_wrm') {
-       stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'MATCLAIM WRM', qty, now);
+      stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'MATCLAIM WRM', qty, now);
     }
   } catch(e) {
     stockSynced = false;
   }
 
-  var msg = 'Berhasil mencatat checkpoint "' + eventDef.label + '" untuk barcode ' + raw;
-  if (!stockSynced) {
-    msg += '\n\n⚠️ PERHATIAN: Checkpoint berhasil dicatat, TAPI Stock TSP/Stock Mesin BELUM tersinkron untuk shift ini ' +
+  var msg = 'Berhasil mencatat checkpoint "' + eventDef.label + '" untuk barcode ' + raw +
+    (activeMesin ? ' (' + activeMesin + ')' : '');
+  if (mesinMissing) {
+    msg += '\n\n\u26a0\ufe0f PERHATIAN: Checkpoint tercatat, TAPI mesin untuk barcode ini tidak diketahui ' +
+      'sehingga mutasi Stock Mesin TIDAK dicatat. Minta Admin TSP mengisi kolom MESIN pada barcode ini ' +
+      'lalu memverifikasi ulang mutasi stoknya.';
+  } else if (!stockSynced) {
+    msg += '\n\n\u26a0\ufe0f PERHATIAN: Checkpoint berhasil dicatat, TAPI Stock TSP/Stock Mesin BELUM tersinkron untuk shift ini ' +
       '(kemungkinan "Tarik Stok Awal Shift" belum dilakukan). Hubungi Admin TSP untuk Tarik Stok Awal, ' +
       'lalu minta Admin TSP memverifikasi ulang transaksi ini agar tercatat di Stock.';
   }
@@ -344,6 +553,7 @@ function handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)
     success: true,
     warning: !stockSynced,
     barcode: raw,
+    mesin: activeMesin || '',
     event: eventDef.label,
     message: msg
   };
@@ -428,8 +638,12 @@ function getReprintData_(parentBarcode) {
 }
 
 /**
- * REPRINT MODULE: Menyimpan sejumlah label reprint ke REPRINT BARCODE 
+ * REPRINT MODULE: Menyimpan sejumlah label reprint ke REPRINT BARCODE
  * dan mendaftarkannya ke BARCODE MATERIAL PRODUKSI.
+ *
+ * Validasi bentuk request ada di sini; alokasi nomor + penulisan dua sheet (lock, cek sisa
+ * kuantitas, cek duplikat, rollback) dilakukan allocateChildBarcodes_() yang dipakai bersama
+ * dengan jalur scan "Kirim ke Mesin".
  */
 function saveBatchReprint_(requestedLabels) {
   if (!Array.isArray(requestedLabels) || requestedLabels.length === 0) {
@@ -454,90 +668,17 @@ function saveBatchReprint_(requestedLabels) {
     requestedQty.push(qty);
   }
 
-  var lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(30000);
+  var allocation = allocateChildBarcodes_(parentBarcode, requestedQty, {
+    isRetur: isRetur,
+    markSentToMesin: false,
+    now: new Date()
+  });
 
-    var reprintData = getReprintData_(parentBarcode);
-    var parent = reprintData.history[0];
-    var alreadyPrinted = 0;
-    for (var j = 0; j < reprintData.history.length; j++) {
-      if (!/-00$/.test(String(reprintData.history[j].barcodeAnak || ''))) {
-        alreadyPrinted += Number(reprintData.history[j].jumlah) || 0;
-      }
-    }
-    var totalRequested = requestedQty.reduce(function(sum, qty) { return sum + qty; }, 0);
-    var remainingQty = Math.max(0, (Number(reprintData.parentQty) || 0) - alreadyPrinted);
-    if (totalRequested > remainingQty) {
-      throw new Error('Jumlah reprint (' + totalRequested + ') melebihi sisa stok induk (' + remainingQty + ').');
-    }
-
-    var nextSequence = getNextChildSequence_(parentBarcode);
-    var nextReturSequence = 1;
-    var returPattern = new RegExp('^' + escapeRegex_(parentBarcode) + '-R(\\d*)$');
-    for (var h = 0; h < reprintData.history.length; h++) {
-      var returMatch = returPattern.exec(String(reprintData.history[h].barcodeAnak || ''));
-      if (returMatch) nextReturSequence = Math.max(nextReturSequence, (Number(returMatch[1]) || 0) + 1);
-    }
-
-    var labels = [];
-    for (var k = 0; k < requestedQty.length; k++) {
-      var suffix = isRetur ? '-R' + padSeq_(nextReturSequence + k) : '-' + padSeq_(nextSequence + k);
-      labels.push({
-        barcodeInduk: parentBarcode,
-        barcodeAnak: parentBarcode + suffix,
-        mid: parent.mid,
-        deskripsi: parent.deskripsi,
-        jumlah: requestedQty[k],
-        isRetur: isRetur
-      });
-    }
-
-    var now = new Date();
-    var shift = getShift_(now);
-    var ts = formatTimestamp_(now);
-    var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
-    var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
-    var reprintHm = getHeaderMap_(reprintSheet);
-    var prodHm = getHeaderMap_(prodSheet);
-    var maxColRep = reprintSheet.getLastColumn();
-    var maxColProd = prodSheet.getLastColumn();
-    var repRowsToAppend = [];
-    var prodRowsToAppend = [];
-
-    for (var l = 0; l < labels.length; l++) {
-      var lbl = labels[l];
-      if (findBarcodeRow_(lbl.barcodeAnak).rowIndex !== -1) {
-        throw new Error('Barcode reprint ' + lbl.barcodeAnak + ' sudah terdaftar. Coba ulangi proses.');
-      }
-      var rRow = new Array(maxColRep).fill('');
-      if (reprintHm['tanggal']) rRow[reprintHm['tanggal'] - 1] = ts;
-      if (reprintHm['shift']) rRow[reprintHm['shift'] - 1] = shift;
-      if (reprintHm['barcode']) rRow[reprintHm['barcode'] - 1] = lbl.barcodeInduk;
-      if (reprintHm['mid']) rRow[reprintHm['mid'] - 1] = lbl.mid;
-      if (reprintHm['material description']) rRow[reprintHm['material description'] - 1] = lbl.deskripsi;
-      if (reprintHm['barcode reprint']) rRow[reprintHm['barcode reprint'] - 1] = lbl.barcodeAnak;
-      if (reprintHm['jumlah']) rRow[reprintHm['jumlah'] - 1] = lbl.jumlah;
-      repRowsToAppend.push(rRow);
-
-      var pRow = new Array(maxColProd).fill('');
-      if (prodHm['tanggal']) pRow[prodHm['tanggal'] - 1] = ts;
-      if (prodHm['shift']) pRow[prodHm['shift'] - 1] = shift;
-      if (prodHm['barcode']) pRow[prodHm['barcode'] - 1] = lbl.barcodeAnak;
-      if (prodHm['no reservasi']) pRow[prodHm['no reservasi'] - 1] = lbl.barcodeInduk;
-      if (prodHm['mid']) pRow[prodHm['mid'] - 1] = lbl.mid;
-      if (prodHm['material description']) pRow[prodHm['material description'] - 1] = lbl.deskripsi;
-      if (prodHm['jumlah']) pRow[prodHm['jumlah'] - 1] = lbl.jumlah;
-      if (prodHm['diterima oleh tsp dari wrm']) pRow[prodHm['diterima oleh tsp dari wrm'] - 1] = ts;
-      prodRowsToAppend.push(pRow);
-    }
-
-    reprintSheet.getRange(reprintSheet.getLastRow() + 1, 1, repRowsToAppend.length, maxColRep).setValues(repRowsToAppend);
-    prodSheet.getRange(prodSheet.getLastRow() + 1, 1, prodRowsToAppend.length, maxColProd).setValues(prodRowsToAppend);
-    return { success: true, message: labels.length + ' label reprint berhasil direkam ke database.', data: { labels: labels } };
-  } finally {
-    if (lock.hasLock()) lock.releaseLock();
-  }
+  return {
+    success: true,
+    message: allocation.labels.length + ' label reprint berhasil direkam ke database.',
+    data: { labels: allocation.labels }
+  };
 }
 
 /**

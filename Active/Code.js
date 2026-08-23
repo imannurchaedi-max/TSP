@@ -29,13 +29,22 @@ function login(nik, password) {
 
 /**
  * Dipanggil dari client (google.script.run) saat barcode berhasil discan.
+ *
+ * Kontrak respons yang dipakai Scanner.html dan ScanSubmitResult (scan_repository.dart):
+ * { success, warning, message, barcode, childBarcode, mesin, details }.
+ * Field `warning` dulu hilang di sini walaupun handler-nya mengembalikannya, jadi UI menampilkan
+ * hasil "sukses hijau" untuk scan yang stoknya tidak tersinkron; `childBarcode` juga selalu null
+ * karena handler mengembalikannya sebagai `barcode`. Keduanya diteruskan apa adanya sekarang.
+ *
+ * Kolom Mesin di Log Aktivitas memakai mesin hasil resolusi server (result.mesin) -- bukan lagi
+ * mesinCode mentah dari client yang untuk event operator selalu null.
  */
 function submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik) {
   var actor;
   try {
     actor = resolveRole_(nik);
   } catch (err) {
-    return { success: false, message: err.message, childBarcode: null };
+    return { success: false, warning: false, message: err.message, barcode: null, childBarcode: null, mesin: '', details: null };
   }
 
   var actorLabel = actor.nik + ' - ' + actor.nama;
@@ -48,14 +57,17 @@ function submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik)
       'Event': eventCode,
       'Actor': actorLabel,
       'Role': actor.role,
-      'Mesin': mesinCode || '',
-      'Hasil': 'SUKSES',
+      'Mesin': result.mesin || mesinCode || '',
+      'Hasil': result.warning ? 'SUKSES (WARNING)' : 'SUKSES',
       'Pesan': result.message
     });
     return {
       success: true,
+      warning: result.warning === true,
       message: result.message,
+      barcode: result.barcode || null,
       childBarcode: result.childBarcode || null,
+      mesin: result.mesin || '',
       details: result.details || null
     };
   } catch (err) {
@@ -69,7 +81,7 @@ function submitScan(barcodeText, eventCode, mesinCode, jumlah, noReservasi, nik)
       'Hasil': 'GAGAL',
       'Pesan': err.message
     });
-    return { success: false, message: err.message, childBarcode: null, details: null };
+    return { success: false, warning: false, message: err.message, barcode: null, childBarcode: null, mesin: '', details: null };
   }
 }
 

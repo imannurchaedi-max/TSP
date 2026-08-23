@@ -114,7 +114,9 @@ class _ScanExtraFieldsScreenState extends ConsumerState<ScanExtraFieldsScreen> {
     }
 
     if (event.requiresMesin && (_selectedMesin == null || _selectedMesin!.isEmpty)) {
-      _showValidationDialog('Pilih mesin tujuan terlebih dahulu.');
+      _showValidationDialog(event.code == 'terima_operator'
+          ? 'Pilih mesin tempat material ini diterima terlebih dahulu.'
+          : 'Pilih mesin tujuan terlebih dahulu.');
       return;
     }
 
@@ -248,7 +250,10 @@ class _ScanExtraFieldsScreenState extends ConsumerState<ScanExtraFieldsScreen> {
               const SizedBox(height: 20),
             ],
             if (event.requiresMesin) ...[
-              Text('Mesin Tujuan', style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                event.code == 'terima_operator' ? 'Mesin Penerima' : 'Mesin Tujuan',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedMesin,

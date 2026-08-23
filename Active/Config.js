@@ -46,6 +46,10 @@ var BARCODE_COLUMNS = [
   'MID',
   'MATERIAL DESCRIPTION',
   'JUMLAH',
+  // Mesin tujuan barcode anak. Diisi saat kirim_mesin (atau saat terima_operator untuk
+  // label reprint yang belum punya tujuan) supaya consume/retur tidak perlu menebak mesin
+  // dari log. ensureSheetsReady_() menambahkan kolom ini otomatis ke sheet lama.
+  'MESIN',
   'DITERIMA OLEH TSP DARI WRM',
   'DIKIRIM OLEH TSP KE MESIN',
   'RETUR DITARIK OLEH TSP DARI MESIN',
@@ -123,7 +127,10 @@ var EVENTS = {
     prerequisite: 'kirim_mesin',
     column: 'DITERIMA OLEH OPERATOR DARI TSP',
     role: 'operator',
-    requiresMesin: false,
+    // Wajib: tanpa mesin, mutasi STOCK MESIN tidak pernah tercatat dan retur tidak bisa
+    // menemukan asal barangnya. Server memvalidasi pilihan ini terhadap kolom MESIN yang
+    // sudah dikunci TSP saat kirim_mesin (lihat handleChildCheckpoint_).
+    requiresMesin: true,
     requiresJumlah: false,
     requiresReservasi: false,
     label: 'Terima dari TSP (Operator Scan)'
