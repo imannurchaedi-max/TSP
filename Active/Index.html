@@ -2652,29 +2652,54 @@
         'Ya, Hapus',
         'Batal',
         function() {
-          var oldHtml = btn.innerHTML;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-          btn.disabled = true;
-
-          google.script.run
-            .withSuccessHandler(function (res) {
-              if (res.success) {
-                var q = document.getElementById('reprint-info-induk').textContent;
-                searchReprintData(q);
-              } else {
-                showPopupModal('Gagal', res.message, 'error');
-                btn.innerHTML = oldHtml;
-                btn.disabled = false;
-              }
-            })
-            .withFailureHandler(function (err) {
-              showPopupModal('Error', err.message, 'error');
-              btn.innerHTML = oldHtml;
-              btn.disabled = false;
-            })
-            .deleteReprintBarcode(CURRENT_NIK, barcodeAnak);
+          _runDeleteReprint(barcodeAnak, btn, false);
         }
       );
+    }
+
+    /**
+     * Eksekusi hapus barcode reprint. Server menolak barcode anak yang sudah punya checkpoint
+     * operator (res.blocked); khusus role spv server mengizinkan override lewat force=true,
+     * dan penolakan itu ditawarkan ulang di sini sebagai konfirmasi kedua.
+     */
+    function _runDeleteReprint(barcodeAnak, btn, force) {
+      var oldHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      btn.disabled = true;
+
+      function restoreBtn() {
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+      }
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res.success) {
+            var q = document.getElementById('reprint-info-induk').textContent;
+            searchReprintData(q);
+            return;
+          }
+          restoreBtn();
+          if (res.blocked && res.requiresForce && !force) {
+            showConfirmModal(
+              'Barcode Sudah Dipakai',
+              res.message + '<br><br><strong>Hapus paksa?</strong> Riwayat transaksi barcode ini ikut hilang dan neraca stok bisa berubah. Aksi ini tercatat di Log Aktivitas Barcode.',
+              'error',
+              'Ya, Hapus Paksa',
+              'Batal',
+              function() {
+                _runDeleteReprint(barcodeAnak, btn, true);
+              }
+            );
+          } else {
+            showPopupModal('Gagal', res.message, 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          restoreBtn();
+          showPopupModal('Error', err.message, 'error');
+        })
+        .deleteReprintBarcode(CURRENT_NIK, barcodeAnak, force === true);
     }
 
     // --- Tampilkan Step 2: Config Print ---

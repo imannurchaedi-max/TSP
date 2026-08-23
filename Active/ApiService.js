@@ -127,7 +127,7 @@ var API_ACTIONS_ = {
 
   getReprintData: function (body) { return getReprintData(body.query); },
   saveBatchReprint: function (body, session) { return saveBatchReprint(session.nik, body.labels); },
-  deleteReprintBarcode: function (body, session) { return deleteReprintBarcode(session.nik, body.barcodeAnak); },
+  deleteReprintBarcode: function (body, session) { return deleteReprintBarcode(session.nik, body.barcodeAnak, body.force); },
 
   getMinMaxSettings: function () { return getMinMaxSettingsApi(); },
   saveMinMaxSetting: function (body, session) { return saveMinMaxSettingApi(session.nik, body.mid, body.lokasi, body.minStock, body.maxStock); },
@@ -140,8 +140,40 @@ var API_ACTIONS_ = {
   deleteMaterial: function (body, session) { return deleteMaterialApi(session.nik, body.mid); }
 };
 
+/**
+ * Pembatasan role untuk action BACA. Aksi TULIS tidak didaftarkan di sini karena otorisasinya
+ * sudah ditegakkan requireRole_() di dalam fungsi Code.js-nya masing-masing -- biar kebijakan
+ * role untuk satu aksi cuma punya satu sumber kebenaran.
+ *
+ * Daftar ini mengikuti gating menu di client: tab Validasi/Reprint/Material Master serta
+ * dashboard Stock TSP hanya tampil untuk tsp/spv (Index.html) dan navItemsForRole()
+ * (app_bottom_nav.dart). Sebelum ini gating itu cuma ada di UI, jadi token operator yang valid
+ * masih bisa menarik data validator/stok TSP/reprint langsung lewat HTTP POST.
+ *
+ * Action baca sisi operator (getMesinStock, getOperatorReceipts, getOperatorConsumption,
+ * getPortalHistory, getHistoricalMesinStock, getMesinList, getReservasiOptions) sengaja
+ * dibiarkan terbuka untuk semua role yang sudah login, karena tsp/spv juga memakainya.
+ */
+var API_ACTION_ROLES_ = {
+  getValidatorData: ['tsp', 'spv'],
+  getTspStock: ['tsp', 'spv'],
+  getTspMesinMonitoring: ['tsp', 'spv'],
+  getShiftReceipts: ['tsp', 'spv'],
+  getShiftDispatches: ['tsp', 'spv'],
+  getHistoricalTspStock: ['tsp', 'spv'],
+  getReprintData: ['tsp', 'spv'],
+  getMinMaxSettings: ['tsp', 'spv'],
+  getMaterialList: ['tsp', 'spv']
+};
+
 function dispatchApiAction_(action, body, session) {
   var handler = API_ACTIONS_[action];
   if (!handler) throw new Error('Action "' + action + '" tidak dikenal.');
+
+  var allowedRoles = API_ACTION_ROLES_[action];
+  if (allowedRoles && allowedRoles.indexOf(session.role) === -1) {
+    throw new Error('Akses ditolak: role "' + session.role + '" tidak berhak mengakses data ini.');
+  }
+
   return handler(body, session);
 }

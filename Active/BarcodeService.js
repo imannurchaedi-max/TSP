@@ -541,48 +541,149 @@ function saveBatchReprint_(requestedLabels) {
 }
 
 /**
+ * Kolom checkpoint hilir di BARCODE MATERIAL PRODUKSI yang menandakan sebuah barcode anak
+ * SUDAH dipakai di lantai produksi. Kalau salah satu terisi, barcode itu bukan lagi label
+ * salah cetak -- menghapusnya berarti membuang riwayat transaksi aktif dan merusak neraca
+ * stok. Kolom 'DITERIMA OLEH TSP DARI WRM' dan 'DIKIRIM OLEH TSP KE MESIN' sengaja TIDAK
+ * masuk daftar ini karena keduanya sudah terisi sejak barcode anak diterbitkan.
+ */
+var REPRINT_DELETE_BLOCKING_COLUMNS_ = [
+  'DITERIMA OLEH OPERATOR DARI TSP',
+  'DICONSUME OLEH OPERATOR',
+  'RETUR DITARIK OLEH TSP DARI MESIN',
+  'RETUR DIKIRIM KEMBALI OLEH TSP KE WRM'
+];
+
+/**
  * REPRINT MODULE: Menghapus barcode reprint (anak) dari REPRINT BARCODE
  * dan dari BARCODE MATERIAL PRODUKSI.
+ *
+ * Tiga pengaman yang wajib ada:
+ *  1. Barcode HARUS terdaftar di kolom "BARCODE REPRINT" sheet REPRINT BARCODE. Tanpa cek ini
+ *     barcode induk (atau barcode produksi apa pun) bisa ikut terhapus, karena pencarian di
+ *     sheet produksi berjalan independen dari pencarian di sheet reprint.
+ *  2. Barcode anak yang sudah punya checkpoint operator ditolak. Role spv boleh override
+ *     (force = true) untuk kasus koreksi data, dan override-nya dicatat di Log Aktivitas.
+ *  3. Seluruh operasi dibungkus script lock + rollback kompensasi: kalau penghapusan baris
+ *     kedua gagal, baris pertama dikembalikan supaya kedua sheet tidak pernah berbeda isi.
+ *
+ * @param {string} barcodeAnak Kode anak yang mau dihapus.
+ * @param {{nik: string, nama: string, role: string}=} actor Hasil requireRole_() dari pemanggil.
+ * @param {boolean=} force Override checkpoint, hanya berlaku untuk role spv.
  */
-function deleteReprintBarcode_(barcodeAnak) {
-  if (!barcodeAnak) throw new Error("Barcode anak tidak valid.");
-  
-  var deletedReprint = false;
-  var deletedProd = false;
+function deleteReprintBarcode_(barcodeAnak, actor, force) {
+  var target = String(barcodeAnak == null ? '' : barcodeAnak).trim();
+  if (!target) throw new Error('Barcode anak tidak valid.');
 
-  // Hapus dari REPRINT BARCODE
-  var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
-  var repHm = getHeaderMap_(reprintSheet);
-  var colRepAnak = repHm['barcode reprint'];
-  if (colRepAnak) {
-    var repData = reprintSheet.getDataRange().getValues();
-    for (var i = repData.length - 1; i >= 1; i--) {
-      if (String(repData[i][colRepAnak - 1]).trim() === barcodeAnak) {
-        reprintSheet.deleteRow(i + 1);
-        deletedReprint = true;
-        break; // Asumsi hanya 1 baris
-      }
+  var actorRole = (actor && actor.role) ? String(actor.role) : '';
+  var actorLabel = (actor && actor.nik) ? (actor.nik + ' - ' + (actor.nama || '')) : '';
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    // --- 1. Barcode wajib terdaftar sebagai barcode anak di REPRINT BARCODE ---
+    var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
+    var repHm = getHeaderMap_(reprintSheet);
+    var colRepAnak = repHm['barcode reprint'];
+    if (!colRepAnak) {
+      throw new Error('Kolom "BARCODE REPRINT" tidak ditemukan di sheet ' + SHEET_NAMES.REPRINT + '.');
     }
-  }
 
-  // Hapus dari BARCODE MATERIAL PRODUKSI
-  var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
-  var prodHm = getHeaderMap_(prodSheet);
-  var colProdAnak = prodHm['barcode'];
-  if (colProdAnak) {
-    var prodData = prodSheet.getDataRange().getValues();
-    for (var j = prodData.length - 1; j >= 1; j--) {
-      if (String(prodData[j][colProdAnak - 1]).trim() === barcodeAnak) {
-        prodSheet.deleteRow(j + 1);
-        deletedProd = true;
+    var repData = reprintSheet.getDataRange().getValues();
+    var repRowIndex = -1;
+    for (var i = repData.length - 1; i >= 1; i--) {
+      if (String(repData[i][colRepAnak - 1]).trim() === target) {
+        repRowIndex = i + 1; // 1-based row di sheet
         break;
       }
     }
-  }
+    if (repRowIndex === -1) {
+      throw new Error('Barcode "' + target + '" tidak terdaftar sebagai Barcode Reprint. ' +
+        'Hanya barcode anak hasil reprint yang boleh dihapus dari riwayat.');
+    }
 
-  if (deletedReprint || deletedProd) {
-    return { success: true, message: 'Barcode ' + barcodeAnak + ' berhasil dihapus dari riwayat.' };
-  } else {
-    return { success: false, message: 'Barcode ' + barcodeAnak + ' tidak ditemukan di riwayat.' };
+    // --- 2. Tolak kalau barcode anak sudah dipakai di lantai produksi ---
+    var prodRow = findBarcodeRow_(target);
+    var blocking = [];
+    if (prodRow.rowIndex !== -1) {
+      for (var c = 0; c < REPRINT_DELETE_BLOCKING_COLUMNS_.length; c++) {
+        if (getCellValue_(prodRow, REPRINT_DELETE_BLOCKING_COLUMNS_[c])) {
+          blocking.push(REPRINT_DELETE_BLOCKING_COLUMNS_[c]);
+        }
+      }
+    }
+
+    var forced = false;
+    if (blocking.length > 0) {
+      if (force === true && actorRole === 'spv') {
+        forced = true;
+      } else {
+        // Dikembalikan sebagai kegagalan terstruktur (bukan throw) supaya client bisa
+        // membedakan "ditolak karena checkpoint" dari error lain, lalu menawarkan override
+        // ke role spv. Untuk role lain requiresForce tetap false -> tidak ada jalan override.
+        return {
+          success: false,
+          blocked: true,
+          requiresForce: actorRole === 'spv',
+          blockingColumns: blocking,
+          message: 'Barcode "' + target + '" sudah dipakai di produksi (' + blocking.join(', ') +
+            ') sehingga tidak boleh dihapus. Batalkan/koreksi checkpoint-nya dulu' +
+            (actorRole === 'spv' ? ', atau lakukan penghapusan paksa.' : ', atau minta SPV melakukan penghapusan paksa.')
+        };
+      }
+    }
+
+    // --- 3. Hapus dua sheet dengan rollback kompensasi ---
+    var prodSheet = getSheet_(SHEET_NAMES.BARCODE);
+    var prodRowValues = null;
+    var deletedProd = false;
+    if (prodRow.rowIndex !== -1) {
+      prodRowValues = prodRow.values;
+      prodSheet.deleteRow(prodRow.rowIndex);
+      deletedProd = true;
+    }
+
+    try {
+      reprintSheet.deleteRow(repRowIndex);
+    } catch (delErr) {
+      // Baris produksi sudah terhapus tapi baris reprint gagal -> kembalikan baris produksi
+      // supaya tidak ada data yang terhapus sebelah. Urutan baris bisa berubah, isinya tidak.
+      if (deletedProd && prodRowValues) {
+        try {
+          prodSheet.appendRow(prodRowValues);
+        } catch (restoreErr) {
+          throw new Error('KRITIS: baris "' + target + '" terhapus dari ' + SHEET_NAMES.BARCODE +
+            ' tapi gagal dihapus dari ' + SHEET_NAMES.REPRINT + ' dan gagal dipulihkan (' +
+            restoreErr.message + '). Hubungi Admin TSP untuk perbaikan manual.');
+        }
+      }
+      throw new Error('Gagal menghapus "' + target + '" dari ' + SHEET_NAMES.REPRINT +
+        ' (' + delErr.message + '). Tidak ada data yang berubah.');
+    }
+
+    var message = 'Barcode ' + target + ' berhasil dihapus dari riwayat.';
+    if (forced) {
+      message += ' (Penghapusan paksa oleh SPV walaupun checkpoint ' + blocking.join(', ') + ' sudah terisi.)';
+    }
+
+    // Audit trail -- best effort, kegagalan log tidak boleh membatalkan penghapusan yang sudah terjadi.
+    try {
+      appendLog_({
+        'Timestamp': new Date(),
+        'Barcode': target,
+        'Event': forced ? 'hapus_reprint_force' : 'hapus_reprint',
+        'Actor': actorLabel,
+        'Role': actorRole,
+        'Mesin': '',
+        'Hasil': 'SUKSES',
+        'Pesan': message
+      });
+    } catch (logErr) {
+      // abaikan
+    }
+
+    return { success: true, message: message, forced: forced };
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
   }
 }

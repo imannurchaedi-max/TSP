@@ -21,11 +21,25 @@ class ReprintRepository {
     return res['message'] as String? ?? 'Label berhasil direkam.';
   }
 
-  Future<String> deleteReprintBarcode(String barcodeAnak) async {
-    final res = await _api.call('deleteReprintBarcode', {'barcodeAnak': barcodeAnak});
+  /// [force] cuma dihormati server untuk role spv -- lihat deleteReprintBarcode_() di
+  /// Active/BarcodeService.js. Barcode anak yang sudah punya checkpoint operator ditolak
+  /// dengan `blocked: true`; kalau server menandai `requiresForce`, pemanggil boleh
+  /// menawarkan konfirmasi kedua lalu memanggil ulang dengan force: true.
+  Future<String> deleteReprintBarcode(String barcodeAnak, {bool force = false}) async {
+    final res = await _api.call('deleteReprintBarcode', {'barcodeAnak': barcodeAnak, 'force': force});
     if (res['success'] != true) {
-      throw ApiException(res['message'] as String? ?? 'Gagal menghapus barcode reprint.');
+      final message = res['message'] as String? ?? 'Gagal menghapus barcode reprint.';
+      if (res['blocked'] == true) {
+        throw ReprintDeleteBlockedException(message, requiresForce: res['requiresForce'] == true);
+      }
+      throw ApiException(message);
     }
     return res['message'] as String? ?? 'Barcode berhasil dihapus.';
   }
+}
+
+/// Penghapusan ditolak karena barcode anak sudah punya checkpoint di lantai produksi.
+class ReprintDeleteBlockedException extends ApiException {
+  final bool requiresForce;
+  ReprintDeleteBlockedException(super.message, {required this.requiresForce});
 }

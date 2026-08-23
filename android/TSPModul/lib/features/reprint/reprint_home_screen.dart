@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/providers.dart';
 import '../../data/models/reprint_models.dart';
+import '../../data/repositories/reprint_repository.dart';
 import '../scan/barcode_scan_helper.dart';
 import '../shell/app_bottom_nav.dart';
 import 'reprint_config_screen.dart';
@@ -87,9 +88,40 @@ class _ReprintHomeScreenState extends ConsumerState<ReprintHomeScreen> {
       ),
     );
     if (confirmed != true) return;
+    await _runDelete(row, force: false);
+  }
+
+  /// Server menolak barcode anak yang sudah punya checkpoint operator. Khusus role spv
+  /// penolakan itu bisa di-override (force), jadi tawarkan konfirmasi kedua yang eksplisit.
+  Future<void> _runDelete(ReprintHistoryRow row, {required bool force}) async {
     try {
-      await ref.read(reprintRepositoryProvider).deleteReprintBarcode(row.barcodeAnak);
+      await ref.read(reprintRepositoryProvider).deleteReprintBarcode(row.barcodeAnak, force: force);
       await _search();
+    } on ReprintDeleteBlockedException catch (e) {
+      if (!mounted) return;
+      if (!e.requiresForce || force) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+        return;
+      }
+      final forceConfirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Barcode Sudah Dipakai'),
+          content: Text(
+            '${e.message}\n\nHapus paksa? Riwayat transaksi barcode ini ikut hilang dan neraca stok bisa berubah. '
+            'Aksi ini tercatat di Log Aktivitas Barcode.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Batal')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Ya, Hapus Paksa'),
+            ),
+          ],
+        ),
+      );
+      if (forceConfirmed == true) await _runDelete(row, force: true);
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));

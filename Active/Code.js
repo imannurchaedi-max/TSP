@@ -254,11 +254,13 @@ function saveBatchReprint(nik, labels) {
 
 /**
  * REPRINT MODULE: Menghapus barcode anak yang salah cetak. Role tsp/spv saja (tab Reprint).
+ * force hanya dihormati untuk role spv (lihat deleteReprintBarcode_), dipakai untuk override
+ * barcode anak yang sudah punya checkpoint operator.
  */
-function deleteReprintBarcode(nik, barcodeAnak) {
+function deleteReprintBarcode(nik, barcodeAnak, force) {
   try {
-    requireRole_(nik, ['tsp', 'spv']);
-    var res = deleteReprintBarcode_(barcodeAnak);
+    var actor = requireRole_(nik, ['tsp', 'spv']);
+    var res = deleteReprintBarcode_(barcodeAnak, actor, force === true);
     return res;
   } catch (err) {
     return { success: false, message: 'Gagal menghapus barcode reprint: ' + err.message };
