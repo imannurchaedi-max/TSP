@@ -18,6 +18,16 @@ yarn-error.log*
 
 # GitNexus
 .gitnexus/
+.gitnexus-home/
+gitnexus-out/
+
+# Graphify / knowledge index
+graphify-input/
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/FUNCTION_INDEX.md
+!graphify-out/function-index.json
+!graphify-out/graph.json
 
 # Clasp / Apps Script secrets (optional ignore or keep config)
 # .clasp.json
@@ -43,3 +53,20 @@ Thumbs.db
 
 # Scratch / debug dumps (local only)
 scratch_*.txt
+scratch_*.py
+scratch_*.md
+
+# Generated reports / binary references
+REF/**/*.xlsx
+REF/**/*.xls
+REF/**/*.xlsm
+*.pdf
+*.pptx
+
+# Flutter generated local files
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/ephemeral/
+**/.flutter-plugins-dependencies
+**/.kotlin/
+**/build/

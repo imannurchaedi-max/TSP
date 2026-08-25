@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **TSP** (3130 symbols, 6594 relationships, 252 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **TSP**. Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -30,18 +30,14 @@ This project is indexed by GitNexus as **TSP** (3130 symbols, 6594 relationships
 | `gitnexus://repo/TSP/processes` | All execution flows |
 | `gitnexus://repo/TSP/process/{name}` | Step-by-step execution trace |
 
-## CLI
-
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
-
 <!-- gitnexus:end -->
+
+# Mandatory Read Order
+- Read `TSP_MODUL_DEEP_CLEAN_REVIEW.md` before broad code exploration.
+- Read `dokumentasi/ARSITEKTUR.md`, `dokumentasi/DEPENDENCY_MAP.md`, and `dokumentasi/FUNCTION_MAPPING.md` before changing GAS runtime behavior.
+- Read `graphify-out/FUNCTION_INDEX.md` when available before opening large files such as `Active/Index.html`, `Active/Scanner.html`, or Flutter screens.
+- Treat `Active/` and `android modif/TSPModul/` as active source. Treat `android/TSPModul/` as legacy/reference unless the task explicitly targets it.
+- After meaningful source or documentation changes, run `.\sync-graphify.ps1`.
 
 # Mandatory End-of-Task Workflow (PUSH + DEPLOY + COMMIT, EVERY TIME)
 At the end of **every** coding fix or update — no exceptions unless the user explicitly says to hold off — run all three of the following, in this order:

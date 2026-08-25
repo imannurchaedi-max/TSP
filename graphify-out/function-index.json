@@ -1,0 +1,1798 @@
+{
+  "generatedAt": "2026-08-25T02:04:46.109Z",
+  "files": [
+    "Active/ApiService.js",
+    "Active/AuthService.js",
+    "Active/BarcodeService.js",
+    "Active/Code.js",
+    "Active/Config.js",
+    "Active/Index.html",
+    "Active/MaterialService.js",
+    "Active/Scanner.html",
+    "Active/SheetService.js",
+    "Active/StockService.js",
+    "Active/Stylesheet.html",
+    "android modif/TSPModul/lib/app_router.dart",
+    "android modif/TSPModul/lib/core/api_client.dart",
+    "android modif/TSPModul/lib/core/apk_installer.dart",
+    "android modif/TSPModul/lib/core/background_sync.dart",
+    "android modif/TSPModul/lib/core/connectivity_sync.dart",
+    "android modif/TSPModul/lib/core/constants.dart",
+    "android modif/TSPModul/lib/core/providers.dart",
+    "android modif/TSPModul/lib/core/session.dart",
+    "android modif/TSPModul/lib/core/update_checker.dart",
+    "android modif/TSPModul/lib/data/local/database.dart",
+    "android modif/TSPModul/lib/data/local/database.g.dart",
+    "android modif/TSPModul/lib/data/models/history_models.dart",
+    "android modif/TSPModul/lib/data/models/material_models.dart",
+    "android modif/TSPModul/lib/data/models/reprint_models.dart",
+    "android modif/TSPModul/lib/data/models/stock_models.dart",
+    "android modif/TSPModul/lib/data/models/validator_models.dart",
+    "android modif/TSPModul/lib/data/repositories/auth_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/history_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/material_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/reference_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/reprint_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/scan_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/stock_repository.dart",
+    "android modif/TSPModul/lib/data/repositories/sync_service.dart",
+    "android modif/TSPModul/lib/data/repositories/validator_repository.dart",
+    "android modif/TSPModul/lib/features/auth/login_screen.dart",
+    "android modif/TSPModul/lib/features/history/history_home_screen.dart",
+    "android modif/TSPModul/lib/features/history/history_mesin_view.dart",
+    "android modif/TSPModul/lib/features/history/history_portal_view.dart",
+    "android modif/TSPModul/lib/features/history/history_tsp_view.dart",
+    "android modif/TSPModul/lib/features/material/csv_import_helper.dart",
+    "android modif/TSPModul/lib/features/material/material_home_screen.dart",
+    "android modif/TSPModul/lib/features/material/material_list_tab.dart",
+    "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+    "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+    "android modif/TSPModul/lib/features/reprint/reprint_home_screen.dart",
+    "android modif/TSPModul/lib/features/reprint/reprint_print_screen.dart",
+    "android modif/TSPModul/lib/features/scan/barcode_scan_helper.dart",
+    "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+    "android modif/TSPModul/lib/features/scan/scan_flow_state.dart",
+    "android modif/TSPModul/lib/features/scan/scan_home_screen.dart",
+    "android modif/TSPModul/lib/features/scan/scan_result_screen.dart",
+    "android modif/TSPModul/lib/features/scan/scanner_screen.dart",
+    "android modif/TSPModul/lib/features/shell/app_bottom_nav.dart",
+    "android modif/TSPModul/lib/features/shell/connectivity_banner.dart",
+    "android modif/TSPModul/lib/features/stock/mesin_stock_tab.dart",
+    "android modif/TSPModul/lib/features/stock/monitoring_tab.dart",
+    "android modif/TSPModul/lib/features/stock/stock_home_screen.dart",
+    "android modif/TSPModul/lib/features/stock/transactions_tab.dart",
+    "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+    "android modif/TSPModul/lib/features/stock/widgets/async_tab.dart",
+    "android modif/TSPModul/lib/features/stock/widgets/status_badge.dart",
+    "android modif/TSPModul/lib/features/sync/sync_queue_screen.dart",
+    "android modif/TSPModul/lib/features/update/update_dialog.dart",
+    "android modif/TSPModul/lib/features/validator/validator_home_screen.dart",
+    "android modif/TSPModul/lib/main.dart",
+    "android modif/TSPModul/test/api_redirect_probe_test.dart",
+    "android modif/TSPModul/test/reprint_request_test.dart",
+    "android modif/TSPModul/test/widget_test.dart",
+    "tools/graphify_codebase.py",
+    "tools/langgraph_agent.py",
+    "tools/mermaid_generator.py",
+    "tools/parse_excel_ref.py",
+    "tools/verify_column_mapping.py",
+    "tools/verify_env.py"
+  ],
+  "functions": [
+    {
+      "name": "doPost",
+      "file": "Active/ApiService.js",
+      "line": 20
+    },
+    {
+      "name": "apiLogin_",
+      "file": "Active/ApiService.js",
+      "line": 46
+    },
+    {
+      "name": "validateApiToken_",
+      "file": "Active/ApiService.js",
+      "line": 59
+    },
+    {
+      "name": "apiSubmitScanIdempotent_",
+      "file": "Active/ApiService.js",
+      "line": 77
+    },
+    {
+      "name": "dispatchApiAction_",
+      "file": "Active/ApiService.js",
+      "line": 169
+    },
+    {
+      "name": "getKaryawanRows_",
+      "file": "Active/AuthService.js",
+      "line": 9
+    },
+    {
+      "name": "readKaryawanRowsFromCache_",
+      "file": "Active/AuthService.js",
+      "line": 46
+    },
+    {
+      "name": "writeKaryawanRowsToCache_",
+      "file": "Active/AuthService.js",
+      "line": 64
+    },
+    {
+      "name": "findKaryawanByNik_",
+      "file": "Active/AuthService.js",
+      "line": 79
+    },
+    {
+      "name": "getLoginAttemptCount_",
+      "file": "Active/AuthService.js",
+      "line": 88
+    },
+    {
+      "name": "registerLoginFailure_",
+      "file": "Active/AuthService.js",
+      "line": 94
+    },
+    {
+      "name": "clearLoginAttempts_",
+      "file": "Active/AuthService.js",
+      "line": 100
+    },
+    {
+      "name": "roleFromJabatan_",
+      "file": "Active/AuthService.js",
+      "line": 104
+    },
+    {
+      "name": "login_",
+      "file": "Active/AuthService.js",
+      "line": 116
+    },
+    {
+      "name": "resolveRole_",
+      "file": "Active/AuthService.js",
+      "line": 148
+    },
+    {
+      "name": "requireRole_",
+      "file": "Active/AuthService.js",
+      "line": 168
+    },
+    {
+      "name": "padSeq_",
+      "file": "Active/BarcodeService.js",
+      "line": 12
+    },
+    {
+      "name": "classifyBarcode_",
+      "file": "Active/BarcodeService.js",
+      "line": 20
+    },
+    {
+      "name": "getNextChildSequence_",
+      "file": "Active/BarcodeService.js",
+      "line": 35
+    },
+    {
+      "name": "escapeRegex_",
+      "file": "Active/BarcodeService.js",
+      "line": 58
+    },
+    {
+      "name": "allocateChildBarcodes_",
+      "file": "Active/BarcodeService.js",
+      "line": 84
+    },
+    {
+      "name": "lookupMesinFromLog_",
+      "file": "Active/BarcodeService.js",
+      "line": 229
+    },
+    {
+      "name": "getShift_",
+      "file": "Active/BarcodeService.js",
+      "line": 252
+    },
+    {
+      "name": "getShiftBounds_",
+      "file": "Active/BarcodeService.js",
+      "line": 259
+    },
+    {
+      "name": "formatTimestamp_",
+      "file": "Active/BarcodeService.js",
+      "line": 278
+    },
+    {
+      "name": "getCellValue_",
+      "file": "Active/BarcodeService.js",
+      "line": 284
+    },
+    {
+      "name": "processScan_",
+      "file": "Active/BarcodeService.js",
+      "line": 294
+    },
+    {
+      "name": "handleTerimaWrm_",
+      "file": "Active/BarcodeService.js",
+      "line": 323
+    },
+    {
+      "name": "handleKirimMesin_",
+      "file": "Active/BarcodeService.js",
+      "line": 390
+    },
+    {
+      "name": "handleChildCheckpoint_",
+      "file": "Active/BarcodeService.js",
+      "line": 469
+    },
+    {
+      "name": "getReprintData_",
+      "file": "Active/BarcodeService.js",
+      "line": 575
+    },
+    {
+      "name": "saveBatchReprint_",
+      "file": "Active/BarcodeService.js",
+      "line": 658
+    },
+    {
+      "name": "deleteReprintBarcode_",
+      "file": "Active/BarcodeService.js",
+      "line": 725
+    },
+    {
+      "name": "doGet",
+      "file": "Active/Code.js",
+      "line": 5
+    },
+    {
+      "name": "include",
+      "file": "Active/Code.js",
+      "line": 14
+    },
+    {
+      "name": "login",
+      "file": "Active/Code.js",
+      "line": 21
+    },
+    {
+      "name": "submitScan",
+      "file": "Active/Code.js",
+      "line": 42
+    },
+    {
+      "name": "getMesinList",
+      "file": "Active/Code.js",
+      "line": 88
+    },
+    {
+      "name": "getReservasiOptions",
+      "file": "Active/Code.js",
+      "line": 93
+    },
+    {
+      "name": "getTspStock",
+      "file": "Active/Code.js",
+      "line": 102
+    },
+    {
+      "name": "getTspMesinMonitoring",
+      "file": "Active/Code.js",
+      "line": 111
+    },
+    {
+      "name": "getMesinStock",
+      "file": "Active/Code.js",
+      "line": 120
+    },
+    {
+      "name": "getValidatorData",
+      "file": "Active/Code.js",
+      "line": 132
+    },
+    {
+      "name": "getShiftReceipts",
+      "file": "Active/Code.js",
+      "line": 141
+    },
+    {
+      "name": "getShiftDispatches",
+      "file": "Active/Code.js",
+      "line": 150
+    },
+    {
+      "name": "getOperatorReceipts",
+      "file": "Active/Code.js",
+      "line": 159
+    },
+    {
+      "name": "getOperatorConsumption",
+      "file": "Active/Code.js",
+      "line": 168
+    },
+    {
+      "name": "tarikStokAwalShift",
+      "file": "Active/Code.js",
+      "line": 178
+    },
+    {
+      "name": "konfirmasiNeracaStokShift",
+      "file": "Active/Code.js",
+      "line": 189
+    },
+    {
+      "name": "konfirmasiItemStokShift",
+      "file": "Active/Code.js",
+      "line": 200
+    },
+    {
+      "name": "getHistoricalTspStock",
+      "file": "Active/Code.js",
+      "line": 211
+    },
+    {
+      "name": "getHistoricalMesinStock",
+      "file": "Active/Code.js",
+      "line": 220
+    },
+    {
+      "name": "getPortalHistory",
+      "file": "Active/Code.js",
+      "line": 229
+    },
+    {
+      "name": "getReprintData",
+      "file": "Active/Code.js",
+      "line": 241
+    },
+    {
+      "name": "saveBatchReprint",
+      "file": "Active/Code.js",
+      "line": 257
+    },
+    {
+      "name": "deleteReprintBarcode",
+      "file": "Active/Code.js",
+      "line": 272
+    },
+    {
+      "name": "getMinMaxSettingsApi",
+      "file": "Active/Code.js",
+      "line": 283
+    },
+    {
+      "name": "saveMinMaxSettingApi",
+      "file": "Active/Code.js",
+      "line": 292
+    },
+    {
+      "name": "saveMinMaxBatchApi",
+      "file": "Active/Code.js",
+      "line": 302
+    },
+    {
+      "name": "deleteMinMaxSettingApi",
+      "file": "Active/Code.js",
+      "line": 312
+    },
+    {
+      "name": "getMaterialListApi",
+      "file": "Active/Code.js",
+      "line": 322
+    },
+    {
+      "name": "saveMaterialApi",
+      "file": "Active/Code.js",
+      "line": 332
+    },
+    {
+      "name": "saveMaterialBatchApi",
+      "file": "Active/Code.js",
+      "line": 349
+    },
+    {
+      "name": "deleteMaterialApi",
+      "file": "Active/Code.js",
+      "line": 369
+    },
+    {
+      "name": "escapeHtml",
+      "file": "Active/Index.html",
+      "line": 513
+    },
+    {
+      "name": "formatNumberDisplay",
+      "file": "Active/Index.html",
+      "line": 523
+    },
+    {
+      "name": "getSavedUser",
+      "file": "Active/Index.html",
+      "line": 530
+    },
+    {
+      "name": "buildMesinColumns_",
+      "file": "Active/Index.html",
+      "line": 615
+    },
+    {
+      "name": "showLogin",
+      "file": "Active/Index.html",
+      "line": 675
+    },
+    {
+      "name": "openSidebar",
+      "file": "Active/Index.html",
+      "line": 680
+    },
+    {
+      "name": "closeSidebar",
+      "file": "Active/Index.html",
+      "line": 681
+    },
+    {
+      "name": "showApp",
+      "file": "Active/Index.html",
+      "line": 683
+    },
+    {
+      "name": "setupMesinPicker",
+      "file": "Active/Index.html",
+      "line": 713
+    },
+    {
+      "name": "buildDeeplinkUrl",
+      "file": "Active/Index.html",
+      "line": 736
+    },
+    {
+      "name": "pushDeeplinkState",
+      "file": "Active/Index.html",
+      "line": 758
+    },
+    {
+      "name": "_updateNavHrefs",
+      "file": "Active/Index.html",
+      "line": 802
+    },
+    {
+      "name": "initDeeplinkUrlListener",
+      "file": "Active/Index.html",
+      "line": 819
+    },
+    {
+      "name": "parseHashLocation",
+      "file": "Active/Index.html",
+      "line": 834
+    },
+    {
+      "name": "restoreStateFromLocation",
+      "file": "Active/Index.html",
+      "line": 849
+    },
+    {
+      "name": "switchTab",
+      "file": "Active/Index.html",
+      "line": 882
+    },
+    {
+      "name": "formatCellVal",
+      "file": "Active/Index.html",
+      "line": 903
+    },
+    {
+      "name": "buildStickyOffsets_",
+      "file": "Active/Index.html",
+      "line": 923
+    },
+    {
+      "name": "stickyAttrs_",
+      "file": "Active/Index.html",
+      "line": 935
+    },
+    {
+      "name": "renderTable",
+      "file": "Active/Index.html",
+      "line": 944
+    },
+    {
+      "name": "renderPortalTable",
+      "file": "Active/Index.html",
+      "line": 989
+    },
+    {
+      "name": "downloadPortalCsv",
+      "file": "Active/Index.html",
+      "line": 1044
+    },
+    {
+      "name": "showPopupModal",
+      "file": "Active/Index.html",
+      "line": 1094
+    },
+    {
+      "name": "showConfirmModal",
+      "file": "Active/Index.html",
+      "line": 1135
+    },
+    {
+      "name": "showPromptModal",
+      "file": "Active/Index.html",
+      "line": 1185
+    },
+    {
+      "name": "openOverlayAnimation",
+      "file": "Active/Index.html",
+      "line": 1229
+    },
+    {
+      "name": "closePopupModal",
+      "file": "Active/Index.html",
+      "line": 1236
+    },
+    {
+      "name": "showFloatingLoading",
+      "file": "Active/Index.html",
+      "line": 1244
+    },
+    {
+      "name": "hideFloatingLoading",
+      "file": "Active/Index.html",
+      "line": 1254
+    },
+    {
+      "name": "switchStockSubnav",
+      "file": "Active/Index.html",
+      "line": 1268
+    },
+    {
+      "name": "startTvAutoRefresh",
+      "file": "Active/Index.html",
+      "line": 1291
+    },
+    {
+      "name": "stopTvAutoRefresh",
+      "file": "Active/Index.html",
+      "line": 1309
+    },
+    {
+      "name": "toggleTvFullscreen",
+      "file": "Active/Index.html",
+      "line": 1316
+    },
+    {
+      "name": "loadTspMesinMonitoring",
+      "file": "Active/Index.html",
+      "line": 1376
+    },
+    {
+      "name": "renderNeracaBanner",
+      "file": "Active/Index.html",
+      "line": 1477
+    },
+    {
+      "name": "tarikStokAwalHandler",
+      "file": "Active/Index.html",
+      "line": 1523
+    },
+    {
+      "name": "konfirmasiStokHandler",
+      "file": "Active/Index.html",
+      "line": 1557
+    },
+    {
+      "name": "konfirmasiItemBenar",
+      "file": "Active/Index.html",
+      "line": 1596
+    },
+    {
+      "name": "konfirmasiItemRevisi",
+      "file": "Active/Index.html",
+      "line": 1617
+    },
+    {
+      "name": "initHistoryTab",
+      "file": "Active/Index.html",
+      "line": 1644
+    },
+    {
+      "name": "onHistoryTypeChange",
+      "file": "Active/Index.html",
+      "line": 1669
+    },
+    {
+      "name": "loadHistoryData",
+      "file": "Active/Index.html",
+      "line": 1679
+    },
+    {
+      "name": "loadMinMaxTab",
+      "file": "Active/Index.html",
+      "line": 1750
+    },
+    {
+      "name": "switchMaterialSubnav",
+      "file": "Active/Index.html",
+      "line": 1754
+    },
+    {
+      "name": "loadMaterialListTab",
+      "file": "Active/Index.html",
+      "line": 1781
+    },
+    {
+      "name": "populateMaterialMidDatalist",
+      "file": "Active/Index.html",
+      "line": 1805
+    },
+    {
+      "name": "filterMaterialListTable",
+      "file": "Active/Index.html",
+      "line": 1817
+    },
+    {
+      "name": "renderMaterialListTable",
+      "file": "Active/Index.html",
+      "line": 1828
+    },
+    {
+      "name": "openAddMaterialModal",
+      "file": "Active/Index.html",
+      "line": 1862
+    },
+    {
+      "name": "editMaterialItem",
+      "file": "Active/Index.html",
+      "line": 1872
+    },
+    {
+      "name": "closeMaterialModal",
+      "file": "Active/Index.html",
+      "line": 1882
+    },
+    {
+      "name": "saveMaterialFromForm",
+      "file": "Active/Index.html",
+      "line": 1886
+    },
+    {
+      "name": "confirmDeleteMaterialItem",
+      "file": "Active/Index.html",
+      "line": 1920
+    },
+    {
+      "name": "downloadMaterialCsvTemplate",
+      "file": "Active/Index.html",
+      "line": 1951
+    },
+    {
+      "name": "triggerMaterialCsvUpload",
+      "file": "Active/Index.html",
+      "line": 1965
+    },
+    {
+      "name": "handleMaterialCsvFileSelected",
+      "file": "Active/Index.html",
+      "line": 1971
+    },
+    {
+      "name": "processMaterialCsvContent",
+      "file": "Active/Index.html",
+      "line": 1985
+    },
+    {
+      "name": "loadMinMaxSettingsTab",
+      "file": "Active/Index.html",
+      "line": 2059
+    },
+    {
+      "name": "filterMinMaxTable",
+      "file": "Active/Index.html",
+      "line": 2080
+    },
+    {
+      "name": "renderMinMaxTable",
+      "file": "Active/Index.html",
+      "line": 2093
+    },
+    {
+      "name": "openAddMinMaxModal",
+      "file": "Active/Index.html",
+      "line": 2141
+    },
+    {
+      "name": "editMinMaxItem",
+      "file": "Active/Index.html",
+      "line": 2150
+    },
+    {
+      "name": "closeMinMaxModal",
+      "file": "Active/Index.html",
+      "line": 2159
+    },
+    {
+      "name": "confirmDeleteMinMaxItem",
+      "file": "Active/Index.html",
+      "line": 2163
+    },
+    {
+      "name": "saveMinMaxFromForm",
+      "file": "Active/Index.html",
+      "line": 2193
+    },
+    {
+      "name": "downloadMinMaxCsvTemplate",
+      "file": "Active/Index.html",
+      "line": 2227
+    },
+    {
+      "name": "triggerMinMaxCsvUpload",
+      "file": "Active/Index.html",
+      "line": 2241
+    },
+    {
+      "name": "handleMinMaxCsvFileSelected",
+      "file": "Active/Index.html",
+      "line": 2247
+    },
+    {
+      "name": "processMinMaxCsvContent",
+      "file": "Active/Index.html",
+      "line": 2261
+    },
+    {
+      "name": "renderStockTableWithFilter",
+      "file": "Active/Index.html",
+      "line": 2337
+    },
+    {
+      "name": "loadStockTab",
+      "file": "Active/Index.html",
+      "line": 2368
+    },
+    {
+      "name": "loadShiftPanels",
+      "file": "Active/Index.html",
+      "line": 2417
+    },
+    {
+      "name": "loadValidatorTab",
+      "file": "Active/Index.html",
+      "line": 2461
+    },
+    {
+      "name": "handleNavClick",
+      "file": "Active/Index.html",
+      "line": 2509
+    },
+    {
+      "name": "handleSubnavClick",
+      "file": "Active/Index.html",
+      "line": 2518
+    },
+    {
+      "name": "tryRestoreSession",
+      "file": "Active/Index.html",
+      "line": 2544
+    },
+    {
+      "name": "triggerReprintCamera",
+      "file": "Active/Index.html",
+      "line": 2586
+    },
+    {
+      "name": "searchReprintData",
+      "file": "Active/Index.html",
+      "line": 2617
+    },
+    {
+      "name": "deleteReprintLabel",
+      "file": "Active/Index.html",
+      "line": 2651
+    },
+    {
+      "name": "_runDeleteReprint",
+      "file": "Active/Index.html",
+      "line": 2669
+    },
+    {
+      "name": "restoreBtn",
+      "file": "Active/Index.html",
+      "line": 2674
+    },
+    {
+      "name": "showReprintConfig",
+      "file": "Active/Index.html",
+      "line": 2710
+    },
+    {
+      "name": "resetReprintSearch",
+      "file": "Active/Index.html",
+      "line": 2752
+    },
+    {
+      "name": "generateReprintLabels",
+      "file": "Active/Index.html",
+      "line": 2762
+    },
+    {
+      "name": "_parseNextSequence",
+      "file": "Active/Index.html",
+      "line": 2837
+    },
+    {
+      "name": "_padSeq",
+      "file": "Active/Index.html",
+      "line": 2850
+    },
+    {
+      "name": "applyReprintPageSize_",
+      "file": "Active/Index.html",
+      "line": 2869
+    },
+    {
+      "name": "onReprintPresetChange",
+      "file": "Active/Index.html",
+      "line": 2879
+    },
+    {
+      "name": "getSelectedReprintSizeConfig",
+      "file": "Active/Index.html",
+      "line": 2898
+    },
+    {
+      "name": "_openBatchPrintModal",
+      "file": "Active/Index.html",
+      "line": 2908
+    },
+    {
+      "name": "renderReprintLabelsWithCurrentSize",
+      "file": "Active/Index.html",
+      "line": 2932
+    },
+    {
+      "name": "closeReprintLabel",
+      "file": "Active/Index.html",
+      "line": 2999
+    },
+    {
+      "name": "printReprintLabel",
+      "file": "Active/Index.html",
+      "line": 3003
+    },
+    {
+      "name": "resolveDeskCol_",
+      "file": "Active/MaterialService.js",
+      "line": 19
+    },
+    {
+      "name": "getSupplierMap_",
+      "file": "Active/MaterialService.js",
+      "line": 27
+    },
+    {
+      "name": "getMaterialList_",
+      "file": "Active/MaterialService.js",
+      "line": 62
+    },
+    {
+      "name": "getMaterialMap_",
+      "file": "Active/MaterialService.js",
+      "line": 94
+    },
+    {
+      "name": "saveMaterialMaster_",
+      "file": "Active/MaterialService.js",
+      "line": 132
+    },
+    {
+      "name": "saveMaterialBatch_",
+      "file": "Active/MaterialService.js",
+      "line": 199
+    },
+    {
+      "name": "deleteMaterial_",
+      "file": "Active/MaterialService.js",
+      "line": 279
+    },
+    {
+      "name": "isMidUsedAnywhere_",
+      "file": "Active/MaterialService.js",
+      "line": 317
+    },
+    {
+      "name": "deleteMaterialMaster_",
+      "file": "Active/MaterialService.js",
+      "line": 342
+    },
+    {
+      "name": "migrateMaterialMasterIfEmpty_",
+      "file": "Active/MaterialService.js",
+      "line": 374
+    },
+    {
+      "name": "showView",
+      "file": "Active/Scanner.html",
+      "line": 70
+    },
+    {
+      "name": "resetScanMenu",
+      "file": "Active/Scanner.html",
+      "line": 80
+    },
+    {
+      "name": "renderActions",
+      "file": "Active/Scanner.html",
+      "line": 85
+    },
+    {
+      "name": "selectEvent",
+      "file": "Active/Scanner.html",
+      "line": 115
+    },
+    {
+      "name": "getTodayIsoString",
+      "file": "Active/Scanner.html",
+      "line": 161
+    },
+    {
+      "name": "setupReservasiPicker",
+      "file": "Active/Scanner.html",
+      "line": 170
+    },
+    {
+      "name": "isDateMatch",
+      "file": "Active/Scanner.html",
+      "line": 194
+    },
+    {
+      "name": "renderReservasiOptions",
+      "file": "Active/Scanner.html",
+      "line": 207
+    },
+    {
+      "name": "startScanner",
+      "file": "Active/Scanner.html",
+      "line": 290
+    },
+    {
+      "name": "handleCapturedFile",
+      "file": "Active/Scanner.html",
+      "line": 295
+    },
+    {
+      "name": "onScanSuccess",
+      "file": "Active/Scanner.html",
+      "line": 315
+    },
+    {
+      "name": "showResult",
+      "file": "Active/Scanner.html",
+      "line": 322
+    },
+    {
+      "name": "getSpreadsheet_",
+      "file": "Active/SheetService.js",
+      "line": 5
+    },
+    {
+      "name": "getSheet_",
+      "file": "Active/SheetService.js",
+      "line": 12
+    },
+    {
+      "name": "ensureSheetsReady_",
+      "file": "Active/SheetService.js",
+      "line": 29
+    },
+    {
+      "name": "getHeaderMap_",
+      "file": "Active/SheetService.js",
+      "line": 66
+    },
+    {
+      "name": "findRowByColumnValue_",
+      "file": "Active/SheetService.js",
+      "line": 85
+    },
+    {
+      "name": "findBarcodeRow_",
+      "file": "Active/SheetService.js",
+      "line": 109
+    },
+    {
+      "name": "lookupWrmIncoming_",
+      "file": "Active/SheetService.js",
+      "line": 133
+    },
+    {
+      "name": "parseSapDate_",
+      "file": "Active/SheetService.js",
+      "line": 142
+    },
+    {
+      "name": "parseMonth_",
+      "file": "Active/SheetService.js",
+      "line": 170
+    },
+    {
+      "name": "getReservasiList_",
+      "file": "Active/SheetService.js",
+      "line": 242
+    },
+    {
+      "name": "validateMidInReservasi_",
+      "file": "Active/SheetService.js",
+      "line": 316
+    },
+    {
+      "name": "appendBarcodeRow_",
+      "file": "Active/SheetService.js",
+      "line": 360
+    },
+    {
+      "name": "appendReprintRow_",
+      "file": "Active/SheetService.js",
+      "line": 381
+    },
+    {
+      "name": "updateBarcodeCell_",
+      "file": "Active/SheetService.js",
+      "line": 402
+    },
+    {
+      "name": "appendLog_",
+      "file": "Active/SheetService.js",
+      "line": 415
+    },
+    {
+      "name": "queryReprintSheet_",
+      "file": "Active/SheetService.js",
+      "line": 438
+    },
+    {
+      "name": "toDateOrNull_",
+      "file": "Active/StockService.js",
+      "line": 10
+    },
+    {
+      "name": "readAllBarcodeRows_",
+      "file": "Active/StockService.js",
+      "line": 16
+    },
+    {
+      "name": "getNormalizedDateStr_",
+      "file": "Active/StockService.js",
+      "line": 43
+    },
+    {
+      "name": "getNormalizedShiftNum_",
+      "file": "Active/StockService.js",
+      "line": 72
+    },
+    {
+      "name": "normalizeMid_",
+      "file": "Active/StockService.js",
+      "line": 78
+    },
+    {
+      "name": "getRealLastRowAndTrim_",
+      "file": "Active/StockService.js",
+      "line": 90
+    },
+    {
+      "name": "computeTspStock_",
+      "file": "Active/StockService.js",
+      "line": 125
+    },
+    {
+      "name": "computeMesinStock_",
+      "file": "Active/StockService.js",
+      "line": 281
+    },
+    {
+      "name": "computeTspMesinMonitoring_",
+      "file": "Active/StockService.js",
+      "line": 391
+    },
+    {
+      "name": "formatDateLabel_",
+      "file": "Active/StockService.js",
+      "line": 576
+    },
+    {
+      "name": "computeShiftReceipts_",
+      "file": "Active/StockService.js",
+      "line": 583
+    },
+    {
+      "name": "computeShiftDispatches_",
+      "file": "Active/StockService.js",
+      "line": 608
+    },
+    {
+      "name": "computeOperatorReceipts_",
+      "file": "Active/StockService.js",
+      "line": 634
+    },
+    {
+      "name": "computeOperatorConsumption_",
+      "file": "Active/StockService.js",
+      "line": 659
+    },
+    {
+      "name": "computeValidator_",
+      "file": "Active/StockService.js",
+      "line": 683
+    },
+    {
+      "name": "parseMb51Timestamp_",
+      "file": "Active/StockService.js",
+      "line": 745
+    },
+    {
+      "name": "executeShiftRollover_",
+      "file": "Active/StockService.js",
+      "line": 783
+    },
+    {
+      "name": "ensureMidInActiveShift_",
+      "file": "Active/StockService.js",
+      "line": 981
+    },
+    {
+      "name": "incrementStockCell_",
+      "file": "Active/StockService.js",
+      "line": 1077
+    },
+    {
+      "name": "tarikStokAwalShift_",
+      "file": "Active/StockService.js",
+      "line": 1174
+    },
+    {
+      "name": "konfirmasiStokShift_",
+      "file": "Active/StockService.js",
+      "line": 1228
+    },
+    {
+      "name": "konfirmasiItemStokShift_",
+      "file": "Active/StockService.js",
+      "line": 1310
+    },
+    {
+      "name": "computeHistoricalTspStock_",
+      "file": "Active/StockService.js",
+      "line": 1370
+    },
+    {
+      "name": "computeHistoricalMesinStock_",
+      "file": "Active/StockService.js",
+      "line": 1472
+    },
+    {
+      "name": "computePortalHistory_",
+      "file": "Active/StockService.js",
+      "line": 1554
+    },
+    {
+      "name": "getMinMaxSheet_",
+      "file": "Active/StockService.js",
+      "line": 1646
+    },
+    {
+      "name": "getMinMaxMap_",
+      "file": "Active/StockService.js",
+      "line": 1660
+    },
+    {
+      "name": "getMinMaxSettings",
+      "file": "Active/StockService.js",
+      "line": 1690
+    },
+    {
+      "name": "saveMinMaxSetting",
+      "file": "Active/StockService.js",
+      "line": 1770
+    },
+    {
+      "name": "deleteMinMaxSetting_",
+      "file": "Active/StockService.js",
+      "line": 1819
+    },
+    {
+      "name": "saveMinMaxBatch_",
+      "file": "Active/StockService.js",
+      "line": 1853
+    },
+    {
+      "name": "toString",
+      "file": "android modif/TSPModul/lib/core/api_client.dart",
+      "line": 15
+    },
+    {
+      "name": "_isRedirectStatus",
+      "file": "android modif/TSPModul/lib/core/api_client.dart",
+      "line": 21
+    },
+    {
+      "name": "backgroundSyncDispatcher",
+      "file": "android modif/TSPModul/lib/core/background_sync.dart",
+      "line": 15
+    },
+    {
+      "name": "start",
+      "file": "android modif/TSPModul/lib/core/connectivity_sync.dart",
+      "line": 15
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/core/connectivity_sync.dart",
+      "line": 28
+    },
+    {
+      "name": "_isNewer",
+      "file": "android modif/TSPModul/lib/core/update_checker.dart",
+      "line": 54
+    },
+    {
+      "name": "toString",
+      "file": "android modif/TSPModul/lib/data/local/database.g.dart",
+      "line": 470
+    },
+    {
+      "name": "toString",
+      "file": "android modif/TSPModul/lib/data/local/database.g.dart",
+      "line": 666
+    },
+    {
+      "name": "_s",
+      "file": "android modif/TSPModul/lib/data/models/history_models.dart",
+      "line": 1
+    },
+    {
+      "name": "_s",
+      "file": "android modif/TSPModul/lib/data/models/material_models.dart",
+      "line": 1
+    },
+    {
+      "name": "_s",
+      "file": "android modif/TSPModul/lib/data/models/reprint_models.dart",
+      "line": 1
+    },
+    {
+      "name": "_s",
+      "file": "android modif/TSPModul/lib/data/models/stock_models.dart",
+      "line": 1
+    },
+    {
+      "name": "_s",
+      "file": "android modif/TSPModul/lib/data/models/validator_models.dart",
+      "line": 1
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/auth/login_screen.dart",
+      "line": 22
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/auth/login_screen.dart",
+      "line": 49
+    },
+    {
+      "name": "_todayIso",
+      "file": "android modif/TSPModul/lib/features/history/history_home_screen.dart",
+      "line": 8
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/history/history_home_screen.dart",
+      "line": 30
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/history/history_home_screen.dart",
+      "line": 52
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/history/history_mesin_view.dart",
+      "line": 14
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/history/history_portal_view.dart",
+      "line": 18
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/history/history_tsp_view.dart",
+      "line": 13
+    },
+    {
+      "name": "findHeaderIndex",
+      "file": "android modif/TSPModul/lib/features/material/csv_import_helper.dart",
+      "line": 14
+    },
+    {
+      "name": "cellAt",
+      "file": "android modif/TSPModul/lib/features/material/csv_import_helper.dart",
+      "line": 21
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/material/material_home_screen.dart",
+      "line": 16
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/material/material_list_tab.dart",
+      "line": 24
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/material/material_list_tab.dart",
+      "line": 31
+    },
+    {
+      "name": "_showMessage",
+      "file": "android modif/TSPModul/lib/features/material/material_list_tab.dart",
+      "line": 190
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/material/material_list_tab.dart",
+      "line": 198
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+      "line": 25
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+      "line": 32
+    },
+    {
+      "name": "_showMessage",
+      "file": "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+      "line": 163
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+      "line": 171
+    },
+    {
+      "name": "ifEmpty",
+      "file": "android modif/TSPModul/lib/features/material/minmax_tab.dart",
+      "line": 260
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+      "line": 24
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+      "line": 32
+    },
+    {
+      "name": "_generate",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+      "line": 37
+    },
+    {
+      "name": "_showValidation",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+      "line": 64
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_config_screen.dart",
+      "line": 77
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_home_screen.dart",
+      "line": 28
+    },
+    {
+      "name": "_resetSearch",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_home_screen.dart",
+      "line": 146
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_home_screen.dart",
+      "line": 157
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_home_screen.dart",
+      "line": 225
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/reprint/reprint_print_screen.dart",
+      "line": 112
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/scan/barcode_scan_helper.dart",
+      "line": 27
+    },
+    {
+      "name": "_onDetect",
+      "file": "android modif/TSPModul/lib/features/scan/barcode_scan_helper.dart",
+      "line": 31
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/barcode_scan_helper.dart",
+      "line": 43
+    },
+    {
+      "name": "_todayIsoString",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 29
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 36
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 46
+    },
+    {
+      "name": "_continue",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 99
+    },
+    {
+      "name": "_showValidationDialog",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 139
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart",
+      "line": 154
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/scan/scan_home_screen.dart",
+      "line": 23
+    },
+    {
+      "name": "_selectEvent",
+      "file": "android modif/TSPModul/lib/features/scan/scan_home_screen.dart",
+      "line": 32
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scan_home_screen.dart",
+      "line": 40
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scan_home_screen.dart",
+      "line": 139
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scan_result_screen.dart",
+      "line": 12
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/scan/scanner_screen.dart",
+      "line": 25
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scanner_screen.dart",
+      "line": 69
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/scan/scanner_screen.dart",
+      "line": 103
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/shell/app_bottom_nav.dart",
+      "line": 40
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/shell/connectivity_banner.dart",
+      "line": 22
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/shell/connectivity_banner.dart",
+      "line": 29
+    },
+    {
+      "name": "_update",
+      "file": "android modif/TSPModul/lib/features/shell/connectivity_banner.dart",
+      "line": 33
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/shell/connectivity_banner.dart",
+      "line": 40
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/mesin_stock_tab.dart",
+      "line": 12
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/mesin_stock_tab.dart",
+      "line": 41
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/monitoring_tab.dart",
+      "line": 15
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/monitoring_tab.dart",
+      "line": 29
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/monitoring_tab.dart",
+      "line": 77
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/monitoring_tab.dart",
+      "line": 111
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/stock_home_screen.dart",
+      "line": 17
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/stock_home_screen.dart",
+      "line": 33
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/stock/stock_home_screen.dart",
+      "line": 84
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/stock_home_screen.dart",
+      "line": 90
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/transactions_tab.dart",
+      "line": 15
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 26
+    },
+    {
+      "name": "dispose",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 33
+    },
+    {
+      "name": "_showError",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 56
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 192
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 309
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 378
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/tsp_stock_tab.dart",
+      "line": 437
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/stock/widgets/async_tab.dart",
+      "line": 22
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/widgets/async_tab.dart",
+      "line": 34
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/stock/widgets/status_badge.dart",
+      "line": 22
+    },
+    {
+      "name": "_statusLabel",
+      "file": "android modif/TSPModul/lib/features/sync/sync_queue_screen.dart",
+      "line": 21
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/sync/sync_queue_screen.dart",
+      "line": 36
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/features/validator/validator_home_screen.dart",
+      "line": 20
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/validator/validator_home_screen.dart",
+      "line": 32
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/features/validator/validator_home_screen.dart",
+      "line": 111
+    },
+    {
+      "name": "initState",
+      "file": "android modif/TSPModul/lib/main.dart",
+      "line": 24
+    },
+    {
+      "name": "build",
+      "file": "android modif/TSPModul/lib/main.dart",
+      "line": 38
+    },
+    {
+      "name": "main",
+      "file": "android modif/TSPModul/test/api_redirect_probe_test.dart",
+      "line": 4
+    },
+    {
+      "name": "main",
+      "file": "android modif/TSPModul/test/reprint_request_test.dart",
+      "line": 3
+    },
+    {
+      "name": "main",
+      "file": "android modif/TSPModul/test/widget_test.dart",
+      "line": 10
+    },
+    {
+      "name": "funcName",
+      "file": "tools/graphify_codebase.py",
+      "line": 24
+    },
+    {
+      "name": "extract_js_functions",
+      "file": "tools/graphify_codebase.py",
+      "line": 17
+    },
+    {
+      "name": "build_codebase_graph",
+      "file": "tools/graphify_codebase.py",
+      "line": 31
+    },
+    {
+      "name": "export_graph_summary",
+      "file": "tools/graphify_codebase.py",
+      "line": 62
+    },
+    {
+      "name": "terima_wrm_step",
+      "file": "tools/langgraph_agent.py",
+      "line": 30
+    },
+    {
+      "name": "kirim_mesin_step",
+      "file": "tools/langgraph_agent.py",
+      "line": 42
+    },
+    {
+      "name": "terima_operator_step",
+      "file": "tools/langgraph_agent.py",
+      "line": 54
+    },
+    {
+      "name": "consume_operator_step",
+      "file": "tools/langgraph_agent.py",
+      "line": 66
+    },
+    {
+      "name": "route_next_checkpoint",
+      "file": "tools/langgraph_agent.py",
+      "line": 78
+    },
+    {
+      "name": "create_tsp_workflow",
+      "file": "tools/langgraph_agent.py",
+      "line": 93
+    },
+    {
+      "name": "generate_mermaid_docs",
+      "file": "tools/mermaid_generator.py",
+      "line": 29
+    },
+    {
+      "name": "analyze_excel",
+      "file": "tools/parse_excel_ref.py",
+      "line": 18
+    },
+    {
+      "name": "default_converter",
+      "file": "tools/parse_excel_ref.py",
+      "line": 66
+    },
+    {
+      "name": "load_excel_mapping",
+      "file": "tools/verify_column_mapping.py",
+      "line": 15
+    },
+    {
+      "name": "verify_columns",
+      "file": "tools/verify_column_mapping.py",
+      "line": 20
+    },
+    {
+      "name": "check_python_packages",
+      "file": "tools/verify_env.py",
+      "line": 29
+    },
+    {
+      "name": "check_graphify",
+      "file": "tools/verify_env.py",
+      "line": 54
+    },
+    {
+      "name": "check_mermaid",
+      "file": "tools/verify_env.py",
+      "line": 75
+    },
+    {
+      "name": "check_langgraph",
+      "file": "tools/verify_env.py",
+      "line": 96
+    },
+    {
+      "name": "check_gitnexus",
+      "file": "tools/verify_env.py",
+      "line": 117
+    },
+    {
+      "name": "main",
+      "file": "tools/verify_env.py",
+      "line": 141
+    }
+  ]
+}
