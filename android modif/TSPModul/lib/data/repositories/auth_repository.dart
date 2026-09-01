@@ -19,14 +19,20 @@ class AuthRepository {
   }
 
   Future<SessionUser?> restoreSession() async {
-    if (await _session.getUser() == null || await _session.getToken() == null) return null;
+    final cachedUser = await _session.getUser();
+    if (cachedUser == null || await _session.getToken() == null) return null;
     try {
       final res = await _api.call('getSession');
       if (res['success'] != true) throw ApiException(res['message'] as String? ?? 'Sesi tidak valid.');
       final user = SessionUser.fromJson(res['data'] as Map<String, dynamic>);
       await _session.updateUser(user);
       return user;
-    } on ApiException {
+    } on ApiException catch (e) {
+      // Startup TANPA koneksi (mis. operator buka app di area sinyal mati) bukan berarti
+      // sesinya invalid -- jangan logout paksa & hapus kredensial tersimpan, karena login
+      // ulang pun butuh koneksi yang sedang tidak ada. Pakai data sesi terakhir yang
+      // tersimpan supaya app tetap bisa dipakai (antrian scan offline, dsb) sampai online lagi.
+      if (e.isConnectivityError) return cachedUser;
       await _session.clear();
       return null;
     }

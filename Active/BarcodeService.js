@@ -103,7 +103,11 @@ function allocateChildBarcodes_(parentBarcode, quantities, options) {
   var markSentToMesin = opts.markSentToMesin === true;
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  // 20s (bukan 30s) -- wajib lebih pendek dari receiveTimeout client Android (30s, lihat
+  // ApiClient) supaya server selalu sempat membalas sebelum client menyerah duluan saat
+  // lock berebut di jam sibuk. Kalau client timeout lebih dulu, request itu salah
+  // diklasifikasi jadi "gagal koneksi" padahal server sebenarnya masih memproses.
+  lock.waitLock(20000);
   try {
     // --- 1. Induk wajib ada & sudah dikonfirmasi diterima dari WRM (dilempar getReprintData_) ---
     var reprintData = getReprintData_(parentStr);
@@ -730,7 +734,9 @@ function deleteReprintBarcode_(barcodeAnak, actor, force) {
   var actorLabel = (actor && actor.nik) ? (actor.nik + ' - ' + (actor.nama || '')) : '';
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  // 20s -- sama seperti allocateChildBarcodes_, harus lebih pendek dari receiveTimeout
+  // client Android (30s) supaya tidak balapan dengan timeout client.
+  lock.waitLock(20000);
   try {
     // --- 1. Barcode wajib terdaftar sebagai barcode anak di REPRINT BARCODE ---
     var reprintSheet = getSheet_(SHEET_NAMES.REPRINT);
