@@ -43,3 +43,12 @@ New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
 $releaseApk = Join-Path $releaseDir 'app-release.apk'
 Copy-Item -LiteralPath $localApk -Destination $releaseApk -Force
 Write-Output "Release APK copied to: $releaseApk"
+
+# Salinan berlabel jelas ("TSP Modul", bukan nama teknis default Flutter "app-release") --
+# ini yang dibagikan/diupload ke rilis, bukan pengganti $releaseApk (path itu tetap dipakai
+# tooling internal seperti BUILD_RELEASE_LOCAL.cmd/dokumentasi yang mengharapkan nama tetap).
+$versionMatch = Select-String -Path (Join-Path $sourceRoot 'pubspec.yaml') -Pattern '^version:\s*([\d.]+)' | Select-Object -First 1
+$versionLabel = if ($versionMatch) { $versionMatch.Matches[0].Groups[1].Value } else { 'unknown' }
+$friendlyApk = Join-Path $releaseDir "TSP Modul-v$versionLabel.apk"
+Copy-Item -LiteralPath $localApk -Destination $friendlyApk -Force
+Write-Output "Release APK (nama distribusi) disalin ke: $friendlyApk"

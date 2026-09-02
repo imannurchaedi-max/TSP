@@ -356,9 +356,13 @@ AppBar layar Scan:
    sistem Android (butuh permission `REQUEST_INSTALL_PACKAGES`).
 3. Rilis baru dibuat manual: bump `pubspec.yaml` → jalankan `BUILD_RELEASE_LOCAL.cmd` dari
    checkout Android → git tag `vX.Y.Z` → `gh release create vX.Y.Z
-   build/.../app-release.apk`. Launcher membangun di `C:\BuildWorkspaces\TSPModul` lalu
-   menyalin hanya APK final kembali ke SynologyDrive; jangan jalankan build release langsung
-   di folder yang tersinkron.
+   "build/.../TSP Modul-vX.Y.Z.apk"`. Launcher membangun di `C:\BuildWorkspaces\TSPModul` lalu
+   menyalin APK final kembali ke SynologyDrive dalam **dua nama**: `app-release.apk` (nama
+   teknis tetap, dipakai tooling internal) dan `TSP Modul-vX.Y.Z.apk` (nama distribusi/user-
+   facing, sejak v1.0.5) — **hanya file bernama "TSP Modul-..."** yang boleh di-attach ke
+   `gh release create`, karena `update_checker.dart` mengambil asset `.apk` **pertama** yang
+   ditemukan di rilis (`assets.where(...).first`) — attach 2 APK ke 1 rilis bikin pilihannya
+   ambigu. Jangan jalankan build release langsung di folder yang tersinkron.
 
 | Versi | Perubahan |
 |---|---|
