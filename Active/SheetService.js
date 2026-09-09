@@ -241,7 +241,7 @@ function parseSapDate_(val, tz) {
  */
 function getReservasiList_() {
   try {
-    var sheet = getSheet_(SHEET_NAMES.RESERVASI);
+    var sheet = getSheet_(SHEET_NAMES.WRM_INCOMING);
     var headerMap = getHeaderMap_(sheet);
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
@@ -249,7 +249,7 @@ function getReservasiList_() {
     var tz = Session.getScriptTimeZone();
     var data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     // Kolom BARCODE OUTBOUND WRM (prioritas) + fallback kolom RESERVASI lama
-    var colTanggal = headerMap['Tanggal Outbound'] || headerMap['tanggal outbound'] || headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'];
+    var colTanggal = headerMap['Tanggal Outbound'] || headerMap['tanggal outbound'] || headerMap['TANGGAL'] || headerMap['Tanggal'] || headerMap['tanggal'] || headerMap['TANGGAL RESERVASI'] || headerMap['tanggal reservasi'];
     var colNoRes = headerMap['MATDOC RESERVASI'] || headerMap['matdoc reservasi'] || headerMap['NO RESERVASI'] || headerMap['No Reservasi'] || headerMap['no reservasi'];
     var colMid = headerMap['MID'] || headerMap['Mid'] || headerMap['mid'];
     var colDesc = headerMap['DESC'] || headerMap['desc'] || headerMap['MATERIAL DESCRIPTION'] || headerMap['Material Description'];
@@ -482,4 +482,58 @@ function queryReprintSheet_(query) {
   // Urutkan terbaru dulu (descending by row position)
   result.reverse();
   return result;
+}
+
+/**
+ * Menyimpan data reservasi yang di-input (paste) dari SAP.
+ */
+function submitReservasi_(nik, tanggal, matdoc, shift, items) {
+  var wrmSpreadsheet = SpreadsheetApp.openById(WRM_SPREADSHEET_ID);
+  var sheet = wrmSpreadsheet.getSheetByName(WRM_RESERVASI_SHEET_NAME);
+  if (!sheet) {
+    throw new Error('Sheet ' + WRM_RESERVASI_SHEET_NAME + ' tidak ditemukan di ekosistem WRM.');
+  }
+  var headerMap = getHeaderMap_(sheet);
+  
+  var cTgl = headerMap['TANGGAL RESERVASI'] || headerMap['tanggal outbound'] || headerMap['TANGGAL'] || 1;
+  var cMatdoc = headerMap['MATDOC RESERVASI'] || headerMap['matdoc reservasi'] || headerMap['NO RESERVASI'] || 2;
+  var cShift = headerMap['SHIFT'] || headerMap['Shift'] || 3;
+  var cMid = headerMap['MID'] || 4;
+  var cDesc = headerMap['DESC'] || headerMap['MATERIAL DESCRIPTION'] || 5;
+  var cUom = headerMap['UOM'] || headerMap['UNIT'] || 6;
+  var cQty = headerMap['QTY'] || headerMap['JUMLAH'] || 7;
+  var cStatus = headerMap['STATUS'] || headerMap['Status'] || 8;
+  
+  var maxCol = sheet.getLastColumn();
+  if (maxCol < 8) maxCol = 8;
+  
+  var newRows = [];
+  var matMap = getMaterialMap_(); 
+  
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    if (!item.mid) continue; // skip invalid row
+
+    var row = new Array(maxCol);
+    for(var j=0; j<maxCol; j++) row[j] = '';
+    
+    var master = matMap[item.mid] || { deskripsi: '', uom: 'KG' };
+    
+    row[cTgl - 1] = tanggal;
+    row[cMatdoc - 1] = matdoc;
+    row[cShift - 1] = shift;
+    row[cMid - 1] = item.mid;
+    row[cDesc - 1] = master.deskripsi;
+    if (cUom) row[cUom - 1] = master.uom;
+    row[cQty - 1] = item.qty;
+    if (cStatus) row[cStatus - 1] = 'OPEN';
+    
+    newRows.push(row);
+  }
+  
+  if (newRows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, maxCol).setValues(newRows);
+  }
+  
+  return { success: true, message: newRows.length + ' item reservasi berhasil disimpan.' };
 }

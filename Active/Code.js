@@ -374,3 +374,13 @@ function deleteMaterialApi(nik, mid) {
     return { success: false, message: 'Gagal menghapus material: ' + err.message };
   }
 }
+
+/** Endpoint API Input Reservasi (TSP) */
+function submitReservasiApi(nik, tanggal, matdoc, shift, items) {
+  try {
+    requireRole_(nik, ['tsp', 'spv']);
+    return submitReservasi_(nik, tanggal, matdoc, shift, items);
+  } catch (err) {
+    return { success: false, message: 'Gagal memproses input reservasi: ' + err.message };
+  }
+}

@@ -52,6 +52,7 @@
         <a class="nav-link" id="tab-btn-validasi" href="<?= appUrl ?>?tab=validasi" style="display:none;"><i class="bi bi-clipboard-check"></i><span>Validasi</span></a>
         <a class="nav-link" id="tab-btn-history" href="<?= appUrl ?>?tab=history"><i class="bi bi-clock-history"></i><span>Riwayat</span></a>
         <a class="nav-link" id="tab-btn-reprint" href="<?= appUrl ?>?tab=reprint" style="display:none;"><i class="bi bi-printer-fill"></i><span>Reprint</span></a>
+        <a class="nav-link" id="tab-btn-reservasi" href="<?= appUrl ?>?tab=reservasi" style="display:none;"><i class="bi bi-journal-plus"></i><span>Input Reservasi</span></a>
         <a class="nav-link" id="tab-btn-minmax" href="<?= appUrl ?>?tab=minmax" style="display:none;"><i class="bi bi-database-fill-gear"></i><span>Material Master</span></a>
       </nav>
       <div class="sidebar-footer">
@@ -312,6 +313,56 @@
 
         </div>
         <!-- END TAB REPRINT -->
+
+        <!-- ===== TAB INPUT RESERVASI ===== -->
+        <div id="tab-reservasi" class="tab-panel" style="display:none;">
+          <div class="card p-3 mb-3 shadow-sm" style="max-width: 800px; margin: 0 auto; background: #fff; border-radius: 8px;">
+            <h4 class="mb-3 text-primary" style="font-weight: 600;"><i class="bi bi-journal-plus"></i> Input Reservasi dari SAP</h4>
+            <form id="form-reservasi">
+              <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Tanggal Reservasi</label>
+                  <input type="date" id="reservasi-tanggal" required style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">MATDOC Reservasi</label>
+                  <input type="text" id="reservasi-matdoc" placeholder="Misal: 20773909" required style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                  <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Shift</label>
+                  <select id="reservasi-shift" required style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <option value="">-- Pilih Shift --</option>
+                    <option value="SHIFT 1">SHIFT 1</option>
+                    <option value="SHIFT 2">SHIFT 2</option>
+                    <option value="SHIFT 3">SHIFT 3</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Paste Data dari SAP</label>
+                <textarea id="reservasi-paste-area" rows="6" placeholder="Paste data tabel dari SAP ke sini..." required style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace;"></textarea>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Pastikan Anda meng-copy blok tabel yang memuat minimal kolom MID dan Quantity dari SAP.</div>
+              </div>
+              <button type="button" class="primary-btn" id="btn-preview-reservasi" style="width:100%; padding: 10px; font-weight: 600; border-radius: 6px; background-color: #0d6efd; color: white; border: none; cursor: pointer;">Preview Data</button>
+            </form>
+          </div>
+
+          <div class="card p-3 shadow-sm" id="reservasi-preview-card" style="display:none; max-width: 800px; margin: 0 auto; background: #fff; border-radius: 8px;">
+            <h5 class="mb-3" style="font-weight: 600; color: #059669;">Preview Data yang akan disimpan:</h5>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; text-align: left; font-size: 14px;">
+                <thead style="background-color: #f1f5f9;">
+                  <tr>
+                    <th style="padding: 8px; border: 1px solid #cbd5e1;">MID</th>
+                    <th style="padding: 8px; border: 1px solid #cbd5e1;">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody id="reservasi-preview-tbody"></tbody>
+              </table>
+            </div>
+            <button type="button" class="primary-btn" id="btn-submit-reservasi" style="width:100%; padding: 10px; margin-top: 16px; font-weight: 600; border-radius: 6px; background-color: #059669; color: white; border: none; cursor: pointer;">Simpan Reservasi</button>
+          </div>
+        </div>
 
         <!-- ===== TAB MIN / MAX STOCK ===== -->
         <div id="tab-minmax" class="tab-panel" style="display:none;">
@@ -696,6 +747,7 @@
 
       document.getElementById('tab-btn-validasi').style.display = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('tab-btn-reprint').style.display  = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
+      document.getElementById('tab-btn-reservasi').style.display = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('tab-btn-minmax').style.display   = (user.role === 'tsp' || user.role === 'spv') ? 'flex' : 'none';
       document.getElementById('mesin-picker-wrap').style.display = user.role === 'operator' ? 'block' : 'none';
       document.getElementById('recent-receipts-panel').style.display = (user.role === 'tsp' || user.role === 'spv' || user.role === 'operator' || user.role === 'leader_mesin') ? 'grid' : 'none';
@@ -727,7 +779,7 @@
       }).getMesinList();
     }
 
-    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi', history: 'Riwayat Stok', reprint: 'Reprint Barcode', minmax: 'Material Master' };
+    var TAB_LABELS = { stock: 'Stock', scan: 'Scan', validasi: 'Validasi', history: 'Riwayat Stok', reprint: 'Reprint Barcode', minmax: 'Material Master', reservasi: 'Input Reservasi' };
     var CURRENT_TAB = 'stock';
 
     // ===== DEEPLINK & URL SESSION HISTORY MANAGEMENT =====
@@ -881,7 +933,7 @@
 
     function switchTab(tab, isRestoring) {
       CURRENT_TAB = tab;
-      ['stock', 'scan', 'validasi', 'history', 'reprint', 'minmax'].forEach(function (t) {
+      ['stock', 'scan', 'validasi', 'history', 'reprint', 'minmax', 'reservasi'].forEach(function (t) {
         var pnl = document.getElementById('tab-' + t);
         if(pnl) pnl.style.display = (t === tab) ? 'block' : 'none';
         var btn = document.getElementById('tab-btn-' + t);

@@ -9,6 +9,10 @@ var SPREADSHEET_ID = '1DrwDLaTqqdVwfqNj9hmiPLXmVCzt-rwfR8jgltY5jO8';
 var KARYAWAN_SPREADSHEET_ID = '14OTl9xYINyRIqnJ2AEaCJFD_D9tNRRueNgFby6FjY9o';
 var KARYAWAN_SHEET_NAME = 'KARYAWAN';
 
+// Spreadsheet Ecosystem WRM
+var WRM_SPREADSHEET_ID = '16ceklU_Y96oEvwjWp10EdMZ_tdm8D4X5QgCzWkWn5KI';
+var WRM_RESERVASI_SHEET_NAME = 'RESERVASI';
+
 // Pemetaan kolom "Jabatan" di sheet KARYAWAN -> role TSP Modul. Jabatan yang tidak
 // terdaftar di sini ditolak akses (lihat AuthService.js).
 var JABATAN_ROLE_MAP = {
@@ -31,7 +35,6 @@ var SHEET_NAMES = {
   MB51: 'MB51 ', // perhatikan ada spasi di akhir nama sheet aslinya
   WRM_INCOMING: 'BARCODE OUTBOUND WRM', // registry pallet dari WRM, sumber lookup MID/QTY saat Terima dari WRM
   REPRINT: 'REPRINT BARCODE', // registry log barcode anak/reprint yang dibuat TSP
-  RESERVASI: 'BARCODE OUTBOUND WRM', // data reservasi terintegrasi di BARCODE OUTBOUND WRM (kolom MATDOC RESERVASI)
   STOCK_TSP: 'STOCK TSP',
   STOCK_MESIN: 'STOCK MESIN',
   MIN_MAX: 'MIN MAX STOCK'

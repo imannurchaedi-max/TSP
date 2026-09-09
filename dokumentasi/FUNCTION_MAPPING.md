@@ -19,13 +19,12 @@ grep itu untuk verifikasi cepat sebelum percaya isi dokumen ini.
 | `SPREADSHEET_ID` | ID spreadsheet utama TSP MODUL |
 | `KARYAWAN_SPREADSHEET_ID` / `KARYAWAN_SHEET_NAME` | ID + nama tab sheet KARYAWAN |
 | `JABATAN_ROLE_MAP` | Peta Jabatan → role (`tsp`/`operator`/`spv`) |
-| `SHEET_NAMES` | Nama semua sheet (`BARCODE`, `MATERIAL_MASTER`, `LOG`, `MB51`, `WRM_INCOMING`, `REPRINT`, `RESERVASI` → menunjuk ke `BARCODE OUTBOUND WRM`, `STOCK_TSP`, `STOCK_MESIN`, `MIN_MAX`) |
+| `SHEET_NAMES` | Nama semua sheet (`BARCODE`, `MATERIAL_MASTER`, `LOG`, `MB51`, `WRM_INCOMING`, `REPRINT`, `STOCK_TSP`, `STOCK_MESIN`, `MIN_MAX`) |
 | `BARCODE_COLUMNS` | Urutan header sheet "BARCODE MATERIAL PRODUKSI" (13 kolom) |
 | `REPRINT_COLUMNS` | Urutan header sheet "REPRINT BARCODE" (7 kolom) |
 | `LOG_COLUMNS` | Urutan header sheet "Log Aktivitas Barcode" |
 | `MESIN_LIST` | Daftar 6 mesin aktif (`BHP 1`..`5`, `AHP 1`) |
 | `EVENTS` | Definisi 6 event checkpoint (`terima_wrm`, `kirim_mesin`, `terima_operator`, `consume_operator`, `retur_dari_mesin`, `retur_ke_wrm`) |
-
 ---
 
 ## 2. SheetService.js — helper generik akses sheet
@@ -33,20 +32,6 @@ grep itu untuk verifikasi cepat sebelum percaya isi dokumen ini.
 | Fungsi | Parameter | Calls | Called by |
 |---|---|---|---|
 | `getSpreadsheet_()` | — | `SpreadsheetApp.openById` | `getSheet_` |
-| `getSheet_(name)` | nama sheet | `getSpreadsheet_` | Hampir semua fungsi yang butuh akses sheet |
-| `ensureSheetsReady_()` | — | `getSheet_`, `getSpreadsheet_` | `processScan_` (BarcodeService.js) |
-| `getHeaderMap_(sheet)` | objek Sheet | — | Hampir semua fungsi yang baca/tulis kolom by-name |
-| `findRowByColumnValue_(sheet, columnName, value)` | sheet, nama kolom, nilai dicari | `getHeaderMap_` | `findBarcodeRow_`, `lookupWrmIncoming_` |
-| `findBarcodeRow_(barcodeText)` | teks barcode | `getSheet_`, `getHeaderMap_` | `classifyBarcode_`, `handleTerimaWrm_`, `handleKirimMesin_`, `handleChildCheckpoint_`, `getReprintData_` |
-| `lookupWrmIncoming_(kodeUnik)` | Kode Unik | `getSheet_`, `findRowByColumnValue_` | `handleTerimaWrm_`, `getReprintData_` (fallback qty) |
-| `parseSapDate_(val, tz)` | nilai sel, zona waktu | `Session.getScriptTimeZone` | `getReservasiList_` |
-| `getReservasiList_()` | — | `getSheet_`, `getHeaderMap_`, `parseSapDate_` | `getReservasiOptions` (Code.js), `validateMidInReservasi_` — baca dari BARCODE OUTBOUND WRM (kolom `Tanggal Outbound`, `MATDOC RESERVASI`, `MID`, `DESC`, `QTY`, `UOM`, `Shift`) |
-| `validateMidInReservasi_(noReservasi, targetMid)` | no. reservasi, MID | `getReservasiList_` | `handleTerimaWrm_` |
-| `appendBarcodeRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | `handleTerimaWrm_` — sejak v114 `handleKirimMesin_` **tidak** lagi memakainya (penulisan pindah ke `allocateChildBarcodes_` yang batch-append via `setValues` di dalam lock) |
-| `appendReprintRow_(rowObject)` | objek {kolom: nilai} | `getSheet_`, `getHeaderMap_` | **tidak dipanggil siapa pun sejak v114** (dead code) — penulisan REPRINT BARCODE pindah ke `allocateChildBarcodes_`. Dibiarkan ada karena tidak berbahaya; hapus kalau memang dipastikan tak dipakai lagi |
-| `updateBarcodeCell_(rowIndex, columnName, value)` | index baris, nama kolom, nilai | `getSheet_`, `getHeaderMap_` | `handleChildCheckpoint_` — dipakai untuk kolom checkpoint **dan** untuk mengunci kolom `MESIN` (v114) |
-| `appendLog_(logObject)` | objek log | `getSheet_` | `submitScan` (Code.js) |
-| `queryReprintSheet_(query)` | substring pencarian | `getSheet_`, `getHeaderMap_` | *(tidak ada caller aktif saat ini — `getReprintData` Code.js pakai `getReprintData_` di BarcodeService.js, bukan fungsi ini. Kandidat dead code, dipertahankan kalau-kalau dipakai lagi utk pencarian substring bebas.)* |
 
 ---
 
@@ -178,6 +163,7 @@ lihat `OLD_MATERIAL_MASTER_SHEET_NAME_` & `migrateMaterialMasterIfEmpty_`).
 | `saveMaterialApi(nik, mid, deskripsi, uom, supplier, status)` | NIK, MID, deskripsi, UOM, supplier, status | `requireRole_(['tsp','spv'])`, `saveMaterialMaster_`, `ensureMidInActiveShift_` | `Index.html` |
 | `saveMaterialBatchApi(nik, items)` | NIK, array items | `requireRole_(['tsp','spv'])`, `saveMaterialBatch_`, `ensureMidInActiveShift_` | `Index.html` |
 | `deleteMaterialApi(nik, mid)` | NIK, MID | `requireRole_(['tsp','spv'])`, `deleteMaterial_` | `Index.html` |
+| `submitReservasiApi(nik, items)` | NIK, array of items | `requireRole_(['tsp','spv'])`, `submitReservasi_` | `Index.html` |
 
 ---
 
