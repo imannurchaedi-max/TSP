@@ -43,3 +43,6 @@ Thumbs.db
 
 # Scratch / debug dumps (local only)
 scratch_*.txt
+
+# Snapshot cadangan lokal, bukan sumber kebenaran (duplikat Active/ + dokumentasi/)
+TSPcore.zip
