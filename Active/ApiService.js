@@ -166,6 +166,31 @@ var API_ACTION_ROLES_ = {
   getMaterialList: ['tsp', 'spv']
 };
 
+/**
+ * Action BACA yang SENGAJA tidak dibatasi role -- didaftarkan di sini supaya
+ * ketiadaannya di API_ACTION_ROLES_ terbaca sebagai keputusan, bukan kelalaian.
+ * (Audit integritas 9 September 2026 sempat menandai ini sebagai asimetri.)
+ *
+ * - getSession           : tiap sesi wajib bisa membaca identitasnya sendiri.
+ * - getMesinList         : data referensi; dipanggil SEMUA role saat bootstrap/login
+ *                          supaya daftar mesin di client tidak lagi hardcode.
+ * - getReservasiOptions  : dipakai form Scan, dan operator ikut men-scan.
+ * - getMesinStock        : stok mesin yang memang jadi wilayah kerja operator.
+ * - getOperatorReceipts  : penerimaan operator itu sendiri.
+ * - getOperatorConsumption: konsumsi operator itu sendiri.
+ * - getHistoricalMesinStock, getPortalHistory:
+ *       PASANGAN operator dari getHistoricalTspStock yang dibatasi di atas.
+ *       Tab Riwayat terbuka untuk semua role (lihat _kBaseNavItems di
+ *       app_bottom_nav.dart); role tsp/spv diarahkan ke riwayat TSP, operator ke
+ *       riwayat Mesin/Portal. Membatasi dua action ini akan mematahkan tab Riwayat
+ *       untuk operator -- pemisahannya memang disengaja, bukan kelewat.
+ */
+var API_OPEN_READ_ACTIONS_ = [
+  'getSession', 'getMesinList', 'getReservasiOptions', 'getMesinStock',
+  'getOperatorReceipts', 'getOperatorConsumption',
+  'getHistoricalMesinStock', 'getPortalHistory'
+];
+
 function dispatchApiAction_(action, body, session) {
   var handler = API_ACTIONS_[action];
   if (!handler) throw new Error('Action "' + action + '" tidak dikenal.');

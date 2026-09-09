@@ -22,7 +22,7 @@ function classifyBarcode_(raw) {
   if (match) {
     var potentialParent = match[1];
     var parentRow = findBarcodeRow_(potentialParent);
-    if (parentRow.rowIndex !== -1 && getCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM')) {
+    if (parentRow.rowIndex !== -1 && getRequiredCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM')) {
       return { raw: raw, isChild: true, isParent: false, parentBarcode: potentialParent };
     }
   }
@@ -285,10 +285,39 @@ function formatTimestamp_(value) {
   return Utilities.formatDate(new Date(value), tz, 'dd/MM/yyyy HH:mm');
 }
 
+/**
+ * Pembaca PERMISIF: mengembalikan '' kalau kolomnya tidak ada.
+ * Pakai ini HANYA untuk kolom yang memang boleh tidak ada (mis. 'MESIN' yang baru
+ * ditambahkan di v114 sehingga sheet lama belum tentu punya). Untuk kolom yang wajib
+ * ada -- apalagi yang nilainya dipakai sebagai gerbang keputusan -- pakai
+ * getRequiredCellValue_ supaya kolom hilang gagal keras, bukan gagal diam.
+ */
 function getCellValue_(rowResult, columnName) {
   var cleanName = String(columnName).trim();
   var col = rowResult.headerMap[cleanName] || rowResult.headerMap[cleanName.toLowerCase()];
   if (!col) return '';
+  return rowResult.values[col - 1];
+}
+
+/**
+ * Baca sel yang KOLOMNYA WAJIB ADA di sheet.
+ *
+ * Berbeda dari getCellValue_ yang sengaja permisif, fungsi ini MELEMPAR error kalau
+ * kolomnya tidak ada. Alasannya: kolom yang tergeser/ter-rename sebelumnya terbaca
+ * sebagai "sel kosong", dan sel kosong punya arti khusus di alur ini -- "checkpoint
+ * belum dilakukan". Akibatnya kolom hilang diam-diam MELOLOSKAN gerbang prasyarat,
+ * gerbang anti-duplikasi event, dan blokir hapus barcode yang sudah dipakai di lantai
+ * produksi. Gagal keras jauh lebih aman daripada meloloskan mutasi stok yang salah.
+ *
+ * Sel yang memang kosong tetap dikembalikan apa adanya -- yang ditolak hanya kolom
+ * yang tidak ada sama sekali.
+ */
+function getRequiredCellValue_(rowResult, columnName) {
+  var cleanName = String(columnName).trim();
+  var col = rowResult.headerMap[cleanName] || rowResult.headerMap[cleanName.toLowerCase()];
+  if (!col) {
+    throw new Error('Kolom "' + cleanName + '" tidak ditemukan di sheet. Struktur kolom berubah -- perbaiki header sheet sebelum melanjutkan.');
+  }
   return rowResult.values[col - 1];
 }
 
@@ -335,9 +364,9 @@ function handleTerimaWrm_(raw, noReservasi, now) {
     throw new Error('Barcode "' + raw + '" tidak ditemukan di sheet BARCODE OUTBOUND WRM.');
   }
 
-  var mid = getCellValue_(wrmRow, 'MID') || getCellValue_(wrmRow, 'MID ');
-  var deskripsi = getCellValue_(wrmRow, 'DESC');
-  var qtyPalet = Number(getCellValue_(wrmRow, 'QTY')) || 0;
+  var mid = getRequiredCellValue_(wrmRow, 'MID');
+  var deskripsi = getRequiredCellValue_(wrmRow, 'DESC');
+  var qtyPalet = Number(getRequiredCellValue_(wrmRow, 'QTY')) || 0;
 
   // Validasi / Kawinkan MID hasil scan dengan Nomor Reservasi (dari BARCODE OUTBOUND WRM)
   validateMidInReservasi_(noReservasi, mid);
@@ -480,18 +509,21 @@ function handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)
 
   var prereqCol = eventDef.prerequisite ? EVENTS[eventDef.prerequisite].column : null;
   if (prereqCol) {
-    var prereqVal = getCellValue_(barcodeRow, prereqCol);
+    var prereqVal = getRequiredCellValue_(barcodeRow, prereqCol);
     if (!prereqVal) {
       throw new Error('Prasyarat "' + EVENTS[eventDef.prerequisite].label + '" belum dilakukan untuk barcode "' + raw + '".');
     }
   }
 
-  var currentVal = getCellValue_(barcodeRow, eventDef.column);
+  var currentVal = getRequiredCellValue_(barcodeRow, eventDef.column);
   if (currentVal) {
     throw new Error('Event "' + eventDef.label + '" sudah pernah dicatat sebelumnya untuk barcode "' + raw + '".');
   }
 
   // --- Resolusi mesin SEBELUM ada penulisan apa pun, supaya mismatch tidak setengah tercatat ---
+  // getCellValue_ (permisif) disengaja di sini: kolom MESIN baru ada sejak v114,
+  // jadi sheet lama boleh tidak punya. Ketidakhadirannya sudah dijaga eksplisit
+  // lewat barcodeRow.headerMap['MESIN'] sebelum penulisan.
   var recordedMesin = String(getCellValue_(barcodeRow, 'MESIN') || '').trim();
   var requestedMesin = mesinCode ? String(mesinCode).trim() : '';
 
@@ -529,8 +561,8 @@ function handleChildCheckpoint_(classified, eventDef, now, mesinCode, eventCode)
 
   var stockSynced = true;
   try {
-    var mid = getCellValue_(barcodeRow, 'MID');
-    var qty = Number(getCellValue_(barcodeRow, 'JUMLAH')) || 0;
+    var mid = getRequiredCellValue_(barcodeRow, 'MID');
+    var qty = Number(getRequiredCellValue_(barcodeRow, 'JUMLAH')) || 0;
 
     if (mesinMissing) {
       // Tidak ada mesin -> mutasi stok mesin tidak mungkin benar. Ditandai supaya operator dan
@@ -586,19 +618,19 @@ function getReprintData_(parentBarcode) {
     throw new Error('Kode Induk "' + parentStr + '" belum pernah diterima/diregister di sistem TSP.');
   }
 
-  var tsTerima = getCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM');
+  var tsTerima = getRequiredCellValue_(parentRow, 'DITERIMA OLEH TSP DARI WRM');
   if (!tsTerima) {
     throw new Error('Kode Induk "' + parentStr + '" belum dikonfirmasi penerimaannya dari WRM (belum scan masuk).');
   }
 
-  var mid = getCellValue_(parentRow, 'MID');
-  var desc = getCellValue_(parentRow, 'MATERIAL DESCRIPTION');
-  var parentQty = Number(getCellValue_(parentRow, 'JUMLAH')) || 0;
+  var mid = getRequiredCellValue_(parentRow, 'MID');
+  var desc = getRequiredCellValue_(parentRow, 'MATERIAL DESCRIPTION');
+  var parentQty = Number(getRequiredCellValue_(parentRow, 'JUMLAH')) || 0;
   if (parentQty === 0) {
     try {
       var wrmRow = lookupWrmIncoming_(parentStr);
       if (wrmRow && wrmRow.rowIndex !== -1) {
-        parentQty = Number(getCellValue_(wrmRow, 'QTY')) || 0;
+        parentQty = Number(getRequiredCellValue_(wrmRow, 'QTY')) || 0;
       }
     } catch (e) {
       // Ignore
@@ -764,7 +796,7 @@ function deleteReprintBarcode_(barcodeAnak, actor, force) {
     var blocking = [];
     if (prodRow.rowIndex !== -1) {
       for (var c = 0; c < REPRINT_DELETE_BLOCKING_COLUMNS_.length; c++) {
-        if (getCellValue_(prodRow, REPRINT_DELETE_BLOCKING_COLUMNS_[c])) {
+        if (getRequiredCellValue_(prodRow, REPRINT_DELETE_BLOCKING_COLUMNS_[c])) {
           blocking.push(REPRINT_DELETE_BLOCKING_COLUMNS_[c]);
         }
       }
