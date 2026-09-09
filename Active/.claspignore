@@ -1,0 +1,12 @@
+# Jangan pernah dorong berkas non-sumber ke Apps Script.
+# Gaya .gitignore: yang tercantum di sini DIABAIKAN oleh clasp push.
+**/node_modules/**
+**/.git/**
+_clasp_*
+*.bak
+*.tmp
+*.log
+*.zip
+*.md
+*.py
+*.ps1
