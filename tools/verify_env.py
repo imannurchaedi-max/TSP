@@ -118,8 +118,17 @@ def check_langgraph():
 
 def check_gitnexus():
     print("\n--- 5. Checking GitNexus CLI ---")
+    # Pakai CLI GitNexus KANONIK di <root>/node_modules, bukan `npx gitnexus` yang
+    # menarik instalasi npm global. Keduanya punya digest dependencyRuntime berbeda
+    # (global tidak punya lockfile), dan setiap pergantian runner memaksa GitNexus
+    # membangun ulang index dari nol. Lihat CLAUDE.md, bagian Runner GitNexus.
+    cli = Path(__file__).resolve().parent.parent.parent / "node_modules" / "gitnexus" / "dist" / "cli" / "index.js"
+    if not cli.exists():
+        print(f"  [FAIL] GitNexus CLI kanonik tidak ada di {cli}")
+        print("         Jalankan `npm install gitnexus` di root workspace.")
+        return False
     res = subprocess.run(
-        ["npx", "gitnexus", "status"],
+        ["node", str(cli), "status"],
         capture_output=True,
         text=True,
         encoding="utf-8",

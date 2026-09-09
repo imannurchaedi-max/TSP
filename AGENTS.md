@@ -44,6 +44,61 @@ Seluruh pekerjaan sudah dimigrasikan ke root project di atas pada
 
 <!-- /canonical-locations -->
 
+<!-- gitnexus-runner -->
+## Runner GitNexus — SATU SAJA
+
+Ada dua instalasi GitNexus di mesin ini, dan keduanya TIDAK setara:
+
+| Instalasi | Status |
+| --- | --- |
+| `<root>/node_modules/gitnexus` | **KANONIK** — punya lockfile, 10.616 artefak |
+| npm global (`AppData/Roaming/npm`) | Jangan dipakai untuk analyze — tanpa lockfile, 10.764 artefak |
+
+Digest `dependencyRuntime` keduanya berbeda, sehingga **setiap pergantian runner
+memaksa GitNexus membangun ulang index dari nol**. Menyamakan nomor versi saja tidak
+cukup; sudah dicoba pada 9 September 2026 dan digest tetap berbeda.
+
+Selalu panggil yang kanonik. `sync-graphify.ps1` dan `tools/verify_env.py` sudah
+mengarah ke sana:
+
+```powershell
+node "<root>\node_modules\gitnexus\dist\cli\index.js" analyze --no-stats --skip-skills --pdg
+```
+
+**JANGAN** pakai `npx gitnexus`, `gitnexus` dari PATH, atau `node .gitnexus/run.cjs`
+untuk analyze di workspace ini. `run.cjs` sengaja me-resolve lewat npx/pnpm dlx/bunx
+sehingga bisa mendarat di instalasi global — berguna untuk bootstrap di mesin baru,
+tetapi di sini justru menstempel index dengan runner yang salah dan memicu rebuild
+penuh berikutnya. Catatan ini menang atas anjuran `run.cjs` di bagian GitNexus di atas,
+yang ditulis untuk kasus umum tanpa CLI monorepo.
+
+Periksa dengan `python tools/verify_env.py` — bagian GitNexus menampilkan identitas
+runner yang mengindeks dan yang sedang dipakai; keduanya harus sama, dan digest
+`dependencyRuntime`-nya harus identik.
+
+Analyzer kadang gagal dengan *"Analyzer dependency runtime changed while its identity
+was being computed"*. Itu race saat GitNexus menghitung hash folder paketnya sendiri di
+dalam SynologyDrive; ulangi saja perintahnya (`sync-graphify.ps1` sudah retry 4x).
+
+### Kalau `explain` / `pdg_query` menjawab "no PDG layer"
+
+Itu server MCP yang memegang handle index lama, bukan lapisan PDG yang hilang.
+Gejalanya: `analyze --pdg` sukses dan `node .gitnexus/run.cjs status` menunjukkan
+commit yang benar, tetapi tool MCP tetap kosong atau memberi hasil yang sudah usang
+(mis. masih memunculkan simbol dari `android/TSPModul` yang sudah dikecualikan).
+
+Perbaikannya: **mulai ulang server MCP GitNexus**. Sebelum itu, jangan percayai hasil
+MCP — pakai CLI langsung.
+
+### `.gitnexusignore`
+
+`android/TSPModul/` dikecualikan dari pengindeksan. Pohon itu kembaran nyaris utuh dari
+`android modif/TSPModul` (40 dari 56 file `.dart` identik byte-per-byte), dan selama
+ikut terindeks setiap penelusuran simbol mengembalikan hasil ganda dari dua path.
+
+<!-- /gitnexus-runner -->
+
+
 
 
 <!-- gitnexus:start -->

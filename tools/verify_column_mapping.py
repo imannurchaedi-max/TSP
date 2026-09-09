@@ -57,6 +57,15 @@ def verify_columns():
         else:
             mismatches.append((ch, "MISSING IN EXCEL", "Extra column in config"))
 
+    # REF/TSP MODUL.xlsx adalah SNAPSHOT, bukan sheet live. Kolom MESIN ditambahkan
+    # di v114 dan snapshot itu belum memuatnya, jadi selisihnya DIHARAPKAN sampai
+    # snapshot disegarkan -- bukan tanda kode yang salah.
+    if any('MESIN' in str(m) for m in mismatches):
+        print()
+        print('  [CATATAN] Selisih kolom MESIN diharapkan: kolom itu ditambahkan di v114,')
+        print('            sedangkan REF/TSP MODUL.xlsx masih snapshot sebelum v114.')
+        print('            Segarkan snapshot Excel untuk menghilangkan catatan ini.')
+
     if mismatches:
         print("\n  [DISCREPANCIES FOUND]:")
         for code_col, excel_col, reason in mismatches:
@@ -64,12 +73,21 @@ def verify_columns():
     else:
         print("\n  >>> [100% PERFECT MATCH] All 14 Config.js barcode headers EXACTLY MATCH the updated Excel sheet! <<<")
 
-    # 2. Verification of BARCODE INCOMING WRM
-    wrm_excel_headers = set(excel_map.get("BARCODE INCOMING WRM", {}).get("columns", []))
-    print("\n--- 2. BARCODE INCOMING WRM ---")
-    print(f"Excel Headers ({len(wrm_excel_headers)}): {sorted(list(wrm_excel_headers))}")
+    # 2. BARCODE OUTBOUND WRM -- registry pallet, sumber lookup saat Terima dari WRM.
+    #
+    # Menggantikan dua pemeriksaan lama yang SELALU gagal palsu:
+    #   - "BARCODE INCOMING WRM": tab dengan nama itu tidak pernah ada di workbook.
+    #     Konstanta WRM_INCOMING di Config.js memang menunjuk 'BARCODE OUTBOUND WRM'.
+    #   - "RESERVASI": tab ini DIHAPUS di v66-v80 dan dilebur ke BARCODE OUTBOUND WRM
+    #     (kolom MATDOC RESERVASI). Memeriksanya membuat alat ini selalu merah, dan
+    #     alat yang selalu merah membuat kegagalan asli ikut terabaikan.
+    wrm_excel_headers = set(excel_map.get("BARCODE OUTBOUND WRM", {}).get("columns", []))
+    print()
+    print("--- 2. BARCODE OUTBOUND WRM ---")
+    print(f"Excel Headers ({len(wrm_excel_headers)}): {sorted(wrm_excel_headers)}")
 
-    code_wrm_lookups = ["Kode Unik", "Qty /Palet", "Mid", "Description", "AKSI", "Keterangan", "PALLET"]
+    # Persis kolom yang di-lookup getRequiredCellValue_(wrmRow, ...) di BarcodeService.js.
+    code_wrm_lookups = ["MID", "DESC", "QTY"]
     print(f"Code Lookups: {code_wrm_lookups}")
 
     wrm_ok = True
@@ -81,30 +99,18 @@ def verify_columns():
             wrm_ok = False
 
     if wrm_ok:
-        print("  >>> [100% PERFECT MATCH] All WRM lookup columns present! <<<")
+        print("  >>> [MATCH] Semua kolom lookup WRM tersedia. <<<")
 
     # 3. Verification of MID EXISTING
     mid_excel_headers = set(excel_map.get("MID EXISTING", {}).get("columns", []))
-    print("\n--- 3. MID EXISTING ---")
-    print(f"Excel Headers: {sorted(list(mid_excel_headers))}")
+    print()
+    print("--- 3. MID EXISTING ---")
+    print(f"Excel Headers: {sorted(mid_excel_headers)}")
     for c in ["MID", "Deskripsi", "UOM"]:
         if c in mid_excel_headers:
             print(f"  [OK] '{c}' found in MID EXISTING")
-
-    # 4. Verification of RESERVASI
-    reservasi_excel_headers = set(excel_map.get("RESERVASI", {}).get("columns", []))
-    print("\n--- 4. RESERVASI ---")
-    print(f"Excel Headers ({len(reservasi_excel_headers)}): {sorted(list(reservasi_excel_headers))}")
-    reservasi_required = ["TANGGAL RESERVASI", "MATDOC RESERVASI", "SHIFT", "MID", "DESC", "UOM", "QTY", "STATUS"]
-    res_ok = True
-    for c in reservasi_required:
-        if c in reservasi_excel_headers:
-            print(f"  [OK] '{c}' found in RESERVASI tab")
         else:
-            print(f"  [FAIL] '{c}' missing in RESERVASI tab")
-            res_ok = False
-    if res_ok:
-        print("  >>> [100% PERFECT MATCH] All RESERVASI columns present and ready for MID matching! <<<")
+            print(f"  [FAIL] '{c}' missing in MID EXISTING")
 
 
 if __name__ == "__main__":

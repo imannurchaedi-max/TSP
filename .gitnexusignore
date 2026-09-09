@@ -1,0 +1,12 @@
+# Pohon Flutter LEGACY. Kembaran nyaris utuh dari "android modif/TSPModul":
+# 56 file .dart dengan struktur identik, 40 di antaranya sama persis byte-per-byte,
+# dan tidak ada satu pun file yang hanya ada di pohon aktif.
+#
+# Selama ikut diindeks, setiap penelusuran simbol mengembalikan hasil ganda dari dua
+# path berbeda -- terlihat pada audit 9 September 2026, di mana TransactionRow dan
+# TransactionsTab muncul dua kali. Hasil ganda itu membuat impact analysis melaporkan
+# pemanggil yang sebenarnya berasal dari pohon yang tidak dipakai.
+#
+# CLAUDE.md sudah menandainya legacy untuk pembaca manusia; baris ini menutupnya
+# untuk perkakas. Riwayatnya tetap aman di git.
+android/TSPModul/
