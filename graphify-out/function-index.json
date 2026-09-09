@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T03:50:29.012Z",
+  "generatedAt": "2026-09-09T03:42:30.608Z",
   "files": [
     "Active/ApiService.js",
     "Active/AuthService.js",
@@ -71,6 +71,7 @@
     "android modif/TSPModul/test/api_redirect_probe_test.dart",
     "android modif/TSPModul/test/reprint_request_test.dart",
     "android modif/TSPModul/test/widget_test.dart",
+    "tools/clasp_prune.py",
     "tools/generate_maps.py",
     "tools/graphify_codebase.py",
     "tools/langgraph_agent.py",
@@ -1699,6 +1700,26 @@
       "name": "main",
       "file": "android modif/TSPModul/test/widget_test.dart",
       "line": 10
+    },
+    {
+      "name": "die",
+      "file": "tools/clasp_prune.py",
+      "line": 25
+    },
+    {
+      "name": "access_token",
+      "file": "tools/clasp_prune.py",
+      "line": 30
+    },
+    {
+      "name": "api",
+      "file": "tools/clasp_prune.py",
+      "line": 54
+    },
+    {
+      "name": "main",
+      "file": "tools/clasp_prune.py",
+      "line": 61
     },
     {
       "name": "create_maps",

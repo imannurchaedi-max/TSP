@@ -1,10 +1,10 @@
 # TSP Modul Function Index
 
-Generated: 2026-09-05T03:50:29.010Z
+Generated: 2026-09-09T03:42:30.607Z
 
-Files scanned: 77
+Files scanned: 78
 
-Functions indexed: 346
+Functions indexed: 350
 
 Use this before broad code reads. Open the target file and line instead of scanning entire runtime files.
 
@@ -484,6 +484,13 @@ Use this before broad code reads. Open the target file and line instead of scann
 ## android modif/TSPModul/test/widget_test.dart
 
 - `main` - line 10
+
+## tools/clasp_prune.py
+
+- `die` - line 25
+- `access_token` - line 30
+- `api` - line 54
+- `main` - line 61
 
 ## tools/generate_maps.py
 
