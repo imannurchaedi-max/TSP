@@ -64,8 +64,10 @@ class ApiClient {
 
       // IOHttpClientAdapter mengembalikan 302 sebagai respons biasa saat
       // followRedirects=false; jangan memakai Response.isRedirect karena nilainya
-      // tidak konsisten pada adapter tersebut.
-      if (_isRedirectStatus(response.statusCode)) {
+      // tidak konsisten pada adapter tersebut. Ikuti berantai (bukan cuma 1 hop) --
+      // Google pernah menyisipkan hop tambahan di infra echo URL-nya.
+      var redirectHops = 0;
+      while (_isRedirectStatus(response.statusCode) && redirectHops < 3) {
         final location = response.headers.value('location');
         if (location == null) {
           throw ApiException('Server mengembalikan redirect tanpa tujuan (HTTP ${response.statusCode}).');
@@ -74,6 +76,7 @@ class ApiClient {
         response = await _dio.getUri<dynamic>(
           target.hasScheme ? target : response.realUri.resolveUri(target),
         );
+        redirectHops++;
       }
 
       final data = response.data;
@@ -89,6 +92,16 @@ class ApiClient {
       throw ApiException('Koneksi ke server gagal: ${e.message}', isConnectivityError: true);
     } on HandshakeException catch (e) {
       throw ApiException('Koneksi aman ke server gagal: ${e.message}', isConnectivityError: true);
+    } on FormatException catch (e) {
+      // Apps Script kadang membalas HTML (kuota eksekusi habis, timeout, service
+      // sibuk) alih-alih JSON saat server sedang tertekan -- status server di titik
+      // itu tidak pasti (sukses/gagal), jadi diperlakukan sebagai gangguan konektivitas
+      // supaya scan ikut mekanisme antrian offline (aman lewat clientRequestId
+      // idempotency di apiSubmitScanIdempotent_), bukan exception mentah yang bocor ke UI.
+      throw ApiException(
+        'Server sedang sibuk atau kuota tereksekusi (respons bukan JSON): ${e.message}',
+        isConnectivityError: true,
+      );
     }
   }
 

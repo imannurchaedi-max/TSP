@@ -7,30 +7,6 @@
       }
     ],
     [
-      "ApiService.js::apiLogin_",
-      {
-        "type": "function",
-        "file": "ApiService.js",
-        "name": "apiLogin_"
-      }
-    ],
-    [
-      "ApiService.js::apiSubmitScanIdempotent_",
-      {
-        "type": "function",
-        "file": "ApiService.js",
-        "name": "apiSubmitScanIdempotent_"
-      }
-    ],
-    [
-      "ApiService.js::doPost",
-      {
-        "type": "function",
-        "file": "ApiService.js",
-        "name": "doPost"
-      }
-    ],
-    [
       "ApiService.js::validateApiToken_",
       {
         "type": "function",
@@ -47,25 +23,33 @@
       }
     ],
     [
+      "ApiService.js::doPost",
+      {
+        "type": "function",
+        "file": "ApiService.js",
+        "name": "doPost"
+      }
+    ],
+    [
+      "ApiService.js::apiLogin_",
+      {
+        "type": "function",
+        "file": "ApiService.js",
+        "name": "apiLogin_"
+      }
+    ],
+    [
+      "ApiService.js::apiSubmitScanIdempotent_",
+      {
+        "type": "function",
+        "file": "ApiService.js",
+        "name": "apiSubmitScanIdempotent_"
+      }
+    ],
+    [
       "AuthService.js",
       {
         "type": "file"
-      }
-    ],
-    [
-      "AuthService.js::readKaryawanRowsFromCache_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "readKaryawanRowsFromCache_"
-      }
-    ],
-    [
-      "AuthService.js::roleFromJabatan_",
-      {
-        "type": "function",
-        "file": "AuthService.js",
-        "name": "roleFromJabatan_"
       }
     ],
     [
@@ -77,11 +61,19 @@
       }
     ],
     [
-      "AuthService.js::writeKaryawanRowsToCache_",
+      "AuthService.js::roleFromJabatan_",
       {
         "type": "function",
         "file": "AuthService.js",
-        "name": "writeKaryawanRowsToCache_"
+        "name": "roleFromJabatan_"
+      }
+    ],
+    [
+      "AuthService.js::findKaryawanByNik_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "findKaryawanByNik_"
       }
     ],
     [
@@ -93,11 +85,11 @@
       }
     ],
     [
-      "AuthService.js::requireRole_",
+      "AuthService.js::readKaryawanRowsFromCache_",
       {
         "type": "function",
         "file": "AuthService.js",
-        "name": "requireRole_"
+        "name": "readKaryawanRowsFromCache_"
       }
     ],
     [
@@ -109,11 +101,11 @@
       }
     ],
     [
-      "AuthService.js::findKaryawanByNik_",
+      "AuthService.js::resolveRole_",
       {
         "type": "function",
         "file": "AuthService.js",
-        "name": "findKaryawanByNik_"
+        "name": "resolveRole_"
       }
     ],
     [
@@ -133,97 +125,25 @@
       }
     ],
     [
-      "AuthService.js::resolveRole_",
+      "AuthService.js::requireRole_",
       {
         "type": "function",
         "file": "AuthService.js",
-        "name": "resolveRole_"
+        "name": "requireRole_"
+      }
+    ],
+    [
+      "AuthService.js::writeKaryawanRowsToCache_",
+      {
+        "type": "function",
+        "file": "AuthService.js",
+        "name": "writeKaryawanRowsToCache_"
       }
     ],
     [
       "BarcodeService.js",
       {
         "type": "file"
-      }
-    ],
-    [
-      "BarcodeService.js::classifyBarcode_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "classifyBarcode_"
-      }
-    ],
-    [
-      "BarcodeService.js::padSeq_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "padSeq_"
-      }
-    ],
-    [
-      "BarcodeService.js::getNextChildSequence_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "getNextChildSequence_"
-      }
-    ],
-    [
-      "BarcodeService.js::formatTimestamp_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "formatTimestamp_"
-      }
-    ],
-    [
-      "BarcodeService.js::getCellValue_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "getCellValue_"
-      }
-    ],
-    [
-      "BarcodeService.js::processScan_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "processScan_"
-      }
-    ],
-    [
-      "BarcodeService.js::lookupMesinFromLog_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "lookupMesinFromLog_"
-      }
-    ],
-    [
-      "BarcodeService.js::handleTerimaWrm_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "handleTerimaWrm_"
-      }
-    ],
-    [
-      "BarcodeService.js::getShift_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "getShift_"
-      }
-    ],
-    [
-      "BarcodeService.js::handleChildCheckpoint_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "handleChildCheckpoint_"
       }
     ],
     [
@@ -235,11 +155,19 @@
       }
     ],
     [
-      "BarcodeService.js::allocateChildBarcodes_",
+      "BarcodeService.js::saveBatchReprint_",
       {
         "type": "function",
         "file": "BarcodeService.js",
-        "name": "allocateChildBarcodes_"
+        "name": "saveBatchReprint_"
+      }
+    ],
+    [
+      "BarcodeService.js::getNextChildSequence_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getNextChildSequence_"
       }
     ],
     [
@@ -259,19 +187,11 @@
       }
     ],
     [
-      "BarcodeService.js::saveBatchReprint_",
+      "BarcodeService.js::allocateChildBarcodes_",
       {
         "type": "function",
         "file": "BarcodeService.js",
-        "name": "saveBatchReprint_"
-      }
-    ],
-    [
-      "BarcodeService.js::escapeRegex_",
-      {
-        "type": "function",
-        "file": "BarcodeService.js",
-        "name": "escapeRegex_"
+        "name": "allocateChildBarcodes_"
       }
     ],
     [
@@ -283,17 +203,89 @@
       }
     ],
     [
-      "Code.js",
+      "BarcodeService.js::formatTimestamp_",
       {
-        "type": "file"
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "formatTimestamp_"
       }
     ],
     [
-      "Code.js::deleteReprintBarcode",
+      "BarcodeService.js::handleTerimaWrm_",
       {
         "type": "function",
-        "file": "Code.js",
-        "name": "deleteReprintBarcode"
+        "file": "BarcodeService.js",
+        "name": "handleTerimaWrm_"
+      }
+    ],
+    [
+      "BarcodeService.js::handleChildCheckpoint_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "handleChildCheckpoint_"
+      }
+    ],
+    [
+      "BarcodeService.js::escapeRegex_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "escapeRegex_"
+      }
+    ],
+    [
+      "BarcodeService.js::processScan_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "processScan_"
+      }
+    ],
+    [
+      "BarcodeService.js::getCellValue_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getCellValue_"
+      }
+    ],
+    [
+      "BarcodeService.js::lookupMesinFromLog_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "lookupMesinFromLog_"
+      }
+    ],
+    [
+      "BarcodeService.js::classifyBarcode_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "classifyBarcode_"
+      }
+    ],
+    [
+      "BarcodeService.js::getShift_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "getShift_"
+      }
+    ],
+    [
+      "BarcodeService.js::padSeq_",
+      {
+        "type": "function",
+        "file": "BarcodeService.js",
+        "name": "padSeq_"
+      }
+    ],
+    [
+      "Code.js",
+      {
+        "type": "file"
       }
     ],
     [
@@ -305,91 +297,11 @@
       }
     ],
     [
-      "Code.js::saveMinMaxSettingApi",
+      "Code.js::deleteMinMaxSettingApi",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "saveMinMaxSettingApi"
-      }
-    ],
-    [
-      "Code.js::doGet",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "doGet"
-      }
-    ],
-    [
-      "Code.js::getReservasiOptions",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getReservasiOptions"
-      }
-    ],
-    [
-      "Code.js::getOperatorConsumption",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getOperatorConsumption"
-      }
-    ],
-    [
-      "Code.js::login",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "login"
-      }
-    ],
-    [
-      "Code.js::getMesinStock",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getMesinStock"
-      }
-    ],
-    [
-      "Code.js::getMinMaxSettingsApi",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getMinMaxSettingsApi"
-      }
-    ],
-    [
-      "Code.js::getShiftDispatches",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getShiftDispatches"
-      }
-    ],
-    [
-      "Code.js::saveMaterialBatchApi",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "saveMaterialBatchApi"
-      }
-    ],
-    [
-      "Code.js::saveMinMaxBatchApi",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "saveMinMaxBatchApi"
-      }
-    ],
-    [
-      "Code.js::getHistoricalTspStock",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getHistoricalTspStock"
+        "name": "deleteMinMaxSettingApi"
       }
     ],
     [
@@ -401,91 +313,35 @@
       }
     ],
     [
-      "Code.js::deleteMinMaxSettingApi",
+      "Code.js::deleteReprintBarcode",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "deleteMinMaxSettingApi"
+        "name": "deleteReprintBarcode"
       }
     ],
     [
-      "Code.js::getMaterialListApi",
+      "Code.js::getShiftDispatches",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "getMaterialListApi"
+        "name": "getShiftDispatches"
       }
     ],
     [
-      "Code.js::deleteMaterialApi",
+      "Code.js::getHistoricalTspStock",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "deleteMaterialApi"
+        "name": "getHistoricalTspStock"
       }
     ],
     [
-      "Code.js::saveBatchReprint",
+      "Code.js::getReservasiOptions",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "saveBatchReprint"
-      }
-    ],
-    [
-      "Code.js::tarikStokAwalShift",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "tarikStokAwalShift"
-      }
-    ],
-    [
-      "Code.js::getOperatorReceipts",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getOperatorReceipts"
-      }
-    ],
-    [
-      "Code.js::getMesinList",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getMesinList"
-      }
-    ],
-    [
-      "Code.js::getPortalHistory",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getPortalHistory"
-      }
-    ],
-    [
-      "Code.js::getValidatorData",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getValidatorData"
-      }
-    ],
-    [
-      "Code.js::saveMaterialApi",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "saveMaterialApi"
-      }
-    ],
-    [
-      "Code.js::getTspMesinMonitoring",
-      {
-        "type": "function",
-        "file": "Code.js",
-        "name": "getTspMesinMonitoring"
+        "name": "getReservasiOptions"
       }
     ],
     [
@@ -497,6 +353,38 @@
       }
     ],
     [
+      "Code.js::saveMinMaxSettingApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "saveMinMaxSettingApi"
+      }
+    ],
+    [
+      "Code.js::getPortalHistory",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getPortalHistory"
+      }
+    ],
+    [
+      "Code.js::doGet",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "doGet"
+      }
+    ],
+    [
+      "Code.js::saveBatchReprint",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "saveBatchReprint"
+      }
+    ],
+    [
       "Code.js::include",
       {
         "type": "function",
@@ -505,27 +393,27 @@
       }
     ],
     [
-      "Code.js::submitScan",
+      "Code.js::saveMaterialBatchApi",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "submitScan"
+        "name": "saveMaterialBatchApi"
       }
     ],
     [
-      "Code.js::getTspStock",
+      "Code.js::getTspMesinMonitoring",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "getTspStock"
+        "name": "getTspMesinMonitoring"
       }
     ],
     [
-      "Code.js::getShiftReceipts",
+      "Code.js::getOperatorConsumption",
       {
         "type": "function",
         "file": "Code.js",
-        "name": "getShiftReceipts"
+        "name": "getOperatorConsumption"
       }
     ],
     [
@@ -537,11 +425,123 @@
       }
     ],
     [
+      "Code.js::tarikStokAwalShift",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "tarikStokAwalShift"
+      }
+    ],
+    [
+      "Code.js::getMesinList",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getMesinList"
+      }
+    ],
+    [
+      "Code.js::login",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "login"
+      }
+    ],
+    [
+      "Code.js::getTspStock",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getTspStock"
+      }
+    ],
+    [
+      "Code.js::submitScan",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "submitScan"
+      }
+    ],
+    [
+      "Code.js::getMinMaxSettingsApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getMinMaxSettingsApi"
+      }
+    ],
+    [
+      "Code.js::getMaterialListApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getMaterialListApi"
+      }
+    ],
+    [
+      "Code.js::getShiftReceipts",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getShiftReceipts"
+      }
+    ],
+    [
       "Code.js::getHistoricalMesinStock",
       {
         "type": "function",
         "file": "Code.js",
         "name": "getHistoricalMesinStock"
+      }
+    ],
+    [
+      "Code.js::saveMaterialApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "saveMaterialApi"
+      }
+    ],
+    [
+      "Code.js::getOperatorReceipts",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getOperatorReceipts"
+      }
+    ],
+    [
+      "Code.js::deleteMaterialApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "deleteMaterialApi"
+      }
+    ],
+    [
+      "Code.js::getValidatorData",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getValidatorData"
+      }
+    ],
+    [
+      "Code.js::saveMinMaxBatchApi",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "saveMinMaxBatchApi"
+      }
+    ],
+    [
+      "Code.js::getMesinStock",
+      {
+        "type": "function",
+        "file": "Code.js",
+        "name": "getMesinStock"
       }
     ],
     [
@@ -554,70 +554,6 @@
       "MaterialService.js",
       {
         "type": "file"
-      }
-    ],
-    [
-      "MaterialService.js::saveMaterialBatch_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "saveMaterialBatch_"
-      }
-    ],
-    [
-      "MaterialService.js::migrateMaterialMasterIfEmpty_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "migrateMaterialMasterIfEmpty_"
-      }
-    ],
-    [
-      "MaterialService.js::getSupplierMap_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "getSupplierMap_"
-      }
-    ],
-    [
-      "MaterialService.js::deleteMaterial_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "deleteMaterial_"
-      }
-    ],
-    [
-      "MaterialService.js::saveMaterialMaster_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "saveMaterialMaster_"
-      }
-    ],
-    [
-      "MaterialService.js::deleteMaterialMaster_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "deleteMaterialMaster_"
-      }
-    ],
-    [
-      "MaterialService.js::isMidUsedAnywhere_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "isMidUsedAnywhere_"
-      }
-    ],
-    [
-      "MaterialService.js::resolveDeskCol_",
-      {
-        "type": "function",
-        "file": "MaterialService.js",
-        "name": "resolveDeskCol_"
       }
     ],
     [
@@ -637,17 +573,105 @@
       }
     ],
     [
+      "MaterialService.js::resolveDeskCol_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "resolveDeskCol_"
+      }
+    ],
+    [
+      "MaterialService.js::saveMaterialMaster_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "saveMaterialMaster_"
+      }
+    ],
+    [
+      "MaterialService.js::deleteMaterialMaster_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "deleteMaterialMaster_"
+      }
+    ],
+    [
+      "MaterialService.js::deleteMaterial_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "deleteMaterial_"
+      }
+    ],
+    [
+      "MaterialService.js::isMidUsedAnywhere_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "isMidUsedAnywhere_"
+      }
+    ],
+    [
+      "MaterialService.js::getSupplierMap_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "getSupplierMap_"
+      }
+    ],
+    [
+      "MaterialService.js::saveMaterialBatch_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "saveMaterialBatch_"
+      }
+    ],
+    [
+      "MaterialService.js::migrateMaterialMasterIfEmpty_",
+      {
+        "type": "function",
+        "file": "MaterialService.js",
+        "name": "migrateMaterialMasterIfEmpty_"
+      }
+    ],
+    [
       "SheetService.js",
       {
         "type": "file"
       }
     ],
     [
-      "SheetService.js::updateBarcodeCell_",
+      "SheetService.js::parseMonth_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "updateBarcodeCell_"
+        "name": "parseMonth_"
+      }
+    ],
+    [
+      "SheetService.js::getReservasiList_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "getReservasiList_"
+      }
+    ],
+    [
+      "SheetService.js::submitReservasi_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "submitReservasi_"
+      }
+    ],
+    [
+      "SheetService.js::getSpreadsheet_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "getSpreadsheet_"
       }
     ],
     [
@@ -667,67 +691,11 @@
       }
     ],
     [
-      "SheetService.js::lookupWrmIncoming_",
+      "SheetService.js::updateBarcodeCell_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "lookupWrmIncoming_"
-      }
-    ],
-    [
-      "SheetService.js::findRowByColumnValue_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "findRowByColumnValue_"
-      }
-    ],
-    [
-      "SheetService.js::submitReservasi_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "submitReservasi_"
-      }
-    ],
-    [
-      "SheetService.js::appendReprintRow_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "appendReprintRow_"
-      }
-    ],
-    [
-      "SheetService.js::getSheet_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "getSheet_"
-      }
-    ],
-    [
-      "SheetService.js::parseMonth_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "parseMonth_"
-      }
-    ],
-    [
-      "SheetService.js::getSpreadsheet_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "getSpreadsheet_"
-      }
-    ],
-    [
-      "SheetService.js::queryReprintSheet_",
-      {
-        "type": "function",
-        "file": "SheetService.js",
-        "name": "queryReprintSheet_"
+        "name": "updateBarcodeCell_"
       }
     ],
     [
@@ -739,11 +707,43 @@
       }
     ],
     [
-      "SheetService.js::getReservasiList_",
+      "SheetService.js::appendReprintRow_",
       {
         "type": "function",
         "file": "SheetService.js",
-        "name": "getReservasiList_"
+        "name": "appendReprintRow_"
+      }
+    ],
+    [
+      "SheetService.js::findRowByColumnValue_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "findRowByColumnValue_"
+      }
+    ],
+    [
+      "SheetService.js::getSheet_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "getSheet_"
+      }
+    ],
+    [
+      "SheetService.js::queryReprintSheet_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "queryReprintSheet_"
+      }
+    ],
+    [
+      "SheetService.js::lookupWrmIncoming_",
+      {
+        "type": "function",
+        "file": "SheetService.js",
+        "name": "lookupWrmIncoming_"
       }
     ],
     [
@@ -785,27 +785,11 @@
       }
     ],
     [
-      "StockService.js::getMinMaxMap_",
+      "StockService.js::ensureMidInActiveShift_",
       {
         "type": "function",
         "file": "StockService.js",
-        "name": "getMinMaxMap_"
-      }
-    ],
-    [
-      "StockService.js::readAllBarcodeRows_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "readAllBarcodeRows_"
-      }
-    ],
-    [
-      "StockService.js::toDateOrNull_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "toDateOrNull_"
+        "name": "ensureMidInActiveShift_"
       }
     ],
     [
@@ -817,203 +801,11 @@
       }
     ],
     [
-      "StockService.js::computeHistoricalTspStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeHistoricalTspStock_"
-      }
-    ],
-    [
-      "StockService.js::saveMinMaxSetting",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "saveMinMaxSetting"
-      }
-    ],
-    [
-      "StockService.js::computeTspStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeTspStock_"
-      }
-    ],
-    [
-      "StockService.js::formatDateLabel_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "formatDateLabel_"
-      }
-    ],
-    [
-      "StockService.js::getNormalizedDateStr_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "getNormalizedDateStr_"
-      }
-    ],
-    [
-      "StockService.js::computeTspMesinMonitoring_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeTspMesinMonitoring_"
-      }
-    ],
-    [
-      "StockService.js::computeHistoricalMesinStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeHistoricalMesinStock_"
-      }
-    ],
-    [
-      "StockService.js::getMinMaxSheet_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "getMinMaxSheet_"
-      }
-    ],
-    [
-      "StockService.js::computeOperatorConsumption_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeOperatorConsumption_"
-      }
-    ],
-    [
-      "StockService.js::getRealLastRowAndTrim_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "getRealLastRowAndTrim_"
-      }
-    ],
-    [
-      "StockService.js::tarikStokAwalShift_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "tarikStokAwalShift_"
-      }
-    ],
-    [
-      "StockService.js::computeValidator_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeValidator_"
-      }
-    ],
-    [
-      "StockService.js::computeOperatorReceipts_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeOperatorReceipts_"
-      }
-    ],
-    [
-      "StockService.js::getNormalizedShiftNum_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "getNormalizedShiftNum_"
-      }
-    ],
-    [
-      "StockService.js::executeShiftRollover_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "executeShiftRollover_"
-      }
-    ],
-    [
-      "StockService.js::incrementStockCell_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "incrementStockCell_"
-      }
-    ],
-    [
-      "StockService.js::normalizeMid_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "normalizeMid_"
-      }
-    ],
-    [
-      "StockService.js::computeShiftReceipts_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeShiftReceipts_"
-      }
-    ],
-    [
-      "StockService.js::saveMinMaxBatch_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "saveMinMaxBatch_"
-      }
-    ],
-    [
-      "StockService.js::computeMesinStock_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeMesinStock_"
-      }
-    ],
-    [
       "StockService.js::deleteMinMaxSetting_",
       {
         "type": "function",
         "file": "StockService.js",
         "name": "deleteMinMaxSetting_"
-      }
-    ],
-    [
-      "StockService.js::computeShiftDispatches_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computeShiftDispatches_"
-      }
-    ],
-    [
-      "StockService.js::ensureMidInActiveShift_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "ensureMidInActiveShift_"
-      }
-    ],
-    [
-      "StockService.js::computePortalHistory_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "computePortalHistory_"
-      }
-    ],
-    [
-      "StockService.js::parseMb51Timestamp_",
-      {
-        "type": "function",
-        "file": "StockService.js",
-        "name": "parseMb51Timestamp_"
       }
     ],
     [
@@ -1025,25 +817,233 @@
       }
     ],
     [
+      "StockService.js::computeTspMesinMonitoring_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeTspMesinMonitoring_"
+      }
+    ],
+    [
+      "StockService.js::tarikStokAwalShift_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "tarikStokAwalShift_"
+      }
+    ],
+    [
+      "StockService.js::computeHistoricalTspStock_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeHistoricalTspStock_"
+      }
+    ],
+    [
+      "StockService.js::getRealLastRowAndTrim_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "getRealLastRowAndTrim_"
+      }
+    ],
+    [
+      "StockService.js::computeValidator_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeValidator_"
+      }
+    ],
+    [
+      "StockService.js::computeMesinStock_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeMesinStock_"
+      }
+    ],
+    [
+      "StockService.js::incrementStockCell_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "incrementStockCell_"
+      }
+    ],
+    [
+      "StockService.js::saveMinMaxBatch_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "saveMinMaxBatch_"
+      }
+    ],
+    [
+      "StockService.js::executeShiftRollover_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "executeShiftRollover_"
+      }
+    ],
+    [
+      "StockService.js::computePortalHistory_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computePortalHistory_"
+      }
+    ],
+    [
+      "StockService.js::computeShiftReceipts_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeShiftReceipts_"
+      }
+    ],
+    [
       "StockService.js::konfirmasiItemStokShift_",
       {
         "type": "function",
         "file": "StockService.js",
         "name": "konfirmasiItemStokShift_"
       }
+    ],
+    [
+      "StockService.js::computeHistoricalMesinStock_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeHistoricalMesinStock_"
+      }
+    ],
+    [
+      "StockService.js::normalizeMid_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "normalizeMid_"
+      }
+    ],
+    [
+      "StockService.js::toDateOrNull_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "toDateOrNull_"
+      }
+    ],
+    [
+      "StockService.js::computeTspStock_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeTspStock_"
+      }
+    ],
+    [
+      "StockService.js::computeOperatorReceipts_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeOperatorReceipts_"
+      }
+    ],
+    [
+      "StockService.js::computeShiftDispatches_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeShiftDispatches_"
+      }
+    ],
+    [
+      "StockService.js::computeOperatorConsumption_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "computeOperatorConsumption_"
+      }
+    ],
+    [
+      "StockService.js::getMinMaxMap_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "getMinMaxMap_"
+      }
+    ],
+    [
+      "StockService.js::formatDateLabel_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "formatDateLabel_"
+      }
+    ],
+    [
+      "StockService.js::saveMinMaxSetting",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "saveMinMaxSetting"
+      }
+    ],
+    [
+      "StockService.js::getNormalizedShiftNum_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "getNormalizedShiftNum_"
+      }
+    ],
+    [
+      "StockService.js::getMinMaxSheet_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "getMinMaxSheet_"
+      }
+    ],
+    [
+      "StockService.js::parseMb51Timestamp_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "parseMb51Timestamp_"
+      }
+    ],
+    [
+      "StockService.js::readAllBarcodeRows_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "readAllBarcodeRows_"
+      }
+    ],
+    [
+      "StockService.js::getNormalizedDateStr_",
+      {
+        "type": "function",
+        "file": "StockService.js",
+        "name": "getNormalizedDateStr_"
+      }
     ]
   ],
   "edges": [
     [
       "ApiService.js",
-      "ApiService.js::apiLogin_",
+      "ApiService.js::validateApiToken_",
       {
         "relation": "defines"
       }
     ],
     [
       "ApiService.js",
-      "ApiService.js::apiSubmitScanIdempotent_",
+      "ApiService.js::dispatchApiAction_",
       {
         "relation": "defines"
       }
@@ -1057,14 +1057,14 @@
     ],
     [
       "ApiService.js",
-      "ApiService.js::validateApiToken_",
+      "ApiService.js::apiLogin_",
       {
         "relation": "defines"
       }
     ],
     [
       "ApiService.js",
-      "ApiService.js::dispatchApiAction_",
+      "ApiService.js::apiSubmitScanIdempotent_",
       {
         "relation": "defines"
       }
@@ -1302,7 +1302,7 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::readKaryawanRowsFromCache_",
+      "AuthService.js::login_",
       {
         "relation": "defines"
       }
@@ -1316,14 +1316,7 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::login_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "AuthService.js",
-      "AuthService.js::writeKaryawanRowsToCache_",
+      "AuthService.js::findKaryawanByNik_",
       {
         "relation": "defines"
       }
@@ -1337,7 +1330,7 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::requireRole_",
+      "AuthService.js::readKaryawanRowsFromCache_",
       {
         "relation": "defines"
       }
@@ -1351,7 +1344,7 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::findKaryawanByNik_",
+      "AuthService.js::resolveRole_",
       {
         "relation": "defines"
       }
@@ -1372,77 +1365,14 @@
     ],
     [
       "AuthService.js",
-      "AuthService.js::resolveRole_",
+      "AuthService.js::requireRole_",
       {
         "relation": "defines"
       }
     ],
     [
-      "BarcodeService.js",
-      "BarcodeService.js::classifyBarcode_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::padSeq_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::getNextChildSequence_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::formatTimestamp_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::getCellValue_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::processScan_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::lookupMesinFromLog_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::handleTerimaWrm_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::getShift_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "BarcodeService.js",
-      "BarcodeService.js::handleChildCheckpoint_",
+      "AuthService.js",
+      "AuthService.js::writeKaryawanRowsToCache_",
       {
         "relation": "defines"
       }
@@ -1456,7 +1386,14 @@
     ],
     [
       "BarcodeService.js",
-      "BarcodeService.js::allocateChildBarcodes_",
+      "BarcodeService.js::saveBatchReprint_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getNextChildSequence_",
       {
         "relation": "defines"
       }
@@ -1477,7 +1414,35 @@
     ],
     [
       "BarcodeService.js",
-      "BarcodeService.js::saveBatchReprint_",
+      "BarcodeService.js::allocateChildBarcodes_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getShiftBounds_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::formatTimestamp_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::handleTerimaWrm_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::handleChildCheckpoint_",
       {
         "relation": "defines"
       }
@@ -1491,7 +1456,42 @@
     ],
     [
       "BarcodeService.js",
-      "BarcodeService.js::getShiftBounds_",
+      "BarcodeService.js::processScan_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getCellValue_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::lookupMesinFromLog_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::classifyBarcode_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::getShift_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "BarcodeService.js",
+      "BarcodeService.js::padSeq_",
       {
         "relation": "defines"
       }
@@ -1575,98 +1575,7 @@
     ],
     [
       "Code.js",
-      "Code.js::deleteReprintBarcode",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
       "Code.js::konfirmasiNeracaStokShift",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::saveMinMaxSettingApi",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::doGet",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getReservasiOptions",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getOperatorConsumption",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::login",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getMesinStock",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getMinMaxSettingsApi",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getShiftDispatches",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::saveMaterialBatchApi",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::saveMinMaxBatchApi",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getHistoricalTspStock",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::submitReservasiApi",
       {
         "relation": "defines"
       }
@@ -1680,70 +1589,35 @@
     ],
     [
       "Code.js",
-      "Code.js::getMaterialListApi",
+      "Code.js::submitReservasiApi",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::deleteMaterialApi",
+      "Code.js::deleteReprintBarcode",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::saveBatchReprint",
+      "Code.js::getShiftDispatches",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::tarikStokAwalShift",
+      "Code.js::getHistoricalTspStock",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::getOperatorReceipts",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getMesinList",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getPortalHistory",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getValidatorData",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::saveMaterialApi",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "Code.js",
-      "Code.js::getTspMesinMonitoring",
+      "Code.js::getReservasiOptions",
       {
         "relation": "defines"
       }
@@ -1757,6 +1631,34 @@
     ],
     [
       "Code.js",
+      "Code.js::saveMinMaxSettingApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getPortalHistory",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::doGet",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::saveBatchReprint",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
       "Code.js::include",
       {
         "relation": "defines"
@@ -1764,21 +1666,21 @@
     ],
     [
       "Code.js",
-      "Code.js::submitScan",
+      "Code.js::saveMaterialBatchApi",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::getTspStock",
+      "Code.js::getTspMesinMonitoring",
       {
         "relation": "defines"
       }
     ],
     [
       "Code.js",
-      "Code.js::getShiftReceipts",
+      "Code.js::getOperatorConsumption",
       {
         "relation": "defines"
       }
@@ -1792,7 +1694,105 @@
     ],
     [
       "Code.js",
+      "Code.js::tarikStokAwalShift",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getMesinList",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::login",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getTspStock",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::submitScan",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getMinMaxSettingsApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getMaterialListApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getShiftReceipts",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
       "Code.js::getHistoricalMesinStock",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::saveMaterialApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getOperatorReceipts",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::deleteMaterialApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getValidatorData",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::saveMinMaxBatchApi",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "Code.js",
+      "Code.js::getMesinStock",
       {
         "relation": "defines"
       }
@@ -2044,28 +2044,21 @@
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::saveMaterialBatch_",
+      "MaterialService.js::getMaterialList_",
       {
         "relation": "defines"
       }
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::migrateMaterialMasterIfEmpty_",
+      "MaterialService.js::getMaterialMap_",
       {
         "relation": "defines"
       }
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::getSupplierMap_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "MaterialService.js",
-      "MaterialService.js::deleteMaterial_",
+      "MaterialService.js::resolveDeskCol_",
       {
         "relation": "defines"
       }
@@ -2086,6 +2079,13 @@
     ],
     [
       "MaterialService.js",
+      "MaterialService.js::deleteMaterial_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "MaterialService.js",
       "MaterialService.js::isMidUsedAnywhere_",
       {
         "relation": "defines"
@@ -2093,21 +2093,21 @@
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::resolveDeskCol_",
+      "MaterialService.js::getSupplierMap_",
       {
         "relation": "defines"
       }
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::getMaterialList_",
+      "MaterialService.js::saveMaterialBatch_",
       {
         "relation": "defines"
       }
     ],
     [
       "MaterialService.js",
-      "MaterialService.js::getMaterialMap_",
+      "MaterialService.js::migrateMaterialMasterIfEmpty_",
       {
         "relation": "defines"
       }
@@ -2142,7 +2142,28 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::updateBarcodeCell_",
+      "SheetService.js::parseMonth_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::getReservasiList_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::submitReservasi_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::getSpreadsheet_",
       {
         "relation": "defines"
       }
@@ -2163,56 +2184,7 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::lookupWrmIncoming_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::findRowByColumnValue_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::submitReservasi_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::appendReprintRow_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::getSheet_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::parseMonth_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::getSpreadsheet_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "SheetService.js",
-      "SheetService.js::queryReprintSheet_",
+      "SheetService.js::updateBarcodeCell_",
       {
         "relation": "defines"
       }
@@ -2226,7 +2198,35 @@
     ],
     [
       "SheetService.js",
-      "SheetService.js::getReservasiList_",
+      "SheetService.js::appendReprintRow_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::findRowByColumnValue_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::getSheet_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::queryReprintSheet_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "SheetService.js",
+      "SheetService.js::lookupWrmIncoming_",
       {
         "relation": "defines"
       }
@@ -2268,21 +2268,7 @@
     ],
     [
       "StockService.js",
-      "StockService.js::getMinMaxMap_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::readAllBarcodeRows_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::toDateOrNull_",
+      "StockService.js::ensureMidInActiveShift_",
       {
         "relation": "defines"
       }
@@ -2296,175 +2282,7 @@
     ],
     [
       "StockService.js",
-      "StockService.js::computeHistoricalTspStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::saveMinMaxSetting",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeTspStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::formatDateLabel_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::getNormalizedDateStr_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeTspMesinMonitoring_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeHistoricalMesinStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::getMinMaxSheet_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeOperatorConsumption_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::getRealLastRowAndTrim_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::tarikStokAwalShift_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeValidator_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeOperatorReceipts_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::getNormalizedShiftNum_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::executeShiftRollover_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::incrementStockCell_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::normalizeMid_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeShiftReceipts_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::saveMinMaxBatch_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeMesinStock_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
       "StockService.js::deleteMinMaxSetting_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computeShiftDispatches_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::ensureMidInActiveShift_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::computePortalHistory_",
-      {
-        "relation": "defines"
-      }
-    ],
-    [
-      "StockService.js",
-      "StockService.js::parseMb51Timestamp_",
       {
         "relation": "defines"
       }
@@ -2478,7 +2296,189 @@
     ],
     [
       "StockService.js",
+      "StockService.js::computeTspMesinMonitoring_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::tarikStokAwalShift_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeHistoricalTspStock_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::getRealLastRowAndTrim_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeValidator_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeMesinStock_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::incrementStockCell_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::saveMinMaxBatch_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::executeShiftRollover_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computePortalHistory_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeShiftReceipts_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
       "StockService.js::konfirmasiItemStokShift_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeHistoricalMesinStock_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::normalizeMid_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::toDateOrNull_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeTspStock_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeOperatorReceipts_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeShiftDispatches_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::computeOperatorConsumption_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::getMinMaxMap_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::formatDateLabel_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::saveMinMaxSetting",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::getNormalizedShiftNum_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::getMinMaxSheet_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::parseMb51Timestamp_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::readAllBarcodeRows_",
+      {
+        "relation": "defines"
+      }
+    ],
+    [
+      "StockService.js",
+      "StockService.js::getNormalizedDateStr_",
       {
         "relation": "defines"
       }
@@ -2531,136 +2531,136 @@
     "num_edges": 213,
     "degree_centrality": {
       "ApiService.js": 0.2923076923076923,
-      "ApiService.js::apiLogin_": 0.007692307692307693,
-      "ApiService.js::apiSubmitScanIdempotent_": 0.007692307692307693,
-      "ApiService.js::doPost": 0.007692307692307693,
       "ApiService.js::validateApiToken_": 0.007692307692307693,
       "ApiService.js::dispatchApiAction_": 0.007692307692307693,
+      "ApiService.js::doPost": 0.007692307692307693,
+      "ApiService.js::apiLogin_": 0.007692307692307693,
+      "ApiService.js::apiSubmitScanIdempotent_": 0.007692307692307693,
       "AuthService.js": 0.08461538461538462,
-      "AuthService.js::readKaryawanRowsFromCache_": 0.007692307692307693,
-      "AuthService.js::roleFromJabatan_": 0.007692307692307693,
       "AuthService.js::login_": 0.023076923076923078,
-      "AuthService.js::writeKaryawanRowsToCache_": 0.007692307692307693,
-      "AuthService.js::getKaryawanRows_": 0.007692307692307693,
-      "AuthService.js::requireRole_": 0.03076923076923077,
-      "AuthService.js::getLoginAttemptCount_": 0.007692307692307693,
+      "AuthService.js::roleFromJabatan_": 0.007692307692307693,
       "AuthService.js::findKaryawanByNik_": 0.007692307692307693,
+      "AuthService.js::getKaryawanRows_": 0.007692307692307693,
+      "AuthService.js::readKaryawanRowsFromCache_": 0.007692307692307693,
+      "AuthService.js::getLoginAttemptCount_": 0.007692307692307693,
+      "AuthService.js::resolveRole_": 0.023076923076923078,
       "AuthService.js::registerLoginFailure_": 0.007692307692307693,
       "AuthService.js::clearLoginAttempts_": 0.007692307692307693,
-      "AuthService.js::resolveRole_": 0.023076923076923078,
+      "AuthService.js::requireRole_": 0.03076923076923077,
+      "AuthService.js::writeKaryawanRowsToCache_": 0.007692307692307693,
       "BarcodeService.js": 0.2153846153846154,
-      "BarcodeService.js::classifyBarcode_": 0.007692307692307693,
-      "BarcodeService.js::padSeq_": 0.007692307692307693,
-      "BarcodeService.js::getNextChildSequence_": 0.007692307692307693,
-      "BarcodeService.js::formatTimestamp_": 0.007692307692307693,
-      "BarcodeService.js::getCellValue_": 0.007692307692307693,
-      "BarcodeService.js::processScan_": 0.015384615384615385,
-      "BarcodeService.js::lookupMesinFromLog_": 0.007692307692307693,
-      "BarcodeService.js::handleTerimaWrm_": 0.007692307692307693,
-      "BarcodeService.js::getShift_": 0.007692307692307693,
-      "BarcodeService.js::handleChildCheckpoint_": 0.007692307692307693,
       "BarcodeService.js::deleteReprintBarcode_": 0.015384615384615385,
-      "BarcodeService.js::allocateChildBarcodes_": 0.007692307692307693,
+      "BarcodeService.js::saveBatchReprint_": 0.015384615384615385,
+      "BarcodeService.js::getNextChildSequence_": 0.007692307692307693,
       "BarcodeService.js::getReprintData_": 0.015384615384615385,
       "BarcodeService.js::handleKirimMesin_": 0.007692307692307693,
-      "BarcodeService.js::saveBatchReprint_": 0.015384615384615385,
-      "BarcodeService.js::escapeRegex_": 0.007692307692307693,
+      "BarcodeService.js::allocateChildBarcodes_": 0.007692307692307693,
       "BarcodeService.js::getShiftBounds_": 0.015384615384615385,
+      "BarcodeService.js::formatTimestamp_": 0.007692307692307693,
+      "BarcodeService.js::handleTerimaWrm_": 0.007692307692307693,
+      "BarcodeService.js::handleChildCheckpoint_": 0.007692307692307693,
+      "BarcodeService.js::escapeRegex_": 0.007692307692307693,
+      "BarcodeService.js::processScan_": 0.015384615384615385,
+      "BarcodeService.js::getCellValue_": 0.007692307692307693,
+      "BarcodeService.js::lookupMesinFromLog_": 0.007692307692307693,
+      "BarcodeService.js::classifyBarcode_": 0.007692307692307693,
+      "BarcodeService.js::getShift_": 0.007692307692307693,
+      "BarcodeService.js::padSeq_": 0.007692307692307693,
       "Code.js": 0.5076923076923077,
-      "Code.js::deleteReprintBarcode": 0.015384615384615385,
       "Code.js::konfirmasiNeracaStokShift": 0.015384615384615385,
-      "Code.js::saveMinMaxSettingApi": 0.015384615384615385,
-      "Code.js::doGet": 0.015384615384615385,
-      "Code.js::getReservasiOptions": 0.015384615384615385,
-      "Code.js::getOperatorConsumption": 0.015384615384615385,
-      "Code.js::login": 0.015384615384615385,
-      "Code.js::getMesinStock": 0.015384615384615385,
-      "Code.js::getMinMaxSettingsApi": 0.015384615384615385,
-      "Code.js::getShiftDispatches": 0.015384615384615385,
-      "Code.js::saveMaterialBatchApi": 0.015384615384615385,
-      "Code.js::saveMinMaxBatchApi": 0.015384615384615385,
-      "Code.js::getHistoricalTspStock": 0.015384615384615385,
-      "Code.js::submitReservasiApi": 0.007692307692307693,
       "Code.js::deleteMinMaxSettingApi": 0.015384615384615385,
-      "Code.js::getMaterialListApi": 0.015384615384615385,
-      "Code.js::deleteMaterialApi": 0.015384615384615385,
-      "Code.js::saveBatchReprint": 0.015384615384615385,
-      "Code.js::tarikStokAwalShift": 0.015384615384615385,
-      "Code.js::getOperatorReceipts": 0.015384615384615385,
-      "Code.js::getMesinList": 0.015384615384615385,
-      "Code.js::getPortalHistory": 0.015384615384615385,
-      "Code.js::getValidatorData": 0.015384615384615385,
-      "Code.js::saveMaterialApi": 0.015384615384615385,
-      "Code.js::getTspMesinMonitoring": 0.015384615384615385,
+      "Code.js::submitReservasiApi": 0.007692307692307693,
+      "Code.js::deleteReprintBarcode": 0.015384615384615385,
+      "Code.js::getShiftDispatches": 0.015384615384615385,
+      "Code.js::getHistoricalTspStock": 0.015384615384615385,
+      "Code.js::getReservasiOptions": 0.015384615384615385,
       "Code.js::getReprintData": 0.015384615384615385,
+      "Code.js::saveMinMaxSettingApi": 0.015384615384615385,
+      "Code.js::getPortalHistory": 0.015384615384615385,
+      "Code.js::doGet": 0.015384615384615385,
+      "Code.js::saveBatchReprint": 0.015384615384615385,
       "Code.js::include": 0.007692307692307693,
-      "Code.js::submitScan": 0.015384615384615385,
-      "Code.js::getTspStock": 0.015384615384615385,
-      "Code.js::getShiftReceipts": 0.015384615384615385,
+      "Code.js::saveMaterialBatchApi": 0.015384615384615385,
+      "Code.js::getTspMesinMonitoring": 0.015384615384615385,
+      "Code.js::getOperatorConsumption": 0.015384615384615385,
       "Code.js::konfirmasiItemStokShift": 0.015384615384615385,
+      "Code.js::tarikStokAwalShift": 0.015384615384615385,
+      "Code.js::getMesinList": 0.015384615384615385,
+      "Code.js::login": 0.015384615384615385,
+      "Code.js::getTspStock": 0.015384615384615385,
+      "Code.js::submitScan": 0.015384615384615385,
+      "Code.js::getMinMaxSettingsApi": 0.015384615384615385,
+      "Code.js::getMaterialListApi": 0.015384615384615385,
+      "Code.js::getShiftReceipts": 0.015384615384615385,
       "Code.js::getHistoricalMesinStock": 0.015384615384615385,
+      "Code.js::saveMaterialApi": 0.015384615384615385,
+      "Code.js::getOperatorReceipts": 0.015384615384615385,
+      "Code.js::deleteMaterialApi": 0.015384615384615385,
+      "Code.js::getValidatorData": 0.015384615384615385,
+      "Code.js::saveMinMaxBatchApi": 0.015384615384615385,
+      "Code.js::getMesinStock": 0.015384615384615385,
       "Config.js": 0.007692307692307693,
       "MaterialService.js": 0.1076923076923077,
-      "MaterialService.js::saveMaterialBatch_": 0.015384615384615385,
-      "MaterialService.js::migrateMaterialMasterIfEmpty_": 0.015384615384615385,
-      "MaterialService.js::getSupplierMap_": 0.015384615384615385,
-      "MaterialService.js::deleteMaterial_": 0.015384615384615385,
-      "MaterialService.js::saveMaterialMaster_": 0.015384615384615385,
-      "MaterialService.js::deleteMaterialMaster_": 0.007692307692307693,
-      "MaterialService.js::isMidUsedAnywhere_": 0.007692307692307693,
-      "MaterialService.js::resolveDeskCol_": 0.007692307692307693,
       "MaterialService.js::getMaterialList_": 0.023076923076923078,
       "MaterialService.js::getMaterialMap_": 0.023076923076923078,
+      "MaterialService.js::resolveDeskCol_": 0.007692307692307693,
+      "MaterialService.js::saveMaterialMaster_": 0.015384615384615385,
+      "MaterialService.js::deleteMaterialMaster_": 0.007692307692307693,
+      "MaterialService.js::deleteMaterial_": 0.015384615384615385,
+      "MaterialService.js::isMidUsedAnywhere_": 0.007692307692307693,
+      "MaterialService.js::getSupplierMap_": 0.015384615384615385,
+      "MaterialService.js::saveMaterialBatch_": 0.015384615384615385,
+      "MaterialService.js::migrateMaterialMasterIfEmpty_": 0.015384615384615385,
       "SheetService.js": 0.13846153846153847,
-      "SheetService.js::updateBarcodeCell_": 0.015384615384615385,
+      "SheetService.js::parseMonth_": 0.007692307692307693,
+      "SheetService.js::getReservasiList_": 0.015384615384615385,
+      "SheetService.js::submitReservasi_": 0.015384615384615385,
+      "SheetService.js::getSpreadsheet_": 0.007692307692307693,
       "SheetService.js::findBarcodeRow_": 0.015384615384615385,
       "SheetService.js::appendLog_": 0.023076923076923078,
-      "SheetService.js::lookupWrmIncoming_": 0.015384615384615385,
-      "SheetService.js::findRowByColumnValue_": 0.007692307692307693,
-      "SheetService.js::submitReservasi_": 0.015384615384615385,
-      "SheetService.js::appendReprintRow_": 0.007692307692307693,
-      "SheetService.js::getSheet_": 0.03076923076923077,
-      "SheetService.js::parseMonth_": 0.007692307692307693,
-      "SheetService.js::getSpreadsheet_": 0.007692307692307693,
-      "SheetService.js::queryReprintSheet_": 0.007692307692307693,
+      "SheetService.js::updateBarcodeCell_": 0.015384615384615385,
       "SheetService.js::appendBarcodeRow_": 0.015384615384615385,
-      "SheetService.js::getReservasiList_": 0.015384615384615385,
+      "SheetService.js::appendReprintRow_": 0.007692307692307693,
+      "SheetService.js::findRowByColumnValue_": 0.007692307692307693,
+      "SheetService.js::getSheet_": 0.03076923076923077,
+      "SheetService.js::queryReprintSheet_": 0.007692307692307693,
+      "SheetService.js::lookupWrmIncoming_": 0.015384615384615385,
       "SheetService.js::ensureSheetsReady_": 0.023076923076923078,
       "SheetService.js::getHeaderMap_": 0.03076923076923077,
       "SheetService.js::parseSapDate_": 0.007692307692307693,
       "SheetService.js::validateMidInReservasi_": 0.015384615384615385,
       "StockService.js": 0.2846153846153846,
-      "StockService.js::getMinMaxMap_": 0.007692307692307693,
-      "StockService.js::readAllBarcodeRows_": 0.007692307692307693,
-      "StockService.js::toDateOrNull_": 0.007692307692307693,
-      "StockService.js::konfirmasiStokShift_": 0.015384615384615385,
-      "StockService.js::computeHistoricalTspStock_": 0.015384615384615385,
-      "StockService.js::saveMinMaxSetting": 0.015384615384615385,
-      "StockService.js::computeTspStock_": 0.015384615384615385,
-      "StockService.js::formatDateLabel_": 0.007692307692307693,
-      "StockService.js::getNormalizedDateStr_": 0.007692307692307693,
-      "StockService.js::computeTspMesinMonitoring_": 0.015384615384615385,
-      "StockService.js::computeHistoricalMesinStock_": 0.015384615384615385,
-      "StockService.js::getMinMaxSheet_": 0.015384615384615385,
-      "StockService.js::computeOperatorConsumption_": 0.015384615384615385,
-      "StockService.js::getRealLastRowAndTrim_": 0.007692307692307693,
-      "StockService.js::tarikStokAwalShift_": 0.015384615384615385,
-      "StockService.js::computeValidator_": 0.015384615384615385,
-      "StockService.js::computeOperatorReceipts_": 0.015384615384615385,
-      "StockService.js::getNormalizedShiftNum_": 0.007692307692307693,
-      "StockService.js::executeShiftRollover_": 0.007692307692307693,
-      "StockService.js::incrementStockCell_": 0.015384615384615385,
-      "StockService.js::normalizeMid_": 0.015384615384615385,
-      "StockService.js::computeShiftReceipts_": 0.015384615384615385,
-      "StockService.js::saveMinMaxBatch_": 0.015384615384615385,
-      "StockService.js::computeMesinStock_": 0.015384615384615385,
-      "StockService.js::deleteMinMaxSetting_": 0.015384615384615385,
-      "StockService.js::computeShiftDispatches_": 0.015384615384615385,
       "StockService.js::ensureMidInActiveShift_": 0.015384615384615385,
-      "StockService.js::computePortalHistory_": 0.015384615384615385,
-      "StockService.js::parseMb51Timestamp_": 0.007692307692307693,
+      "StockService.js::konfirmasiStokShift_": 0.015384615384615385,
+      "StockService.js::deleteMinMaxSetting_": 0.015384615384615385,
       "StockService.js::getMinMaxSettings": 0.015384615384615385,
-      "StockService.js::konfirmasiItemStokShift_": 0.015384615384615385
+      "StockService.js::computeTspMesinMonitoring_": 0.015384615384615385,
+      "StockService.js::tarikStokAwalShift_": 0.015384615384615385,
+      "StockService.js::computeHistoricalTspStock_": 0.015384615384615385,
+      "StockService.js::getRealLastRowAndTrim_": 0.007692307692307693,
+      "StockService.js::computeValidator_": 0.015384615384615385,
+      "StockService.js::computeMesinStock_": 0.015384615384615385,
+      "StockService.js::incrementStockCell_": 0.015384615384615385,
+      "StockService.js::saveMinMaxBatch_": 0.015384615384615385,
+      "StockService.js::executeShiftRollover_": 0.007692307692307693,
+      "StockService.js::computePortalHistory_": 0.015384615384615385,
+      "StockService.js::computeShiftReceipts_": 0.015384615384615385,
+      "StockService.js::konfirmasiItemStokShift_": 0.015384615384615385,
+      "StockService.js::computeHistoricalMesinStock_": 0.015384615384615385,
+      "StockService.js::normalizeMid_": 0.015384615384615385,
+      "StockService.js::toDateOrNull_": 0.007692307692307693,
+      "StockService.js::computeTspStock_": 0.015384615384615385,
+      "StockService.js::computeOperatorReceipts_": 0.015384615384615385,
+      "StockService.js::computeShiftDispatches_": 0.015384615384615385,
+      "StockService.js::computeOperatorConsumption_": 0.015384615384615385,
+      "StockService.js::getMinMaxMap_": 0.007692307692307693,
+      "StockService.js::formatDateLabel_": 0.007692307692307693,
+      "StockService.js::saveMinMaxSetting": 0.015384615384615385,
+      "StockService.js::getNormalizedShiftNum_": 0.007692307692307693,
+      "StockService.js::getMinMaxSheet_": 0.015384615384615385,
+      "StockService.js::parseMb51Timestamp_": 0.007692307692307693,
+      "StockService.js::readAllBarcodeRows_": 0.007692307692307693,
+      "StockService.js::getNormalizedDateStr_": 0.007692307692307693
     }
   }
 }
