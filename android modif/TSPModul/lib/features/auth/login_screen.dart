@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,6 +38,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .read(authRepositoryProvider)
           .login(_nikController.text.trim(), _passwordController.text);
       ref.read(currentUserProvider.notifier).state = user;
+      // Login pertama di perangkat baru: ambil daftar mesin dari server supaya
+      // tidak bergantung pada nilai hardcode di kMesinList.
+      unawaited(ref.read(referenceRepositoryProvider).refreshMesinList());
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {

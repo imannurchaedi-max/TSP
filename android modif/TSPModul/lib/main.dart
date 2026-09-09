@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,6 +31,9 @@ class _TspModulAppState extends ConsumerState<TspModulApp> {
       final user = await ref.read(authRepositoryProvider).restoreSession();
       if (user != null && mounted) {
         ref.read(currentUserProvider.notifier).state = user;
+        // Tarik daftar mesin terbaru dari server. Tidak di-await: dropdown sudah
+        // punya nilai fallback, jadi bootstrap tidak perlu menunggu jaringan.
+        unawaited(ref.read(referenceRepositoryProvider).refreshMesinList());
       }
       ref.read(connectivitySyncWatcherProvider).start();
     });

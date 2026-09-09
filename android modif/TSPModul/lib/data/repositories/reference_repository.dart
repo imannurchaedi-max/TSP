@@ -46,15 +46,43 @@ class Reservasi {
       );
 }
 
-/// Data referensi dipakai form Scan: daftar mesin (statis, mirror MESIN_LIST)
-/// dan daftar reservasi (dinamis dari server, dengan fallback input manual
-/// kalau gagal dimuat -- persis pola di Scanner.html supaya tetap bisa
-/// dipakai walau server sedang tidak terjangkau).
+/// Data referensi dipakai form Scan: daftar mesin dan daftar reservasi.
+///
+/// Daftar mesin bersumber dari server (action `getMesinList`, mirror MESIN_LIST di
+/// Active/Config.js) dan di-cache di memori. `kMesinList` dipakai sebagai nilai awal
+/// dan fallback offline SAJA -- bukan sumber kebenaran. Sebelumnya daftar ini
+/// di-hardcode di client tanpa pernah memanggil server, sehingga mesin yang ditambah
+/// atau diganti nama di server diam-diam tidak pernah sampai ke aplikasi.
+///
+/// Reservasi tetap dinamis dari server dengan fallback input manual kalau gagal
+/// dimuat -- persis pola di Scanner.html supaya tetap bisa dipakai walau server
+/// sedang tidak terjangkau.
 class ReferenceRepository {
   final ApiClient _api;
   ReferenceRepository(this._api);
 
-  List<String> get mesinList => kMesinList;
+  List<String> _mesinList = kMesinList;
+
+  /// Daftar mesin yang dipakai UI. Sinkron supaya bisa dibaca langsung dari
+  /// initState/build; isinya disegarkan oleh [refreshMesinList] saat bootstrap.
+  List<String> get mesinList => _mesinList;
+
+  /// Tarik daftar mesin terbaru dari server. Sengaja tidak melempar: kegagalan
+  /// (offline, server sibuk) hanya berarti daftar sebelumnya tetap dipakai, supaya
+  /// operator di area sinyal mati tidak kehilangan dropdown mesin.
+  Future<void> refreshMesinList() async {
+    try {
+      final res = await _api.call('getMesinList');
+      if (res['success'] != true) return;
+      final data = res['data'];
+      if (data is! List) return;
+      final fresh = data.whereType<String>().where((m) => m.trim().isNotEmpty).toList();
+      if (fresh.isEmpty) return; // daftar kosong hampir pasti anomali -- pertahankan yang lama
+      _mesinList = fresh;
+    } catch (_) {
+      // Pertahankan daftar yang ada. Lihat doc di atas.
+    }
+  }
 
   Future<List<Reservasi>> getReservasiOptions() async {
     final res = await _api.call('getReservasiOptions');
