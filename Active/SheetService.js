@@ -80,6 +80,24 @@ function getHeaderMap_(sheet) {
 }
 
 /**
+ * Cari indeks kolom (0-based) dari headerMap berdasarkan daftar nama kandidat.
+ *
+ * Kalau tidak satu pun kandidat ditemukan, kembalikan `fallbackIdx` -- indeks posisional
+ * yang dipakai kode lama. Dengan begitu pembacaan yang tadinya posisional menjadi benar
+ * ketika header dikenali, dan TIDAK berubah perilakunya ketika tidak dikenali. Sengaja
+ * TIDAK melempar seperti getRequiredCellValue_, karena pemanggilnya adalah jalur
+ * perhitungan stok yang lebih baik tetap berjalan seperti semula daripada berhenti total.
+ */
+function resolveColIdx_(headerMap, candidateNames, fallbackIdx) {
+  for (var i = 0; i < candidateNames.length; i++) {
+    var n = String(candidateNames[i]).trim();
+    var c = headerMap[n] || headerMap[n.toLowerCase()];
+    if (c) return c - 1;
+  }
+  return fallbackIdx;
+}
+
+/**
  * Cari 1 baris di `sheet` yang kolom `columnName`-nya persis sama dengan `value`.
  */
 function findRowByColumnValue_(sheet, columnName, value) {

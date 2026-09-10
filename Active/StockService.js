@@ -93,11 +93,26 @@ function getRealLastRowAndTrim_(sheet) {
   if (lastRow < 2) return lastRow;
   var realLast = 1;
   try {
-    var data = sheet.getRange(2, 1, lastRow - 1, Math.min(sheet.getLastColumn(), 8)).getValues();
+    // Kolom diresolusi per-sheet, BUKAN indeks tetap. Fungsi ini dipanggil untuk
+    // STOCK TSP dan STOCK MESIN yang tata letaknya BERBEDA:
+    //   STOCK TSP   -> [1] Tanggal [2] Shift [3] NIK TSP [4] Nama TSP [5] MID
+    //   STOCK MESIN -> [1] Tanggal [2] Shift [3] Mesin   [4] NIK OP   [5] NAMA OP [6] MID
+    // Dengan indeks tetap [5], untuk STOCK MESIN yang divalidasi sebagai "MID" sebenarnya
+    // NAMA OP. Itu berbahaya karena hasil fungsi ini dipakai untuk deleteRows(): salah
+    // mengenali baris data terakhir berarti baris asli ikut terhapus.
+    // Fallback ke indeks lama dipertahankan supaya perilaku tidak berubah bila header
+    // tidak dikenali.
+    var hm = getHeaderMap_(sheet);
+    var iDate = resolveColIdx_(hm, ['Tanggal'], 1);
+    var iShift = resolveColIdx_(hm, ['Shift'], 2);
+    var iMid = resolveColIdx_(hm, ['MID'], 5);
+    var needCols = Math.max(iDate, iShift, iMid) + 1;
+    var readCols = Math.min(sheet.getLastColumn(), Math.max(8, needCols));
+    var data = sheet.getRange(2, 1, lastRow - 1, readCols).getValues();
     for (var i = data.length - 1; i >= 0; i--) {
-      var dStr = String(data[i][1] || '').trim();
-      var sStr = String(data[i][2] || '').trim();
-      var mStr = String(data[i][5] || '').trim();
+      var dStr = String(data[i][iDate] || '').trim();
+      var sStr = String(data[i][iShift] || '').trim();
+      var mStr = String(data[i][iMid] || '').trim();
       
       var isMidValid = (mStr !== '' && mStr !== '0' && mStr.indexOf('#') === -1);
       var isDateValid = (dStr !== '' && dStr.indexOf('#') === -1);
@@ -940,8 +955,14 @@ function executeShiftRollover_(tspSheet, mesinSheet, activeDateStr, shiftName, a
     setMVal('no', idx + 1);
     setMVal('tanggal', activeDateStr);
     setMVal('shift', Number(shiftName) || getNormalizedShiftNum_(shiftName));
+    // Varian nama dicoba semua, seperti pola setMVal('no.')/setMVal('no') di atas.
+    // REF/TSP MODUL.xlsx menyebut kolomnya 'NIK OP'/'NAMA OP', sedangkan kode lama hanya
+    // mencari 'nik operator'/'nama operator'. setMVal diam saja kalau kolomnya tidak ada,
+    // jadi salah satu penamaan itu selama ini tidak pernah terisi -- tanpa gejala.
     setMVal('nik operator', actorNik || '-');
+    setMVal('nik op', actorNik || '-');
     setMVal('nama operator', actorNama || 'Admin TSP');
+    setMVal('nama op', actorNama || 'Admin TSP');
     setMVal('mid', mid);
     setMVal('deskripsi', item.deskripsi);
     setMVal('uom', item.uom);

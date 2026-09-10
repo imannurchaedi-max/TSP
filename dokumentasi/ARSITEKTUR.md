@@ -204,9 +204,30 @@ Ledger dihitung ulang **on-the-fly** tiap request:
 
 ## 10. Proteksi Pemetaan Kolom (Robust Column Mapping)
 
-Backend TSP Modul dilengkapi mekanisme dinamis multi-lapis untuk membaca tabel data dari Google Sheets. Hal ini dirancang untuk mencegah *error* saat pengguna tidak sengaja melakukan kesalahan pengetikan di baris judul (header) Excel.
+Backend TSP Modul memakai mekanisme dinamis multi-lapis untuk membaca tabel data dari
+Google Sheets, dirancang untuk mencegah *error* saat ada kesalahan pengetikan di baris
+judul (header).
+
+**Cakupannya tidak menyeluruh — ini penting.** Proteksi di bawah berlaku untuk jalur yang
+meresolusi kolom lewat `getHeaderMap_`:
+
+| Jalur | Cara baca kolom |
+| --- | --- |
+| Scan barcode (`BarcodeService.js`, `SheetService.js`) | Dinamis, berbasis nama header |
+| Material Master & Min/Max (`MaterialService.js`) | Dinamis |
+| Penulisan baris stok (`setMVal` di `StockService.js`) | Dinamis |
+| `getRealLastRowAndTrim_` | Dinamis, dengan fallback posisional |
+| Parsing MB51 (`StockService.js`, data mulai baris 3) | **Posisional** — `row[0]`, `[3]`, `[11]`, `[12]` |
+| Login (`AuthService.js`) | **Posisional** — kolom A–F sheet KARYAWAN |
+| Hapus Min/Max (`MaterialService.js`) | **Posisional** — kolom A |
+
+Yang posisional membaca indeks kolom secara harfiah. Kegagalannya lebih berbahaya daripada
+kolom yang hilang: kolom yang bergeser membuat kode membaca **nilai kolom lain** tanpa
+error apa pun. Jangan menyisipkan atau memindahkan kolom pada sheet MB51 dan KARYAWAN
+tanpa menyesuaikan kodenya.
 - **Space Trimming**: Mengatasi spasi siluman/tambahan di awal atau akhir kata. Saat membaca *header* sheet atau melakukan pencarian data spesifik, sistem selalu mengaktifkan `.trim()` otomatis. (Contoh: `"MID "` di Sheet dijamin akan dikenali secara internal sebagai `"MID"`).
 - **Case-Insensitive Mapping**: Mengatasi inkonsistensi huruf kapital (besar/kecil). Fungsi internal `getHeaderMap_` meregistrasi setiap judul kolom ganda, yakni versi asli dan versi huruf kecil paksa (`toLowerCase`). Panggilan kode terhadap `headerMap['JUMLAH']` atau `headerMap['jumlah']` dipastikan 100% tepat mengarah ke kolom yang sama.
+- **Resolusi per-sheet**: `getRealLastRowAndTrim_` dipakai untuk STOCK TSP *dan* STOCK MESIN yang tata letaknya berbeda (`MID` ada di kolom ke-6 pada yang pertama, ke-7 pada yang kedua). Kolomnya kini diresolusi lewat `getHeaderMap_` per sheet, bukan indeks tetap. Ini penting karena hasil fungsi itu dipakai untuk `deleteRows()` — salah mengenali baris data terakhir berarti baris asli ikut terhapus.
 - **Fallback Chaining**: Mengatasi penggantian nama kolom atau *typo*. Pencarian kolom krusial diikat menggunakan jaring pengaman berantai (Logika OR `||`). Misalnya, kolom tanggal dicari berurutan: `"Tanggal Outbound"` → `"TANGGAL"` → `"Tanggal"`. Kolom reservasi: `"MATDOC RESERVASI"` → `"NO RESERVASI"` → `"No Reservasi"`.
 
 ## 11. Riwayat Deployment (Versi CLASP)
