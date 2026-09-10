@@ -18,7 +18,12 @@ function padSeq_(n) {
  * Kode Induk (Mother Barcode dari WRM).
  */
 function classifyBarcode_(raw) {
-  var match = /^(.+)-(?:\d{2}|R\d*)$/.exec(raw);
+  // \d{2,} -- BUKAN \d{2}. padSeq_ hanya menjamin MINIMAL 2 digit, bukan tepat 2:
+  // anak ke-100 menghasilkan '-100'. Dengan pola lama yang mengunci tepat 2 digit,
+  // '-100' tidak dikenali sebagai anak sehingga dianggap INDUK. Akibatnya penjagaan
+  // di handleKirimMesin_ (yang bersandar pada isChild) jebol dan bug 'cucu' v115
+  // kembali: qty terhitung dua kali di STOCK TSP dan lolos dari plafon kuantitas induk.
+  var match = /^(.+)-(?:\d{2,}|R\d*)$/.exec(raw);
   if (match) {
     var potentialParent = match[1];
     var parentRow = findBarcodeRow_(potentialParent);
