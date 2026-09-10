@@ -123,10 +123,23 @@ class _ScanExtraFieldsScreenState extends ConsumerState<ScanExtraFieldsScreen> {
     String? jumlah;
     if (event.requiresJumlah) {
       jumlah = _jumlahController.text.trim();
-      final qty = num.tryParse(jumlah);
-      if (jumlah.isEmpty || qty == null || qty <= 0) {
-        _showValidationDialog('Isi jumlah (Qty) material yang sah dan lebih besar dari 0.');
-        return;
+      // Kolom ini BOLEH dikosongkan, dan itu disengaja.
+      //
+      // Kode Induk WRM dipecah lewat tab Reprint jadi label-label kecil yang qty-nya
+      // sudah menempel pada labelnya. Saat label pecahan itu yang discan, qty-nya
+      // ditentukan server dari baris labelnya -- bukan dari angka yang diketik ulang di
+      // sini. Layar ini muncul SEBELUM kamera, jadi aplikasi belum bisa tahu yang akan
+      // discan itu induk atau label pecahan; keputusannya diserahkan ke server.
+      //
+      // Kalau ternyata yang discan Kode Induk dan kolom ini kosong, server menolak
+      // dengan pesan yang jelas. Kalau diisi tapi berbeda dari qty label, server juga
+      // menolak -- supaya tidak ada yang mengira qty bisa diubah saat pengiriman.
+      if (jumlah.isNotEmpty) {
+        final qty = num.tryParse(jumlah);
+        if (qty == null || qty <= 0) {
+          _showValidationDialog('Jumlah (Qty) harus berupa angka lebih besar dari 0, atau dikosongkan.');
+          return;
+        }
       }
     }
 
@@ -270,7 +283,14 @@ class _ScanExtraFieldsScreenState extends ConsumerState<ScanExtraFieldsScreen> {
               TextField(
                 controller: _jumlahController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(hintText: 'Contoh: 200', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  hintText: 'Contoh: 200',
+                  border: OutlineInputBorder(),
+                  helperMaxLines: 3,
+                  helperText: 'Isi kalau men-scan Kode Induk dari WRM. '
+                      'Kosongkan kalau men-scan label pecahan (LABEL REPRINT) -- '
+                      'qty-nya sudah tercatat pada label itu.',
+                ),
               ),
               const SizedBox(height: 20),
             ],

@@ -56,3 +56,11 @@ $versionLabel = $versionMatch.Matches[0].Groups[1].Value
 $releaseApk = Join-Path $releaseDir "TSP Modul-v$versionLabel.apk"
 Copy-Item -LiteralPath $localApk -Destination $releaseApk -Force
 Write-Output "APK distribusi: $releaseApk"
+
+# Salinan kedua di ROOT PROJECT. Path build/app/outputs/flutter-apk terlalu dalam untuk
+# dicari manual setiap kali mau mengunggah rilis; di root, file-nya langsung terlihat.
+# Aman dari git karena .gitignore sudah mengabaikan *.apk.
+$projectRoot = (Resolve-Path -LiteralPath (Join-Path $sourceRoot '..\..')).Path
+$rootApk = Join-Path $projectRoot (Split-Path -Leaf $releaseApk)
+Copy-Item -LiteralPath $releaseApk -Destination $rootApk -Force
+Write-Output "Salinan siap ambil : $rootApk"
