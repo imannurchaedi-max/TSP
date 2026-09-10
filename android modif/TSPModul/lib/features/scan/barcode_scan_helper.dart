@@ -21,6 +21,10 @@ class _QuickScanScreen extends StatefulWidget {
 class _QuickScanScreenState extends State<_QuickScanScreen> {
   final MobileScannerController _controller = MobileScannerController(
     formats: const [BarcodeFormat.code128, BarcodeFormat.qrCode],
+    // Alasan sama seperti ScannerScreen: label Code128 terlalu padat untuk
+    // ditangkap tanpa bantuan zoom otomatis dan resolusi memadai.
+    autoZoom: true,
+    cameraResolution: const Size(1920, 1080),
   );
   bool _handled = false;
 

@@ -19,8 +19,19 @@ class ScannerScreen extends ConsumerStatefulWidget {
 class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     formats: const [BarcodeFormat.code128, BarcodeFormat.qrCode],
+    // Label reprint Code128 sangat padat (>300 modul dalam 68mm), jadi user harus
+    // menebak jarak yang pas secara manual. autoZoom membiarkan kamera yang mencari
+    // jarak fokusnya sendiri -- ini penyebab utama "scan lama" yang dikeluhkan.
+    autoZoom: true,
+    // Resolusi default platform bisa terlalu rendah untuk barcode sepadat itu:
+    // garis tersempit jatuh di bawah 1 piksel dan tidak pernah ter-decode.
+    cameraResolution: const Size(1920, 1080),
   );
   bool _isSubmitting = false;
+
+  /// Kotak fokus. Ukurannya harus sama dengan _ScanOverlay supaya area yang
+  /// dianalisis ML Kit benar-benar sama dengan yang dilihat user.
+  static const Size _kScanBoxSize = Size(280, 190);
 
   @override
   void dispose() {
@@ -74,8 +85,43 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          MobileScanner(controller: _controller, onDetect: _onDetect),
-          _ScanOverlay(borderColor: Theme.of(context).colorScheme.primary),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // scanWindow WAJIB di-set. Tanpa ini kotak overlay cuma hiasan: ML Kit
+              // menganalisis SELURUH frame, bukan area kotak, sehingga barcode lain di
+              // sekitarnya ikut diproses dan pencarian target jadi lebih lambat.
+              final center = Offset(constraints.maxWidth / 2, constraints.maxHeight / 2);
+              final scanWindow = Rect.fromCenter(
+                center: center,
+                width: _kScanBoxSize.width,
+                height: _kScanBoxSize.height,
+              );
+              return MobileScanner(
+                controller: _controller,
+                onDetect: _onDetect,
+                scanWindow: scanWindow,
+              );
+            },
+          ),
+          _ScanOverlay(
+            borderColor: Theme.of(context).colorScheme.primary,
+            size: _kScanBoxSize,
+          ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: ValueListenableBuilder<MobileScannerState>(
+              valueListenable: _controller,
+              builder: (context, state, child) {
+                final on = state.torchState == TorchState.on;
+                return IconButton.filledTonal(
+                  onPressed: () => _controller.toggleTorch(),
+                  icon: Icon(on ? Icons.flash_on : Icons.flash_off),
+                  tooltip: on ? 'Matikan senter' : 'Nyalakan senter',
+                );
+              },
+            ),
+          ),
           Positioned(
             bottom: 32,
             child: Text(
@@ -98,13 +144,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
 class _ScanOverlay extends StatelessWidget {
   final Color borderColor;
-  const _ScanOverlay({required this.borderColor});
+  final Size size;
+  const _ScanOverlay({required this.borderColor, required this.size});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
-      height: 180,
+      width: size.width,
+      height: size.height,
       decoration: BoxDecoration(
         border: Border.all(color: borderColor, width: 3),
         borderRadius: BorderRadius.circular(12),
