@@ -55,11 +55,14 @@ Sebelum membaca kode luas, model wajib membaca:
 1. `AGENTS.md`
 2. `CLAUDE.md`
 3. `TSP_MODUL_DEEP_CLEAN_REVIEW.md`
-4. `dokumentasi/ARSITEKTUR.md`
-5. `dokumentasi/DEPENDENCY_MAP.md`
-6. `dokumentasi/FUNCTION_MAPPING.md`
-7. `graphify-out/FUNCTION_INDEX.md` bila tersedia
-8. `graphify-out/GRAPH_REPORT.md` bila tersedia
+4. `dokumentasi/AUDIT_INTEGRITAS.md` — temuan berstatus `TERBUKA` adalah cacat yang **diketahui
+   dan belum diperbaiki**. Jangan laporkan ulang sebagai temuan baru, dan jangan menulis kode
+   yang bersandar pada perilaku yang sudah tercatat salah di sana.
+5. `dokumentasi/ARSITEKTUR.md`
+6. `dokumentasi/DEPENDENCY_MAP.md`
+7. `dokumentasi/FUNCTION_MAPPING.md`
+8. `graphify-out/FUNCTION_INDEX.md` bila tersedia
+9. `graphify-out/GRAPH_REPORT.md` bila tersedia
 
 ## Token-Efficient Navigation
 

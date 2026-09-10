@@ -139,6 +139,7 @@ This project is indexed by GitNexus as **TSP**.
 
 # Mandatory Read Order
 - Read `TSP_MODUL_DEEP_CLEAN_REVIEW.md` before broad code exploration.
+- Read `dokumentasi/AUDIT_INTEGRITAS.md` before touching Apps Script auth, stock math, or the reprint/retur flow. Findings marked `TERBUKA` are known, unfixed defects -- do not re-report them as new, and do not write code that relies on behaviour already recorded there as wrong.
 - Read `dokumentasi/ARSITEKTUR.md`, `dokumentasi/DEPENDENCY_MAP.md`, and `dokumentasi/FUNCTION_MAPPING.md` before changing GAS runtime behavior.
 - Read `graphify-out/FUNCTION_INDEX.md` when available before opening large files such as `Active/Index.html`, `Active/Scanner.html`, or Flutter screens.
 - Treat `Active/` and `android modif/TSPModul/` as active source. Treat `android/TSPModul/` as legacy/reference unless the task explicitly targets it.

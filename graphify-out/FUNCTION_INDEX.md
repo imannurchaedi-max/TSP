@@ -1,10 +1,10 @@
 # TSP Modul Function Index
 
-Generated: 2026-09-09T03:42:30.607Z
+Generated: 2026-09-10T12:45:44.358Z
 
 Files scanned: 78
 
-Functions indexed: 350
+Functions indexed: 354
 
 Use this before broad code reads. Open the target file and line instead of scanning entire runtime files.
 
@@ -14,7 +14,7 @@ Use this before broad code reads. Open the target file and line instead of scann
 - `apiLogin_` - line 46
 - `validateApiToken_` - line 59
 - `apiSubmitScanIdempotent_` - line 77
-- `dispatchApiAction_` - line 169
+- `dispatchApiAction_` - line 194
 
 ## Active/AuthService.js
 
@@ -34,21 +34,23 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 - `padSeq_` - line 12
 - `classifyBarcode_` - line 20
-- `getNextChildSequence_` - line 35
-- `escapeRegex_` - line 58
-- `allocateChildBarcodes_` - line 84
-- `lookupMesinFromLog_` - line 229
-- `getShift_` - line 252
-- `getShiftBounds_` - line 259
-- `formatTimestamp_` - line 278
-- `getCellValue_` - line 284
-- `processScan_` - line 294
-- `handleTerimaWrm_` - line 323
-- `handleKirimMesin_` - line 390
-- `handleChildCheckpoint_` - line 469
-- `getReprintData_` - line 575
-- `saveBatchReprint_` - line 658
-- `deleteReprintBarcode_` - line 725
+- `getNextChildSequence_` - line 40
+- `escapeRegex_` - line 63
+- `allocateChildBarcodes_` - line 89
+- `lookupMesinFromLog_` - line 238
+- `getShift_` - line 261
+- `getShiftBounds_` - line 268
+- `formatTimestamp_` - line 287
+- `getCellValue_` - line 300
+- `getRequiredCellValue_` - line 320
+- `processScan_` - line 332
+- `handleTerimaWrm_` - line 361
+- `sendExistingChildToMesin_` - line 428
+- `handleKirimMesin_` - line 505
+- `handleChildCheckpoint_` - line 595
+- `getReprintData_` - line 704
+- `saveBatchReprint_` - line 787
+- `deleteReprintBarcode_` - line 854
 
 ## Active/Code.js
 
@@ -168,18 +170,19 @@ Use this before broad code reads. Open the target file and line instead of scann
 - `deleteReprintLabel` - line 2703
 - `_runDeleteReprint` - line 2721
 - `restoreBtn` - line 2726
-- `showReprintConfig` - line 2762
-- `resetReprintSearch` - line 2804
-- `generateReprintLabels` - line 2814
-- `_parseNextSequence` - line 2889
-- `_padSeq` - line 2902
-- `applyReprintPageSize_` - line 2921
-- `onReprintPresetChange` - line 2931
-- `getSelectedReprintSizeConfig` - line 2950
-- `_openBatchPrintModal` - line 2960
-- `renderReprintLabelsWithCurrentSize` - line 2984
-- `closeReprintLabel` - line 3051
-- `printReprintLabel` - line 3055
+- `parseChildSeq_` - line 2762
+- `showReprintConfig` - line 2771
+- `resetReprintSearch` - line 2824
+- `generateReprintLabels` - line 2834
+- `_parseNextSequence` - line 2909
+- `_padSeq` - line 2922
+- `applyReprintPageSize_` - line 2941
+- `onReprintPresetChange` - line 2951
+- `getSelectedReprintSizeConfig` - line 2970
+- `_openBatchPrintModal` - line 2980
+- `renderReprintLabelsWithCurrentSize` - line 3004
+- `closeReprintLabel` - line 3115
+- `printReprintLabel` - line 3119
 
 ## Active/MaterialService.js
 
@@ -215,19 +218,20 @@ Use this before broad code reads. Open the target file and line instead of scann
 - `getSheet_` - line 12
 - `ensureSheetsReady_` - line 29
 - `getHeaderMap_` - line 66
-- `findRowByColumnValue_` - line 85
-- `findBarcodeRow_` - line 109
-- `lookupWrmIncoming_` - line 133
-- `parseSapDate_` - line 142
-- `parseMonth_` - line 170
-- `getReservasiList_` - line 242
-- `validateMidInReservasi_` - line 316
-- `appendBarcodeRow_` - line 360
-- `appendReprintRow_` - line 381
-- `updateBarcodeCell_` - line 402
-- `appendLog_` - line 415
-- `queryReprintSheet_` - line 438
-- `submitReservasi_` - line 490
+- `resolveColIdx_` - line 91
+- `findRowByColumnValue_` - line 103
+- `findBarcodeRow_` - line 127
+- `lookupWrmIncoming_` - line 151
+- `parseSapDate_` - line 160
+- `parseMonth_` - line 188
+- `getReservasiList_` - line 260
+- `validateMidInReservasi_` - line 334
+- `appendBarcodeRow_` - line 378
+- `appendReprintRow_` - line 399
+- `updateBarcodeCell_` - line 420
+- `appendLog_` - line 433
+- `queryReprintSheet_` - line 456
+- `submitReservasi_` - line 508
 
 ## Active/StockService.js
 
@@ -237,31 +241,31 @@ Use this before broad code reads. Open the target file and line instead of scann
 - `getNormalizedShiftNum_` - line 72
 - `normalizeMid_` - line 78
 - `getRealLastRowAndTrim_` - line 90
-- `computeTspStock_` - line 125
-- `computeMesinStock_` - line 281
-- `computeTspMesinMonitoring_` - line 391
-- `formatDateLabel_` - line 576
-- `computeShiftReceipts_` - line 583
-- `computeShiftDispatches_` - line 608
-- `computeOperatorReceipts_` - line 634
-- `computeOperatorConsumption_` - line 659
-- `computeValidator_` - line 683
-- `parseMb51Timestamp_` - line 745
-- `executeShiftRollover_` - line 783
-- `ensureMidInActiveShift_` - line 981
-- `incrementStockCell_` - line 1077
-- `tarikStokAwalShift_` - line 1174
-- `konfirmasiStokShift_` - line 1228
-- `konfirmasiItemStokShift_` - line 1310
-- `computeHistoricalTspStock_` - line 1370
-- `computeHistoricalMesinStock_` - line 1472
-- `computePortalHistory_` - line 1554
-- `getMinMaxSheet_` - line 1646
-- `getMinMaxMap_` - line 1660
-- `getMinMaxSettings` - line 1690
-- `saveMinMaxSetting` - line 1770
-- `deleteMinMaxSetting_` - line 1819
-- `saveMinMaxBatch_` - line 1853
+- `computeTspStock_` - line 140
+- `computeMesinStock_` - line 296
+- `computeTspMesinMonitoring_` - line 406
+- `formatDateLabel_` - line 591
+- `computeShiftReceipts_` - line 598
+- `computeShiftDispatches_` - line 623
+- `computeOperatorReceipts_` - line 649
+- `computeOperatorConsumption_` - line 674
+- `computeValidator_` - line 698
+- `parseMb51Timestamp_` - line 760
+- `executeShiftRollover_` - line 798
+- `ensureMidInActiveShift_` - line 1002
+- `incrementStockCell_` - line 1098
+- `tarikStokAwalShift_` - line 1195
+- `konfirmasiStokShift_` - line 1249
+- `konfirmasiItemStokShift_` - line 1331
+- `computeHistoricalTspStock_` - line 1391
+- `computeHistoricalMesinStock_` - line 1493
+- `computePortalHistory_` - line 1575
+- `getMinMaxSheet_` - line 1667
+- `getMinMaxMap_` - line 1681
+- `getMinMaxSettings` - line 1711
+- `saveMinMaxSetting` - line 1791
+- `deleteMinMaxSetting_` - line 1840
+- `saveMinMaxBatch_` - line 1874
 
 ## android modif/TSPModul/lib/core/api_client.dart
 
@@ -308,8 +312,8 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 ## android modif/TSPModul/lib/features/auth/login_screen.dart
 
-- `dispose` - line 22
-- `build` - line 49
+- `dispose` - line 23
+- `build` - line 53
 
 ## android modif/TSPModul/lib/features/history/history_home_screen.dart
 
@@ -370,13 +374,13 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 ## android modif/TSPModul/lib/features/reprint/reprint_print_screen.dart
 
-- `build` - line 112
+- `build` - line 137
 
 ## android modif/TSPModul/lib/features/scan/barcode_scan_helper.dart
 
-- `dispose` - line 27
-- `_onDetect` - line 31
-- `build` - line 43
+- `dispose` - line 31
+- `_onDetect` - line 35
+- `build` - line 47
 
 ## android modif/TSPModul/lib/features/scan/scan_extra_fields_screen.dart
 
@@ -384,8 +388,8 @@ Use this before broad code reads. Open the target file and line instead of scann
 - `initState` - line 36
 - `dispose` - line 46
 - `_continue` - line 99
-- `_showValidationDialog` - line 139
-- `build` - line 154
+- `_showValidationDialog` - line 152
+- `build` - line 167
 
 ## android modif/TSPModul/lib/features/scan/scan_home_screen.dart
 
@@ -400,9 +404,9 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 ## android modif/TSPModul/lib/features/scan/scanner_screen.dart
 
-- `dispose` - line 25
-- `build` - line 69
-- `build` - line 103
+- `dispose` - line 36
+- `build` - line 80
+- `build` - line 150
 
 ## android modif/TSPModul/lib/features/shell/app_bottom_nav.dart
 
@@ -470,8 +474,8 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 ## android modif/TSPModul/lib/main.dart
 
-- `initState` - line 24
-- `build` - line 38
+- `initState` - line 25
+- `build` - line 42
 
 ## android modif/TSPModul/test/api_redirect_probe_test.dart
 
@@ -523,15 +527,15 @@ Use this before broad code reads. Open the target file and line instead of scann
 
 ## tools/verify_column_mapping.py
 
-- `load_excel_mapping` - line 15
-- `verify_columns` - line 20
+- `load_excel_mapping` - line 14
+- `verify_columns` - line 19
 
 ## tools/verify_env.py
 
-- `check_python_packages` - line 29
-- `check_graphify` - line 54
-- `check_mermaid` - line 75
-- `check_langgraph` - line 96
-- `check_gitnexus` - line 117
-- `main` - line 141
+- `check_python_packages` - line 28
+- `check_graphify` - line 53
+- `check_mermaid` - line 74
+- `check_langgraph` - line 95
+- `check_gitnexus` - line 116
+- `main` - line 149
 
