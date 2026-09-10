@@ -384,7 +384,7 @@ AppBar layar Scan:
    sistem Android (butuh permission `REQUEST_INSTALL_PACKAGES`).
 3. Rilis baru dibuat manual: bump `pubspec.yaml` → jalankan `BUILD_RELEASE_LOCAL.cmd` dari
    checkout Android → git tag `vX.Y.Z` → `gh release create vX.Y.Z
-   build/.../app-release.apk`. Launcher membangun di `C:\BuildWorkspaces\TSPModul` lalu
+   "build/.../TSP Modul-v<versi>.apk"`. Launcher membangun di `C:\BuildWorkspaces\TSPModul` lalu
    menyalin hanya APK final kembali ke SynologyDrive; jangan jalankan build release langsung
    di folder yang tersinkron.
 
@@ -416,7 +416,7 @@ flowchart LR
   L --> W[Workspace lokal C:\\BuildWorkspaces\\TSPModul]
   W --> V[clean -> pub get -> analyze -> test]
   V --> B[flutter build apk --release]
-  B --> A[Salin hanya app-release.apk ke SynologyDrive]
+  B --> A["Salin hanya TSP Modul-v&lt;versi&gt;.apk ke SynologyDrive"]
 ```
 
 `BUILD_RELEASE_LOCAL.cmd` adalah entry point wajib untuk release. Cache Gradle global juga

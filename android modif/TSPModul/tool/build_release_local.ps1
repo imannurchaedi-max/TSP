@@ -40,6 +40,19 @@ if (-not (Test-Path -LiteralPath $localApk)) {
 
 $releaseDir = Join-Path $sourceRoot 'build\app\outputs\flutter-apk'
 New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
-$releaseApk = Join-Path $releaseDir 'app-release.apk'
+
+# Nama distribusi: "TSP Modul-v<versi>.apk", BUKAN app-release.apk.
+#
+# app-release.apk adalah nama teknis bawaan Flutter dan tidak berarti apa-apa bagi
+# operator yang menerima file itu. Versi dibaca dari pubspec.yaml supaya dua build
+# berbeda tidak pernah punya nama file yang sama.
+#
+# Hanya SATU apk dihasilkan di sini. update_checker.dart mengambil aset .apk PERTAMA
+# yang ditemukan pada rilis GitHub, jadi menaruh dua apk di satu rilis membuat
+# pilihannya ambigu.
+$versionMatch = Select-String -Path (Join-Path $sourceRoot 'pubspec.yaml') -Pattern '^version:\s*([\d.]+)' | Select-Object -First 1
+if (-not $versionMatch) { throw "Tidak bisa membaca version: dari pubspec.yaml." }
+$versionLabel = $versionMatch.Matches[0].Groups[1].Value
+$releaseApk = Join-Path $releaseDir "TSP Modul-v$versionLabel.apk"
 Copy-Item -LiteralPath $localApk -Destination $releaseApk -Force
-Write-Output "Release APK copied to: $releaseApk"
+Write-Output "APK distribusi: $releaseApk"

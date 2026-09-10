@@ -110,8 +110,13 @@ build release di disk lokal. Hanya APK final yang disalin kembali ke SynologyDri
 
 Output APK:
 ```
-android modif\TSPModul\build\app\outputs\flutter-apk\app-release.apk
+android modif\TSPModul\build\app\outputs\flutter-apk\TSP Modul-v<versi>.apk
 ```
+
+Sejak 10 September 2026 script build menamai APK-nya langsung `TSP Modul-v<versi>.apk`,
+bukan `app-release.apk`. Nama teknis bawaan Flutter itu tidak berarti apa-apa bagi
+operator yang menerima file-nya. Versi diambil dari `pubspec.yaml` supaya dua build
+berbeda tidak pernah bernama sama.
 
 > **Hati-hati salah ambil file.** Folder legacy `android\TSPModul\build\...` juga berisi
 > `app-release.apk` dari build lama. Ukurannya cuma beda belasan KB dari yang baru, jadi gampang
@@ -125,7 +130,7 @@ android modif\TSPModul\build\app\outputs\flutter-apk\app-release.apk
 > ```
 > Verifikasi tanda tangan release (bukan debug):
 > ```powershell
-> apksigner verify --print-certs app-release.apk   # harus CN=TSP Modul
+> apksigner verify --print-certs "TSP Modul-v<versi>.apk"   # harus CN=TSP Modul
 > ```
 
 ### Kapan APK WAJIB di-rebuild & disebar ulang
@@ -136,10 +141,14 @@ Perbaikan sisi **Apps Script** langsung aktif untuk semua APK yang sudah terpasa
 mewajibkan pilihan mesin pada event `terima_operator`, sedangkan APK sebelum v114 belum punya
 field-nya sehingga scan operator akan ditolak server. Role TSP/SPV tidak terblokir.
 
-### Rename jadi "TSP Modul.apk"
-```powershell
-Copy-Item "build\app\outputs\flutter-apk\app-release.apk" "..\..\TSP Modul.apk"
-```
+### Penamaan APK
+
+Tidak perlu rename manual lagi — `BUILD_RELEASE_LOCAL.cmd` sudah
+mengeluarkan file bernama `TSP Modul-v<versi>.apk`. Unggah file itu apa adanya ke rilis
+GitHub.
+
+Lampirkan **hanya satu** berkas `.apk` per rilis: `update_checker.dart` mengambil aset
+`.apk` PERTAMA yang ditemukan, jadi dua apk dalam satu rilis membuat pilihannya ambigu.
 
 ---
 

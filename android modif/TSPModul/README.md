@@ -38,7 +38,7 @@ Jangan build release langsung dari checkout SynologyDrive. Gunakan launcher beri
 
 Launcher mencerminkan source ke `C:\BuildWorkspaces\TSPModul`, melakukan `clean`,
 `pub get`, `analyze`, `test`, dan build release di disk lokal, lalu menyalin hanya APK
-final ke `build\app\outputs\flutter-apk\app-release.apk` di checkout ini. Ini mencegah
+final ke `build\app\outputs\flutter-apk\TSP Modul-v<versi>.apk` di checkout ini. Ini mencegah
 artefak native Gradle berbenturan dengan reparse point SynologyDrive.
 
 ## Test
