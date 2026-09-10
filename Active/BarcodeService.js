@@ -419,6 +419,83 @@ function handleTerimaWrm_(raw, noReservasi, now) {
 }
 
 /**
+ * Kirim Kode Anak yang SUDAH ada (hasil pemecahan induk lewat tab Reprint) ke mesin.
+ *
+ * Berbeda dari jalur induk: TIDAK menerbitkan barcode baru dan TIDAK memotong kuota
+ * induk lagi -- kuota itu sudah dipotong saat labelnya dicetak. Yang dilakukan hanya
+ * menstempel DIKIRIM + MESIN pada baris anak itu lalu mencatat mutasi Stock TSP.
+ */
+function sendExistingChildToMesin_(childBarcode, mesin, jumlah, now) {
+  var row = findBarcodeRow_(childBarcode);
+  if (row.rowIndex === -1) {
+    throw new Error('Kode Anak "' + childBarcode + '" tidak ditemukan di sistem.');
+  }
+
+  var sudahDikirim = getRequiredCellValue_(row, 'DIKIRIM OLEH TSP KE MESIN');
+  if (sudahDikirim) {
+    throw new Error('Kode Anak "' + childBarcode + '" sudah dikirim ke mesin pada ' + sudahDikirim +
+      '. Mengirim ulang akan menghitung qty-nya dua kali di Stock TSP.');
+  }
+
+  var recordedMesin = String(getCellValue_(row, 'MESIN') || '').trim();
+  if (recordedMesin && recordedMesin !== mesin) {
+    throw new Error('Kode Anak "' + childBarcode + '" tercatat untuk mesin ' + recordedMesin +
+      ', bukan ' + mesin + '. Periksa label yang discan.');
+  }
+
+  // Qty label ditetapkan saat pemecahan dan menempel pada barang fisiknya, jadi ITU yang
+  // otoritatif -- bukan angka yang diketik ulang operator. Selisih ditolak eksplisit
+  // supaya tidak ada yang mengira qty-nya bisa diubah di titik pengiriman.
+  var qtyLabel = Number(getRequiredCellValue_(row, 'JUMLAH')) || 0;
+  if (qtyLabel <= 0) {
+    throw new Error('Kode Anak "' + childBarcode + '" tidak punya Jumlah yang sah di sistem.');
+  }
+  var qtyInput = Number(jumlah);
+  if (isFinite(qtyInput) && qtyInput > 0 && qtyInput !== qtyLabel) {
+    throw new Error('Jumlah yang diisi (' + qtyInput + ') tidak sama dengan Jumlah pada label "' +
+      childBarcode + '" (' + qtyLabel + '). Qty label ditetapkan saat pemecahan dari induk ' +
+      'dan tidak bisa diubah saat pengiriman.');
+  }
+
+  var mid = getRequiredCellValue_(row, 'MID');
+
+  updateBarcodeCell_(row.rowIndex, 'DIKIRIM OLEH TSP KE MESIN', formatTimestamp_(now));
+  if (!recordedMesin && row.headerMap['MESIN']) {
+    try {
+      updateBarcodeCell_(row.rowIndex, 'MESIN', mesin);
+    } catch (e) {
+      // Checkpoint-nya sudah tercatat; mutasi stok di bawah tetap jalan.
+    }
+  }
+
+  var stockSynced = true;
+  try {
+    stockSynced = incrementStockCell_(SHEET_NAMES.STOCK_TSP, mid, 'Kirim ' + mesin, qtyLabel, now);
+  } catch (e) {
+    stockSynced = false;
+  }
+
+  var msg = 'Kode Anak "' + childBarcode + '" (Qty: ' + qtyLabel + ') dikirim ke ' + mesin + '.';
+  if (!stockSynced) {
+    msg += '\n\n\u26a0\ufe0f PERHATIAN: Pengiriman tercatat, TAPI Stock TSP BELUM tersinkron untuk ' +
+      'shift ini (kemungkinan "Tarik Stok Awal Shift" belum dilakukan). Hubungi Admin TSP untuk ' +
+      'Tarik Stok Awal, lalu minta verifikasi ulang transaksi ini.';
+  }
+
+  return {
+    success: true,
+    warning: !stockSynced,
+    barcode: childBarcode,
+    childBarcode: childBarcode,
+    parentBarcode: classifyBarcode_(childBarcode).parentBarcode,
+    mesin: mesin,
+    event: 'kirim_mesin',
+    message: msg,
+    details: null
+  };
+}
+
+/**
  * Event 2: kirim_mesin -> scan Kode Unik Induk, REPRINT Barcode Anak (<KodeInduk>-01), dan kirim ke Mesin.
  *
  * Penerbitan barcode anak didelegasikan ke allocateChildBarcodes_() -- allocator terkunci yang
@@ -431,19 +508,30 @@ function handleKirimMesin_(raw, mesinCode, jumlah, now) {
   if (MESIN_LIST.indexOf(mesin) === -1) {
     throw new Error('Mesin "' + mesin + '" tidak dikenal.');
   }
-  var qtyNum = Number(jumlah);
-  if (isNaN(qtyNum) || qtyNum <= 0) throw new Error('Jumlah yang dikirim harus lebih besar dari 0.');
-
   var parentStr = String(raw).trim();
 
-  // Kirim ke Mesin hanya boleh dari Kode Induk (mother barcode WRM). Tanpa penjagaan ini, men-scan
-  // barcode ANAK akan menerbitkan "cucu" (PARENT-01-01): qty-nya dihitung dua kali di STOCK TSP dan
-  // penerbitannya lolos dari plafon sisa kuantitas induk, karena allocator memakai baris anak itu
-  // sebagai induk barunya. classifyBarcode_ memakai aturan yang sama dengan jalur checkpoint.
+  // Kode Anak hasil pemecahan induk SAH untuk dikirim ke mesin -- justru itu tujuan
+  // pemecahannya: induk WRM dipecah jadi unit-unit kecil ber-qty sendiri, lalu unit
+  // itulah yang dikirim. Sebelumnya SEMUA Kode Anak ditolak di sini, sehingga label
+  // hasil pemecahan tidak pernah bisa maju ke mana pun (terima_operator dan
+  // retur_dari_mesin sama-sama mensyaratkan kirim_mesin) -- padahal qty-nya sudah
+  // terlanjur memotong kuota induk saat dicetak.
+  //
+  // Yang dilarang adalah mengirim ULANG anak yang sudah punya stempel DIKIRIM; itulah
+  // yang dulu menerbitkan "cucu" (PARENT-01-01), menghitung qty dua kali di STOCK TSP,
+  // dan lolos dari plafon kuantitas induk. Penjagaan itu dipindahkan ke
+  // sendExistingChildToMesin_ yang memeriksa stempelnya, bukan bentuk kodenya.
   if (classifyBarcode_(parentStr).isChild) {
-    throw new Error('Barcode "' + parentStr + '" adalah Kode Anak hasil reprint, bukan Kode Induk. ' +
-      'Event "Kirim ke Mesin" hanya boleh discan dari Kode Induk (mother barcode dari WRM).');
+    return sendExistingChildToMesin_(parentStr, mesin, jumlah, now);
   }
+
+  // Validasi qty SENGAJA setelah cabang di atas: hanya jalur induk yang butuh operator
+  // mengisi jumlah, karena di situlah unit baru dipecah. Untuk Kode Anak, qty sudah
+  // ditetapkan saat pemecahan dan menempel pada labelnya, jadi kolom jumlah boleh
+  // dikosongkan -- kalau divalidasi di sini, scan label pecahan ditolak sebelum sempat
+  // sampai ke sendExistingChildToMesin_.
+  var qtyNum = Number(jumlah);
+  if (isNaN(qtyNum) || qtyNum <= 0) throw new Error('Jumlah yang dikirim harus lebih besar dari 0.');
 
   var allocation = allocateChildBarcodes_(parentStr, [qtyNum], {
     isRetur: false,
