@@ -2910,9 +2910,9 @@
     // kanvas fisik yang tetap itu, bukan ukuran kertas yang berbeda-beda.
     var REPRINT_PAGE_SIZE_MM = { width: 75, height: 50 };
     var REPRINT_PRESETS = {
-      kecil:   { barcodeHeight: 34, fontSize: 7.5, padding: '1.5mm 2.5mm', svgMargin: 0 },
-      standar: { barcodeHeight: 44, fontSize: 8.5, padding: '2mm 3mm',     svgMargin: 1 },
-      besar:   { barcodeHeight: 54, fontSize: 10,  padding: '1mm 2mm',    svgMargin: 1 }
+      kecil:   { barcodeHeight: 34, fontSize: 7.5, padding: '1.5mm 2.5mm', svgMargin: 0, qrSizeMm: 16 },
+      standar: { barcodeHeight: 44, fontSize: 8.5, padding: '2mm 3mm',     svgMargin: 1, qrSizeMm: 18 },
+      besar:   { barcodeHeight: 54, fontSize: 10,  padding: '1mm 2mm',    svgMargin: 1, qrSizeMm: 20 }
     };
 
     // Tulis ulang @page CSS supaya browser & driver printer menerima ukuran kertas fisik yang
@@ -3025,26 +3025,65 @@
             '<td style="border:1px solid #000; padding:2px 4px; font-size:calc(' + mainFont + ' - 1.5px);">' + escapeHtml(lbl.barcodeInduk) + '</td>' +
           '</tr>' +
           '<tr>' +
-            '<td colspan="2" style="border:1px solid #000; padding:2px; text-align:center; vertical-align:middle;">' +
-              '<svg id="lbl-svg-' + idx + '" style="display:block; margin:0 auto; width:100%; max-width:100%; height:auto;"></svg>' +
+            '<td colspan="2" style="border:1px solid #000; padding:2px; vertical-align:middle;">' +
+              '<div style="display:flex; align-items:center; gap:2mm; height:100%;">' +
+                '<div id="lbl-qr-' + idx + '" style="flex:0 0 auto; width:' + cfg.qrSizeMm + 'mm; height:' + cfg.qrSizeMm + 'mm;"></div>' +
+                '<div style="flex:1 1 auto; min-width:0; font-family:monospace; font-weight:bold; font-size:calc(' + mainFont + ' - 1px); word-break:break-all; line-height:1.15;">' + escapeHtml(lbl.barcodeAnak) + '</div>' +
+              '</div>' +
             '</td>' +
           '</tr>' +
           '</table>';
         container.appendChild(page);
 
-        // Render barcode dengan ketinggian & font sesuai konfigurasi
-        setTimeout(function (svgId, code, bHeight, fSize, mMargin) {
+        // Render QR, bukan Code128.
+        //
+        // Kode anak (mis. 1800120600-20000364-P12-0001-73, 31 karakter) butuh >300 modul
+        // kalau dikodekan Code128. Pada lebar cetak efektif ~68mm di printer thermal
+        // 203dpi itu hanya ~1,6 dot per modul -- di bawah minimum 2 dot, sehingga tepi
+        // garis kabur dan label sering gagal dibaca.
+        //
+        // Seluruh karakter kode anak (angka, huruf kapital, tanda '-') masuk charset
+        // alfanumerik QR, jadi 31 karakter muat di QR versi 2 (25x25 modul) dengan
+        // koreksi galat M. Pada sisi 18mm hasilnya ~4,4 dot per modul, hampir tiga kali
+        // lipat lebih longgar, DAN dapat koreksi galat Reed-Solomon (~15% modul rusak
+        // masih terbaca) yang tidak dimiliki Code128 sama sekali.
+        //
+        // Scanner Android maupun web sudah menerima kedua format, jadi label Code128
+        // lama tetap terbaca selama masa transisi.
+        setTimeout(function (qrId, svgFallbackId, code, bHeight, fSize, mMargin) {
+          var host = document.getElementById(qrId);
+          if (!host) return;
+          if (typeof qrcode === 'function') {
+            try {
+              var qr = qrcode(0, 'M'); // 0 = versi otomatis, 'M' = koreksi galat ~15%
+              qr.addData(code);
+              qr.make();
+              host.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+              var svg = host.querySelector('svg');
+              if (svg) {
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.style.display = 'block';
+              }
+              return;
+            } catch (e) {
+              // jatuh ke fallback di bawah
+            }
+          }
+          // Fallback: CDN QR gagal dimuat/render. Cetak Code128 seperti sebelumnya
+          // supaya pencetakan tidak pernah mati total.
           try {
-            JsBarcode('#' + svgId, code, {
+            host.innerHTML = '<svg id="' + svgFallbackId + '"></svg>';
+            JsBarcode('#' + svgFallbackId, code, {
               format: 'CODE128',
               width: 1.1,
               height: bHeight,
-              displayValue: true,
+              displayValue: false,
               fontSize: Math.max(fSize - 1, 6),
               margin: mMargin
             });
-          } catch(e) {}
-        }.bind(null, 'lbl-svg-' + idx, lbl.barcodeAnak, cfg.barcodeHeight, cfg.fontSize, cfg.svgMargin), 30 * (idx + 1));
+          } catch (e2) {}
+        }.bind(null, 'lbl-qr-' + idx, 'lbl-svg-' + idx, lbl.barcodeAnak, cfg.barcodeHeight, cfg.fontSize, cfg.svgMargin), 30 * (idx + 1));
       });
     }
 
@@ -3097,6 +3136,9 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <!-- JsBarcode CDN -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- QR untuk label reprint. JsBarcode di atas dipertahankan sebagai fallback
+       kalau CDN ini gagal dimuat, supaya pencetakan tidak pernah mati total. -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
   <!-- Hidden div untuk html5-qrcode decoder (reprint) -->
   <div id="reprint-qr-reader" style="display:none;"></div>

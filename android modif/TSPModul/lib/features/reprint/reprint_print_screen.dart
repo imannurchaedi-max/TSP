@@ -63,23 +63,48 @@ class _ReprintPrintScreenState extends ConsumerState<ReprintPrintScreen> {
       doc.addPage(
         pw.Page(
           pageFormat: pageFormat,
-          build: (context) => pw.Column(
+          // QR, bukan Code128. Kode anak (mis. 1800120600-20000364-P12-0001-73,
+          // 31 karakter) butuh >300 modul kalau dicetak Code128. Di lebar cetak
+          // efektif ~68mm pada printer thermal 203dpi itu cuma ~1,6 dot per modul,
+          // di bawah minimum 2 dot -- penyebab label sering gagal dibaca.
+          //
+          // QR memuat 31 karakter alfanumerik itu dalam 25x25 modul (versi 2, koreksi
+          // galat M). Dengan sisi 26mm hasilnya ~5 dot per modul, tiga kali lipat lebih
+          // longgar, plus koreksi galat Reed-Solomon yang memulihkan ~15% modul rusak --
+          // Code128 tidak punya itu sama sekali, sobek sedikit langsung gagal.
+          //
+          // Scanner sudah menerima kedua format, jadi label Code128 lama tetap terbaca.
+          build: (context) => pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.BarcodeWidget(
-                barcode: bc.Barcode.code128(),
+                barcode: bc.Barcode.qrCode(
+                  errorCorrectLevel: bc.BarcodeQRCorrectionLevel.medium,
+                ),
                 data: label.barcodeAnak,
-                width: double.infinity,
-                height: 24 * PdfPageFormat.mm,
-                drawText: true,
-                textStyle: const pw.TextStyle(fontSize: 8),
+                width: 26 * PdfPageFormat.mm,
+                height: 26 * PdfPageFormat.mm,
+                drawText: false,
               ),
-              pw.SizedBox(height: 2),
-              _labelRow('Kode Anak', label.barcodeAnak, bold: true),
-              _labelRow('MID', label.mid),
-              _labelRow('Material', label.deskripsi),
-              _labelRow('Qty', '${label.jumlah}', bold: true, color: PdfColors.green800),
-              _labelRow('Ref Induk', label.barcodeInduk, fontSize: 6, color: PdfColors.grey600),
+              pw.SizedBox(width: 2 * PdfPageFormat.mm),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    _labelRow('MID', label.mid),
+                    _labelRow('Material', label.deskripsi),
+                    _labelRow('Qty', '${label.jumlah}', bold: true, color: PdfColors.green800),
+                    _labelRow('Ref Induk', label.barcodeInduk, fontSize: 6, color: PdfColors.grey600),
+                    pw.SizedBox(height: 1 * PdfPageFormat.mm),
+                    // Kode anak tetap dicetak sebagai teks supaya masih bisa diketik
+                    // manual kalau QR-nya rusak parah atau kamera sedang bermasalah.
+                    pw.Text(
+                      label.barcodeAnak,
+                      style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
