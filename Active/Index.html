@@ -2758,6 +2758,15 @@
         .deleteReprintBarcode(CURRENT_NIK, barcodeAnak, force === true);
     }
 
+    /** Pecah sufiks kode anak jadi {isRetur, seq} untuk pengurutan numerik. */
+    function parseChildSeq_(barcodeAnak) {
+      var s = String(barcodeAnak);
+      var m = /-R(\d+)$/.exec(s);
+      if (m) return { isRetur: true, seq: Number(m[1]) || 0 };
+      m = /-(\d+)$/.exec(s);
+      return { isRetur: false, seq: m ? (Number(m[1]) || 0) : 0 };
+    }
+
     // --- Tampilkan Step 2: Config Print ---
     function showReprintConfig(rows, query, parentQty) {
       // Ambil info dari baris pertama (induk dan material)
@@ -2776,10 +2785,19 @@
         '<br><span style="display:inline-block; margin-top:6px; padding:3px 8px; border-radius:4px; background:#dcfce7; color:#166534; font-weight:700;">Sisa Stock: ' + remainingQty + '</span>';
 
       // Riwayat kode anak yang sudah ada (urutkan berdasarkan barcodeAnak)
-      var anakList = rows.slice().sort(function (a, b) {
-        return String(a.barcodeAnak).localeCompare(String(b.barcodeAnak));
+      // Baris "-00" adalah PANCINGAN internal getReprintData_ supaya nomor urut mulai
+      // dari 01 -- bukan label yang pernah dicetak. Sebelumnya ikut tampil di tabel dan
+      // jadi "Terakhir dicetak", sehingga operator melihat kode palsu ber-Qty 0.
+      var anakList = rows.filter(function (r) {
+        return !String(r.barcodeAnak).endsWith('-00');
+      }).sort(function (a, b) {
+        // Numerik, bukan leksikal: localeCompare menaruh '-100' SEBELUM '-99' sehingga
+        // "Terakhir dicetak" jadi salah begitu jumlah anak melewati 99.
+        var pa = parseChildSeq_(a.barcodeAnak), pb = parseChildSeq_(b.barcodeAnak);
+        if (pa.isRetur !== pb.isRetur) return pa.isRetur ? 1 : -1;
+        return pa.seq - pb.seq;
       });
-      var lastAnak = anakList[anakList.length - 1];
+      var lastAnak = anakList.length ? anakList[anakList.length - 1] : null;
       var historyHtml = '<div class="table-scroll"><table class="data-table" style="font-size:12px;">';
       historyHtml += '<thead><tr><th>Kode Anak</th><th class="num-cell">Qty</th><th>Tanggal</th><th>Shift</th><th style="width:50px; text-align:center;">Aksi</th></tr></thead><tbody>';
       anakList.forEach(function (r) {
@@ -2790,11 +2808,13 @@
         historyHtml += '<tr><td><strong>' + r.barcodeAnak + '</strong></td><td class="num-cell">' + r.jumlah + '</td><td>' + r.tanggal + '</td><td style="text-align:center;">Shift ' + r.shift + '</td><td style="text-align:center;">' + actionBtn + '</td></tr>';
       });
       historyHtml += '</tbody></table></div>';
-      historyHtml += '<p style="margin-top:8px; font-size:12px; color:#0369a1;"><i class="bi bi-info-circle"></i> Terakhir dicetak: <strong>' + lastAnak.barcodeAnak + '</strong> (Qty: ' + lastAnak.jumlah + ')</p>';
+      historyHtml += lastAnak
+        ? '<p style="margin-top:8px; font-size:12px; color:#0369a1;"><i class="bi bi-info-circle"></i> Terakhir dicetak: <strong>' + lastAnak.barcodeAnak + '</strong> (Qty: ' + lastAnak.jumlah + ')</p>'
+        : '<p style="margin-top:8px; font-size:12px; color:#64748b;"><i class="bi bi-info-circle"></i> Belum ada label yang dicetak untuk kode induk ini.</p>';
       document.getElementById('reprint-history-list').innerHTML = historyHtml;
 
       // Isi default qty dari yang terakhir
-      document.getElementById('reprint-qty-per-label').value = lastAnak.jumlah || '';
+      document.getElementById('reprint-qty-per-label').value = (lastAnak && lastAnak.jumlah) ? lastAnak.jumlah : '';
 
       // Sembunyikan step 1 result, tampilkan step 2
       document.getElementById('reprint-step-search').style.display = 'none';
