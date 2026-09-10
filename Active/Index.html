@@ -3071,9 +3071,14 @@
             }
           }
           // Fallback: CDN QR gagal dimuat/render. Cetak Code128 seperti sebelumnya
-          // supaya pencetakan tidak pernah mati total.
+          // supaya pencetakan tidak pernah mati total -- TAPI beri penanda yang
+          // terlihat di label. Fallback yang senyap membuat "kenapa yang tercetak
+          // masih barcode?" mustahil didiagnosis: dari layar tidak ada bedanya.
           try {
-            host.innerHTML = '<svg id="' + svgFallbackId + '"></svg>';
+            host.style.width = 'auto';
+            host.innerHTML =
+              '<div style="font-size:5px; font-weight:bold; color:#000; line-height:1;">[QR GAGAL - CODE128]</div>' +
+              '<svg id="' + svgFallbackId + '"></svg>';
             JsBarcode('#' + svgFallbackId, code, {
               format: 'CODE128',
               width: 1.1,
